@@ -1,0 +1,26 @@
+.rq-custom-combo-box .rq-combo-box .arrow-button .arrow {
+    -fx-background-color: transparent;
+}
+
+.rq-custom-combo-box .rq-button {
+    -fx-background-color: transparent;
+}
+
+.rq-custom-combo-box .rq-arrow {
+    -fx-fill: -rq-accent-unfocus;
+}
+
+.rq-custom-combo-box .list-view {
+    -fx-background-color: transparent;
+}
+
+.jfx-combo-box .list-cell:hover,
+.jfx-combo-box .list-cell:selected {
+    -fx-background-color: -rq-accent-unfocus;
+    -fx-font-weight: bold;
+    /*-fx-text-fill: white;*/
+}
+
+
+/*TODO: make list-cell background white on hover*/
+

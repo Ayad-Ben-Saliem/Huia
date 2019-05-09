@@ -1,0 +1,100 @@
+
+*{
+    /* a dark green color used in text field-like control as border color
+       and for some buttons background color....
+       it's the main ui color besides the background color
+     */
+    -rq-accent-focus: red;
+    -rq-accent-unfocus: #ff8888;
+
+    -rq-accent-dark: red;
+    -rq-accent-light: #ff8888;
+
+    -rq-background: #303030;
+    -rq-background-alt: white;
+    -rq-background-alt2: -fx-background;
+
+    -rq-text-background: white;
+    -rq-text-background-alt: black;
+    -rq-text-background-alt2: black;
+
+    -rq-text-accent-dark: white;
+    -rq-text-accent-light: white;
+
+    -rq-shadow1: rgba(20, 20, 20, 0.1);
+    -rq-shadow2: rgba(20, 20, 20, 0.2);
+    -rq-shadow3: rgba(20, 20, 20, 0.3);
+    -rq-shadow4: rgba(20, 20, 20, 0.4);
+    -rq-shadow5: rgba(20, 20, 20, 0.5);
+}
+
+.common-button {
+    -fx-background-color: -rq-accent-unfocus;
+    -fx-text-fill: -rq-background-alt;
+}
+
+.common-button:focused {
+    -fx-background-color: derive(-rq-accent-focus, 50%);
+}
+
+.main-button {
+    -fx-background-color: -rq-background;
+    -fx-text-fill: -rq-text-background;
+}
+
+.main-button:focused {
+    -fx-background-color: derive(-rq-background, 50%);
+}
+
+.jfx-combo-box,
+.jfx-text-field,
+.jfx-date-picker,
+.jfx-password-field {
+    -jfx-unfocus-color: -rq-accent-unfocus;
+    -jfx-default-color: -rq-accent-unfocus;
+    -jfx-focus-color: -rq-accent-focus;
+}
+
+.menu-bar,
+.menu-bar-button,
+.menu-bar-container {
+    -fx-background-color: -rq-background;
+}
+.menu-bar-button,
+.menu-bar-button-icon,
+.menu-bar .container .menu .label {
+    -fx-fill: -rq-text-background;
+    -fx-text-fill: -rq-text-background;
+    -jfx-text-fill: -rq-text-background;
+}
+
+.tool-bar-button .jfx-rippler {
+    -jfx-rippler-fill: -rq-background-alt;
+}
+
+.separator {
+    -fx-background-color: lightgray;
+}
+
+.auth-dialog > StackPane {
+    -fx-background-color: transparent;
+}
+
+#search-button .jfx-rippler {
+    -jfx-rippler-fill: -rq-accent-unfocus;
+}
+
+.context-menu .menu-item:hover,
+.context-menu .menu-item:focused {
+    -fx-background-color: -rq-accent-light;
+    -fx-text-fill: white;
+}
+
+.pagination .pagination-control {
+    visibility: hidden;
+}
+
+.jfx-check-box {
+    -jfx-checked-color: -rq-accent-unfocus;
+    -jfx-unchecked-color: -rq-accent-focus;
+}

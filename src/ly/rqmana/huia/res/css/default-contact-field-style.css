@@ -1,0 +1,24 @@
+.icon {
+    -fx-effect: innershadow(gaussian ,-rq-accent-light, 100, 0, 0, 0);
+    -fx-fill: -rq-accent-light;
+}
+
+.input-field {
+    -jfx-unfocus-color: -rq-accent-light;
+    -jfx-focus-color: -rq-accent-dark;
+}
+
+.cancel-button {
+    -fx-background-color: transparent;
+    /* Big radius to ensure circularity of the button */
+    -fx-border-radius: 100px;
+    -fx-background-radius: 100px;
+}
+
+.cancel-button .jfx-rippler {
+    -jfx-rippler-fill: -rq-accent-light;
+}
+
+.cancel-button-icon {
+    -fx-fill: -rq-accent-light;
+}

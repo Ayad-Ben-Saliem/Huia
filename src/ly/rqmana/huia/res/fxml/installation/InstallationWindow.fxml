@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Pagination?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane prefHeight="400.0" prefWidth="750.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.installation.InstallationWindowController">
+   <BorderPane>
+
+      <bottom>
+         <HBox spacing="8.0">
+            <JFXButton fx:id="cancelBtn" buttonType="RAISED" mnemonicParsing="false" onAction="#onCancelBtnClicked" styleClass="common-button" text="%CANCEL" />
+            <Separator visible="false" HBox.hgrow="ALWAYS" />
+            <JFXButton fx:id="backBtn" buttonType="RAISED" disable="true" mnemonicParsing="false" onAction="#onBackBtnClicked" styleClass="common-button" text="%BACK" />
+            <JFXButton fx:id="nextBtn" buttonType="RAISED" disable="true" mnemonicParsing="false" onAction="#onNextBtnClicked" styleClass="common-button" text="%NEXT" />
+            <BorderPane.margin>
+               <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+            </BorderPane.margin>
+         </HBox>
+      </bottom>
+      <center>
+         <Pagination fx:id="pagination" VBox.vgrow="ALWAYS" />
+      </center>
+   </BorderPane>
+   <stylesheets>
+      <URL value="@../../css/theme.css" />
+      <URL value="@../../css/templates.css" />
+   </stylesheets>
+</StackPane>

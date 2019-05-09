@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
+
+<?import com.jfoenix.controls.JFXCheckBox?>
+<StackPane prefHeight="480.0" prefWidth="720.0" stylesheets="@../../css/theme.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.installation.LicenseTermsPageController">
+    <BorderPane>
+        <center>
+            <VBox alignment="CENTER" BorderPane.alignment="CENTER">
+                <ImageView fitHeight="150.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@../../images/huia_logo.png" />
+                </ImageView>
+                <Label text="Huia" textFill="#ff8888">
+               <font>
+                  <Font name="System Bold" size="50.0" />
+               </font></Label>
+                <Label text="Huia is ...">
+               <font>
+                  <Font size="18.0" />
+               </font></Label>
+                <VBox>
+                    <VBox.margin>
+                        <Insets bottom="32.0" left="32.0" right="32.0" top="32.0" />
+                    </VBox.margin>
+                    <ScrollPane fx:id="licenseContainer" hbarPolicy="NEVER" minHeight="128.0">
+                        <TextFlow fx:id="licenseTextFlow">
+                            <Text text="A license (American English) or licence (British English)[1] is an official permission or permit to do, use, or own something (as well as the document of that permission or permit).[1]A license can be granted by a party to another party as an element of an agreement between those parties. A shorthand definition of a license is &quot;an authorization to use licensed material&quot;.In particular, a license may be issued by authorities, to allow an activity that would otherwise be forbidden. It may require paying a fee or proving a capability. The requirement may also serve to keep the authorities informed on a type of activity, and to give them the opportunity to set conditions and limitations.A licensor may grant a license under intellectual property laws to authorize a use (such as copying software or using a (patented) invention) to a licensee, sparing the licensee from a claim of infringement brought by the licensor.[2] A license under intellectual property commonly has several components beyond the grant itself, including a term, territory, renewal provisions, and other limitations deemed vital to the licensor.Term: many licenses are valid for a particular length of time. This protects the licensor should the value of the license increase, or market conditions change. It also preserves enforceability by ensuring that no license extends beyond the term of the agreement.Territory: a license may stipulate what territory the rights pertain to. For example, a license with a territory limited to &quot;North America&quot; (Mexico/United States/Canada) would not permit a licensee any protection from actions for use in Japan.A shorthand definition of license is &quot;a promise by the licensor not to sue the licensee&quot;. That means without a license any use or exploitation of intellectual property by a third party would amount to copying or infringement. Such copying would be improper and could, by using the legal system, be stopped if the intellectual property owner wanted to do so.[3]Intellectual property licensing plays a major role in business, academia and broadcasting. Business practices such as franchising, technology transfer, publication and character merchandising entirely depend on the licensing of intellectual property. Land licensing (proprietary licensing) and IP licensing form sub-branches of law born out of the interplay of general laws of contract and specific principles and statutory laws relating to these respective assets." />
+                            <padding>
+                                <Insets left="10.0" />
+                            </padding>
+                        </TextFlow>
+                    </ScrollPane>
+
+                    <JFXCheckBox fx:id="acceptTermsCheckBox" mnemonicParsing="false" text="I have read the tearms, and I'm accept.">
+                        <VBox.margin>
+                            <Insets bottom="32.0" left="32.0" right="32.0" top="32.0" />
+                        </VBox.margin>
+                    </JFXCheckBox>
+                </VBox>
+            </VBox>
+        </center>
+    </BorderPane>
+</StackPane>

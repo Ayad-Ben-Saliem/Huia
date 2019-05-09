@@ -1,0 +1,11 @@
+.jfx-text-field {
+    -jfx-label-float: true;
+}
+
+#search-button {
+    -fx-background-radius: 50;
+}
+
+.main-button {
+    -fx-background-radius: 0;
+}

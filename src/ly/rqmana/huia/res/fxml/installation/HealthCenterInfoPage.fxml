@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import com.lynden.gmapsfx.GoogleMapView?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane prefHeight="480.0" prefWidth="720.0" stylesheets="@../../css/theme.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.installation.HealthCenterInfoPageController">
+   <VBox alignment="CENTER" fillWidth="false" spacing="32.0">
+      <StackPane.margin>
+         <Insets bottom="32.0" left="32.0" right="32.0" top="32.0" />
+      </StackPane.margin>
+      <JFXTextField fx:id="instituteTitle" labelFloat="true" promptText="%INSTITUTE_TITLE" />
+      <Label text="Select location, Right click, Add mark.">
+         <VBox.margin>
+            <Insets bottom="-24.0" />
+         </VBox.margin>
+      </Label>
+      <GoogleMapView fx:id="googleMapView" />
+      <HBox spacing="8.0">
+         <JFXTextField fx:id="installationDir" labelFloat="true" prefWidth="500.0" promptText="%INSTALLATION_DIRECTORY" />
+         <JFXButton mnemonicParsing="false" onAction="#onBrowseBtnClicked" styleClass="common-button" text="%BROWSE" />
+      </HBox>
+   </VBox>
+</StackPane>

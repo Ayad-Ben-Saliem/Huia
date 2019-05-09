@@ -1,0 +1,32 @@
+.toggle-switch .background {
+    -fx-stroke-type: inside;
+    -fx-stroke-width: 1.25;
+    -fx-arc-width: 27;
+    -fx-arc-height: 27;
+    -fx-fill: -rq-background-alt;
+    -fx-stroke: -rq-accent-light;
+    -fx-pref-height: 10;
+}
+
+.toggle-switch .trigger {
+    -fx-fill: -rq-accent-light;
+    -fx-stroke: -rq-background-alt2;
+    /*-fx-stroke-width: 0;*/
+
+    -fx-effect: dropshadow(gaussian, lightgray, 0, 0, 0, 1);
+}
+
+
+.toggle-switch .label {
+    -fx-alignment: center;
+}
+
+.toggle-switch .on-label {
+    -fx-opacity: 0;
+    -fx-padding: 0 30 0 0;
+}
+
+.toggle-switch .off-label {
+    -fx-padding: 0 0 0 30;
+}
+

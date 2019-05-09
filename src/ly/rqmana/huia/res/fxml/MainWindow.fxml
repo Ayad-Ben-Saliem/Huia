@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+
+<StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.MainWindowController">
+    <stylesheets>
+        <URL value="@../css/theme.css" />
+        <URL value="@../css/templates.css" />
+    </stylesheets>
+    <BorderPane fx:id="mainContainer">
+        <center>
+          <StackPane fx:id="centralStack" prefHeight="400.0" prefWidth="720.0" BorderPane.alignment="CENTER" />
+        </center>
+        <bottom>
+            <HBox BorderPane.alignment="CENTER">
+                <JFXButton fx:id="registrationBan" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="Registration Page" HBox.hgrow="ALWAYS">
+               <HBox.margin>
+                  <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+               </HBox.margin></JFXButton>
+                <JFXButton fx:id="authenticationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="Authintication Page" HBox.hgrow="ALWAYS">
+               <HBox.margin>
+                  <Insets bottom="1.0" top="1.0" />
+               </HBox.margin></JFXButton>
+            </HBox>
+        </bottom>
+    </BorderPane>
+</StackPane>
