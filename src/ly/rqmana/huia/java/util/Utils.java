@@ -5,11 +5,14 @@ import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
+import ly.rqmana.huia.java.controls.alerts.AlertAction;
+import ly.rqmana.huia.java.controls.alerts.Alerts;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -29,25 +32,6 @@ public class Utils {
     public final static String $lte = "$lte";
     public final static String $regex = "$regex";
 
-    public static WebSocketClient WEB_SOCKET_CLIENT;
-
-    static {
-        final AtomicReference<EventHandler<WebSocketClient.CloseEvent>> closeEventHandler = new AtomicReference<>();
-
-        closeEventHandler.set(event -> {
-            try {
-                System.out.println("connect again");
-                WEB_SOCKET_CLIENT = new WebSocketClient("ws://huia.herokuapp.com//");
-//                WEB_SOCKET_CLIENT.setOnCloseEvent(closeEventHandler.get());
-                WEB_SOCKET_CLIENT.connect();
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-        });
-
-        closeEventHandler.get().handle(null);
-    }
-
     public static ResourceBundle getBundle() {
         return ResourceBundle.getBundle(Res.LANGUAGE_PATH, new Locale("ar", "SA"));
     }
@@ -64,7 +48,7 @@ public class Utils {
         });
     }
 
-    static Node getErrorIcon() {
+    public static Node getErrorIcon() {
         FontAwesomeIconView view = new FontAwesomeIconView(FontAwesomeIcon.EXCLAMATION_CIRCLE);
         view.setScaleX(0.7);
         view.setScaleY(0.7);
@@ -138,12 +122,15 @@ public class Utils {
         return null;
     }
 
-    public static void closeWebSocket() {
-        new Thread(() -> {
-            Utils.WEB_SOCKET_CLIENT.setOnCloseEvent(null);
-            while (!Utils.WEB_SOCKET_CLIENT.isClosed()) {
-                Utils.WEB_SOCKET_CLIENT.close();
-            }
-        }).start();
+    private static long alertNetworkErrorTime = 0;
+    public static void alertNetworkError(Exception ex) {
+        Platform.runLater(() -> {
+            if (System.currentTimeMillis() - alertNetworkErrorTime < 1000000) return;
+            if (Windows.NETWORK_ERROR_ALERT.isShowing()) return;
+
+            alertNetworkErrorTime = System.currentTimeMillis();
+            Windows.NETWORK_ERROR_ALERT.visualizeStackTrace(ex);
+            Windows.NETWORK_ERROR_ALERT.showAndWait();
+        });
     }
 }

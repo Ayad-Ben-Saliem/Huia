@@ -25,9 +25,9 @@
           <RowConstraints minHeight="10.0" percentHeight="50.0" prefHeight="30.0" vgrow="SOMETIMES" />
       </rowConstraints>
       <Pane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: -rq-background;" GridPane.rowSpan="2" />
-   <Label fx:id="shopPlace2" style="-fx-text-fill: -rq-text-background;" text="%APP_NAME">
+   <Label fx:id="shopPlace2" style="-fx-text-fill: -rq-text-background;" styleClass="font50" text="%APP_NAME">
       <font>
-         <Font name="System Bold" size="50.0" />
+         <Font name="System Bold" size="13.0" />
       </font>
    </Label>
       <Pane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: -rq-background-alt;" GridPane.rowIndex="2" GridPane.rowSpan="2" />
@@ -39,10 +39,7 @@
       </JFXButton>
     </HBox>
      <VBox alignment="BOTTOM_CENTER" spacing="10.0" GridPane.rowIndex="3">
-         <Label fx:id="companyName" style="-fx-text-fill: -rq-text-background-alt;" text="%COMPANY_NAME">
-         <font>
-            <Font size="32.0" />
-         </font>
+         <Label fx:id="companyName" style="-fx-text-fill: -rq-text-background-alt;" styleClass="font30" text="%COMPANY_NAME">
          <VBox.margin>
             <Insets />
          </VBox.margin>
@@ -51,24 +48,14 @@
              <VBox.margin>
                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
              </VBox.margin>
-             <Label maxWidth="1.7976931348623157E308" style="-fx-text-fill: -rq-text-background-alt;" text="%POWERED_BY">
-                 <font>
-                     <Font size="16.0" />
-                 </font>
-             </Label>
+             <Label maxWidth="1.7976931348623157E308" style="-fx-text-fill: -rq-text-background-alt;" text="%POWERED_BY" />
              <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true" preserveRatio="true">
                  <Image url="@../images/addalil_logo.png" />
              </ImageView>
              <Pane HBox.hgrow="ALWAYS" />
-             <Label maxWidth="1.7976931348623157E308" style="-fx-text-fill: -rq-text-background-alt;" text="%DEVELOPED_BY">
-                 <font>
-                     <Font size="16.0" />
-                 </font>
-             </Label>
+             <Label maxWidth="1.7976931348623157E308" style="-fx-text-fill: -rq-text-background-alt;" text="%DEVELOPED_BY" />
              <ImageView fitHeight="25.0" fitWidth="25.0" layoutX="530.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true">
-                 <image>
-                     <Image url="@../images/rqmana_logo.png" />
-                 </image>
+                 <Image url="@../images/rqmana_logo.png"/>
              </ImageView>
          </HBox>
      </VBox>

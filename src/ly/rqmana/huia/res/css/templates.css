@@ -1,3 +1,23 @@
+
+/*.root {*/
+    /*-fx-font-size: 16pt;*/
+    /*!*-fx-font-family: "Courier New";*!*/
+    /*!*-fx-base: rgb(132, 145, 47);*!*/
+    /*!*-fx-background: rgb(225, 228, 203);*!*/
+/*}*/
+
+/*.glyph-icon{*/
+    /*-fx-font-size: 128pt;*/
+    /*!*-fx-font-family:"Material Design Icons";*!*/
+    /*!*-fx-font-family: "FontAwesome";*!*/
+/*}*/
+
+.text,
+.jfx-text-field,
+.jfx-password-field {
+    -fx-font-size: 14pt;
+}
+
 .jfx-text-field {
     -jfx-label-float: true;
 }
@@ -8,4 +28,44 @@
 
 .main-button {
     -fx-background-radius: 0;
+}
+
+.font20 .text {
+    -fx-font-size: 20pt;
+}
+
+.font22 .text {
+    -fx-font-size: 22pt;
+}
+
+.font24 .text {
+    -fx-font-size: 24pt;
+}
+
+.font26 .text {
+    -fx-font-size: 26pt;
+}
+
+.font28 .text {
+    -fx-font-size: 28pt;
+}
+
+.font30 .text {
+    -fx-font-size: 30pt;
+}
+
+.font34 .text {
+    -fx-font-size:34pt;
+}
+
+.font40 .text {
+    -fx-font-size: 40pt;
+}
+
+.font50 .text {
+    -fx-font-size: 50pt;
+}
+
+.font64 .text {
+    -fx-font-size: 64pt;
 }

@@ -1,0 +1,77 @@
+
+/*********** custom alert {type: JFXAlert} ***********/
+/*
+    structure:
+    - custom-alert-pane, jfx-alert-overlay  (DialogPane)
+        -jfx-alert-content-container        (StackPane)
+            - custom-alert-layout           (VBox)
+*/
+
+
+/*********** custom alert layout  {type: VBox} ***********/
+/*
+    structure:
+      - custom-alert-layout         (VBox)
+        - heading                   (HBox)
+        - body                      (StackPane)
+
+        - footer                    (VBox)
+            - buttons-bar           (HBox)
+                - flow-pane         (FlowPane)
+
+*/
+
+.custom-alert-pane{
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+
+.custom-alert-layout {
+    -fx-text-fill: rgba(0, 0, 0, 0.87);
+}
+
+.custom-alert-layout .heading {
+    -fx-alignment: center-left;
+    -fx-font-weight: BOLD;
+    -fx-padding: 24 24 20 24;
+}
+
+
+.custom-alert-layout .body{
+    -fx-alignment: center-left;
+    -fx-padding: 0 24 24 24;
+    -fx-pref-width: 400;
+}
+
+.custom-alert-layout .body .label {
+    -fx-text-fill: #757575;
+    -fx-font-size: 16.0;
+    -fx-wrap-text: true;
+}
+
+
+.custom-alert-layout .body .error-label {
+    -fx-text-fill: #ffb209;
+    -fx-font-size: 12.0;
+}
+
+
+.custom-alert-layout .footer .buttons-bar{
+    -fx-alignment: center;
+    -fx-spacing: 8;
+    -fx-padding: 0 8 0 8;
+}
+
+.custom-alert-layout .footer .flow-pane{
+    -fx-alignment: center-right;
+    -fx-hgap: 8;
+}
+
+
+.custom-alert-layout .jfx-button {
+    /*-jfx-button-type: RAISED;*/
+    -fx-pref-height: 36;
+    -fx-max-height: 36;
+    -fx-min-width: 64;
+    -fx-padding: 8;
+}

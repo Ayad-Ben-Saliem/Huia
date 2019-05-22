@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<fx:root spacing="10.0"
+         styleClass="custom-alert-layout"
+         type="VBox"
+         xmlns="http://javafx.com/javafx/8.0.171"
+         xmlns:fx="http://javafx.com/fxml/1">
+    <stylesheets>
+        <URL value="@../../css/default-custom-alert-style.css"/>
+        <URL value="@../../css/templates.css"/>
+        <URL value="@../../css/theme.css"/>
+    </stylesheets>
+    <HBox fx:id="headingPane" spacing="15.0" styleClass="heading">
+        <Label fx:id="headingLabel" maxWidth="1.7976931348623157E308" text="Alert Title" wrapText="true"
+               HBox.hgrow="ALWAYS"/>
+        <FontAwesomeIconView fx:id="graphicView" glyphName="QUESTION_CIRCLE" size="32"/>
+    </HBox>
+    <StackPane fx:id="bodyPane" styleClass="body">
+        <Label fx:id="bodyLabel" text="Label"/>
+    </StackPane>
+    <VBox fx:id="footerPane" styleClass="footer">
+        <VBox.margin>
+            <Insets/>
+        </VBox.margin>
+        <HBox fx:id="buttonsBar" spacing="10.0" styleClass="buttons-bar">
+            <VBox.margin>
+                <Insets bottom="5.0"/>
+            </VBox.margin>
+            <FlowPane fx:id="actionsFlow" alignment="CENTER_RIGHT" hgap="8.0" maxWidth="1.7976931348623157E308"
+                      styleClass="flow-pane" HBox.hgrow="ALWAYS"/>
+        </HBox>
+    </VBox>
+</fx:root>

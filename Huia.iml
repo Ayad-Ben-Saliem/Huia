@@ -7,16 +7,13 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="httpclient-4.5.8" level="project" />
     <orderEntry type="library" name="gson-2.8.5" level="project" />
     <orderEntry type="library" name="de.jensd:fontawesomefx:8.9" level="project" />
     <orderEntry type="library" name="ZKFingerReader" level="project" />
     <orderEntry type="library" name="com.jfoenix:jfoenix:8.0.8" level="project" />
-    <orderEntry type="library" name="commons-codec" level="project" />
-    <orderEntry type="library" name="Java-WebSocket-1.4.0" level="project" />
     <orderEntry type="library" name="org.json:json:20180813" level="project" />
     <orderEntry type="library" name="org.controlsfx:controlsfx:8.40.14" level="project" />
-    <orderEntry type="library" name="com.lynden:GMapsFX:2.12.0" level="project" />
     <orderEntry type="library" name="org.xerial:sqlite-jdbc:3.27.2.1" level="project" />
+    <orderEntry type="library" name="Simple Logging Facade for Java:1.7.26" level="project" />
   </component>
 </module>

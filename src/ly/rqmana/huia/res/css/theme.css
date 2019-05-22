@@ -72,6 +72,11 @@
     -jfx-rippler-fill: -rq-background-alt;
 }
 
+.menu-bar > .container > .menu:hover,
+.menu-bar > .container > .menu:focused {
+    -fx-background-color: -rq-accent-light;
+}
+
 .separator {
     -fx-background-color: lightgray;
 }
@@ -97,4 +102,13 @@
 .jfx-check-box {
     -jfx-checked-color: -rq-accent-unfocus;
     -jfx-unchecked-color: -rq-accent-focus;
+}
+
+.jfx-text-area {
+    -jfx-unfocused-color: -rq-accent-unfocus;
+    -jfx-focused-color: -rq-accent-focus;
+}
+
+.progress-indicator {
+    -fx-progress-color: -rq-accent-light;
 }

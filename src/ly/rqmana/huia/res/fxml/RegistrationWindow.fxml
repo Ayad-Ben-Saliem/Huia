@@ -68,15 +68,14 @@
                 <JFXTextField fx:id="familyNameTextField" labelFloat="true" promptText="%FAMILY_NAME" />
             </HBox>
             <FlowPane alignment="TOP_CENTER" hgap="32.0" vgap="32.0">
-                <JFXDatePicker fx:id="birthdayDatePicker" prefWidth="151.0" promptText="%BIRTHDAY" />
-                <CustomComboBox fx:id="genderComboBox" labelFloat="true" prefWidth="150.0" promptText="%GENDER" />
-                <CustomComboBox fx:id="instituteComboBox" labelFloat="true" promptText="%INSTITUTE" />
+                <JFXDatePicker fx:id="birthdayDatePicker" prefWidth="217.0" promptText="%BIRTHDAY" />
+                <CustomComboBox fx:id="genderComboBox" labelFloat="true" prefWidth="217.0" promptText="%GENDER" />
+                <CustomComboBox fx:id="instituteComboBox" labelFloat="true" prefWidth="217.0" promptText="%INSTITUTE" />
                 <JFXTextField fx:id="nationalityTextField" labelFloat="true" promptText="%NATIONALITY" />
-                <JFXTextField fx:id="nationalIdTextField" labelFloat="true" layoutX="210.0" layoutY="129.0" promptText="%NATIONAL_ID" />
+                <JFXTextField fx:id="nationalIdTextField" labelFloat="true" promptText="%NATIONAL_ID" />
                 <JFXTextField fx:id="newEmployeeWorkIdTextField" labelFloat="true" maxWidth="-Infinity" minWidth="-Infinity" promptText="%WORK_ID" />
-                <CustomComboBox fx:id="employeesWorkIdComboBox" labelFloat="true" managed="false" promptText="%WORK_ID" visible="false" />
-                <ToggleSwitch fx:id="isEmployeeToggleSwitch" status="true" textOff="%EMPLOYEE_RELATED" textOn="%EMPLOYEE" />
-                <CustomComboBox fx:id="relationshipComboBox" labelFloat="true" layoutX="10.0" layoutY="10.0" managed="false" maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%EMPLOYEE_RELATIONSHIP" visible="false" />
+                <CustomComboBox fx:id="employeesWorkIdComboBox" labelFloat="true" managed="false" prefWidth="217.0" promptText="%WORK_ID" visible="false" />
+                <CustomComboBox fx:id="relationshipComboBox" labelFloat="true" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="217.0" promptText="%EMPLOYEE_RELATIONSHIP" />
                 <padding>
                     <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
                 </padding>
@@ -85,7 +84,6 @@
                 <ContactField cancelable="false" labelFloat="true" promptText="%ADDRESS" type="ADDRESS" />
                 <ContactField cancelable="false" labelFloat="true" layoutX="175.0" layoutY="30.0" promptText="%PHONE" type="PHONE" />
                 <ContactField cancelable="false" labelFloat="true" layoutX="328.0" layoutY="30.0" promptText="%EMAIL" type="EMAIL" />
-                <ContactField cancelable="false" labelFloat="true" layoutX="279.0" layoutY="30.0" promptText="%FACEBOOK" type="FACEBOOK" />
                 <padding>
                     <Insets bottom="10.0" left="10.0" right="10.0" top="20.0" />
                 </padding>
@@ -133,11 +131,6 @@
                         </ImageView>
 
                     </StackPane>
-                    <JFXButton id="search-button" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#onZoomBtnClicked" text="Button">
-                        <graphic>
-                            <FontAwesomeIconView fx:id="zoomIconView" fill="#ff6a6a" glyphName="SEARCH_PLUS" size="30" strokeType="OUTSIDE" strokeWidth="0.0" />
-                        </graphic>
-                    </JFXButton>
                     <StackPane fx:id="rightHandImageContainer">
                         <ImageView fx:id="rightHandImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true">
                             <Image url="@../images/hand.png" />

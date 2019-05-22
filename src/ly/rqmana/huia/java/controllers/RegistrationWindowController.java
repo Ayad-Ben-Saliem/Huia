@@ -1,14 +1,14 @@
 package ly.rqmana.huia.java.controllers;
 
-import com.google.gson.Gson;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXTextField;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import com.jfoenix.validation.base.ValidatorBase;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -23,40 +23,31 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
-import ly.rqmana.huia.java.controls.ToggleSwitch;
+import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.models.Gender;
+import ly.rqmana.huia.java.models.Institute;
 import ly.rqmana.huia.java.models.Relationship;
+import ly.rqmana.huia.java.models.Subscriber;
+import ly.rqmana.huia.java.security.Auth;
+import ly.rqmana.huia.java.storage.DataStorage;
 import ly.rqmana.huia.java.util.*;
 import ly.rqmana.huia.java.util.fingerprint.Finger;
 import ly.rqmana.huia.java.util.fingerprint.FingerprintManager;
-import ly.rqmana.huia.java.util.fingerprint.FingerprintSensor;
-import org.apache.commons.codec.Charsets;
-import org.apache.http.Consts;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class RegistrationWindowController implements Controllable {
 
-    @FXML
-    public ToggleSwitch isEmployeeToggleSwitch;
     @FXML
     public FlowPane contactsContainer;
     @FXML
@@ -72,7 +63,7 @@ public class RegistrationWindowController implements Controllable {
     @FXML
     public CustomComboBox<String> employeesWorkIdComboBox;
     @FXML
-    public CustomComboBox<String> instituteComboBox;
+    public CustomComboBox<Institute> instituteComboBox;
     @FXML
     public JFXDatePicker birthdayDatePicker;
     @FXML
@@ -87,8 +78,6 @@ public class RegistrationWindowController implements Controllable {
     public StackPane rightHandImageContainer;
     @FXML
     public StackPane leftHandImageContainer;
-    @FXML
-    public FontAwesomeIconView zoomIconView;
     @FXML
     public CustomComboBox<Gender> genderComboBox;
     @FXML
@@ -139,9 +128,6 @@ public class RegistrationWindowController implements Controllable {
     @FXML
     public Label fingerprintNoteLabel;
 
-    private boolean isZoomed = false;
-    private final FingerprintSensor sensor = new FingerprintSensor();
-
     private final ContextMenu menu = new ContextMenu();
     private final MenuItem thumbMenuItem = new MenuItem("Thumb Finger");
     private final MenuItem indexMenuItem = new MenuItem("Index Finger");
@@ -150,154 +136,95 @@ public class RegistrationWindowController implements Controllable {
     private final MenuItem pinkyMenuItem = new MenuItem("Pinky Finger");
 
     private final FingerprintManager fingerprintManager = new FingerprintManager();
-    private final ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    private final Timer timer = new Timer("Huia-Timer");
-    private InterruptableTimerTask pinkingTimerTask = new InterruptableTimerTask() {
-        @Override
-        public void run() {
-        }
-    };
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(10);
 
     private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-
-
-        isEmployeeToggleSwitch.statusProperty().addListener((observable, oldValue, newValue) -> {
-            newEmployeeWorkIdTextField.setManaged(newValue);
-            newEmployeeWorkIdTextField.setVisible(newValue);
-            employeesWorkIdComboBox.setManaged(!newValue);
-            employeesWorkIdComboBox.setVisible(!newValue);
-
-            if (newValue) {
-//                executorService.
-                timer.scheduleAtFixedRate(new TimerTask() {
-                    @Override
-                    public void run() {
-                        relationshipComboBox.setMaxWidth(relationshipComboBox.getWidth() - 10);
-                        if (relationshipComboBox.getWidth() <= 0) {
-                            relationshipComboBox.setManaged(false);
-                            relationshipComboBox.setVisible(false);
-                            cancel();
-                        }
-                    }
-                }, 0, 25);
-            } else {
-                relationshipComboBox.setManaged(true);
-                relationshipComboBox.setVisible(true);
-                timer.scheduleAtFixedRate(new TimerTask() {
-                    @Override
-                    public void run() {
-                        relationshipComboBox.setMaxWidth(relationshipComboBox.getWidth() + 10);
-                        if (relationshipComboBox.getWidth() >= 151) {
-                            relationshipComboBox.setMaxWidth(151);
-                            cancel();
-                        }
-                    }
-                }, 0, 25);
-            }
+        relationshipComboBox.setItems(FXCollections.observableArrayList(Relationship.values()));
+        relationshipComboBox.setValue(Relationship.EMPLOYEE);
+        relationshipComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+            boolean status = newValue.equals(Relationship.EMPLOYEE);
+            newEmployeeWorkIdTextField.setVisible(status);
+            newEmployeeWorkIdTextField.setManaged(status);
+            employeesWorkIdComboBox.setVisible(!status);
+            employeesWorkIdComboBox.setManaged(!status);
         });
-
 
         menu.getItems().addAll(thumbMenuItem, indexMenuItem, middleMenuItem, ringMenuItem, pinkyMenuItem);
 
-        mainWindowController.setOnCloseRequest(event -> {
-            timer.purge();
-            timer.cancel();
-        });
-
-        new Thread(() -> {
-            try {
-                CloseableHttpClient client = HttpClients.createDefault();
-                HttpGet httpGet = new HttpGet("http://huia.herokuapp.com//getEmployees/");
-                HttpResponse response = client.execute(httpGet);
-                String content = EntityUtils.toString(response.getEntity());
-
-                if (content == null || content.length() < 4) return;
-
-                content = content.substring(1, content.length() - 2);
-                String[] employees = content.split("}, ");
-                Gson gson = new Gson();
-                ObservableList<String> workIdes = FXCollections.observableArrayList();
-                for (String employee : employees) {
-                    employee += "}";
-                    Map map = gson.fromJson(employee, Map.class);
-                    workIdes.add((String) map.get("workId"));
-                }
-                employeesWorkIdComboBox.setItems(workIdes);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-
-        new Thread(() -> {
-            try {
-                CloseableHttpClient client = HttpClients.createDefault();
-                HttpGet httpGet = new HttpGet("http://huia.herokuapp.com//getInstitutes/");
-                HttpResponse response = client.execute(httpGet);
-                String content = EntityUtils.toString(response.getEntity());
-                if (content.length() > 2) {
-                    content = content.substring(2, content.length() - 2);
-                    String[] institutes = content.split("', '");
-                    instituteComboBox.setItems(FXCollections.observableArrayList(institutes));
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
+        loadDatabase();
 
         genderComboBox.setItems(FXCollections.observableArrayList(Gender.values()));
         genderComboBox.getSelectionModel().select(0);
 
-        relationshipComboBox.setItems(FXCollections.observableArrayList(Relationship.values()));
-
         Utils.setFieldRequired(firstNameTextField);
         Utils.setFieldRequired(fatherNameTextField);
-        Utils.setFieldRequired(grandfatherNameTextField);
+//        Utils.setFieldRequired(grandfatherNameTextField);
         Utils.setFieldRequired(familyNameTextField);
 
         Utils.setFieldRequired(genderComboBox);
         Utils.setFieldRequired(instituteComboBox);
         Utils.setFieldRequired(birthdayDatePicker);
-        Utils.setFieldRequired(nationalIdTextField);
+//        Utils.setFieldRequired(nationalIdTextField);
         Utils.setFieldRequired(nationalityTextField);
         Utils.setFieldRequired(relationshipComboBox);
-        Utils.setFieldRequired(employeesWorkIdComboBox);
-        Utils.setFieldRequired(newEmployeeWorkIdTextField);
 
-        contactsContainer.getChildren().forEach(node -> {
-            ContactField field = (ContactField) node;
-            Utils.setFieldRequired(field);
+        newEmployeeWorkIdTextField.setValidators(new RequiredFieldValidator(),
+        new ValidatorBase() {
+            {
+                setMessage(Utils.getBundle().getString("WORK_ID_ALREADY_EXIST"));
+                setIcon(Utils.getErrorIcon());
+            }
+            @Override
+            protected void eval() {
+                hasErrors.set(employeesWorkIdComboBox.getItems().contains(newEmployeeWorkIdTextField.getText()));
+            }
         });
 
         rightHandImageContainer.addEventFilter(MouseEvent.MOUSE_CLICKED, this::onRightHandImageViewClicked);
         leftHandImageContainer.addEventFilter(MouseEvent.MOUSE_CLICKED, this::onLeftHandImageViewClicked);
+
+        setupInputFields();
+
     }
 
-    private void sendToServer(String data) throws Exception {
-        System.out.println(data);
-//        System.out.println(Request.Post("http://huia.herokuapp.com//insert/").bodyString(data, ContentType.APPLICATION_JSON));
-//        Request.Post("http://huia.herokuapp.com//insert/").bodyString(data, ContentType.APPLICATION_JSON).execute();
-
-        CloseableHttpClient client = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost("http://huia.herokuapp.com//insert/");
-
-        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
-        urlParameters.add(new BasicNameValuePair("data", data));
-        urlParameters.add(new BasicNameValuePair("type", "addPerson"));
-
-        httpPost.setEntity(new UrlEncodedFormEntity(urlParameters));
-
-//        StringEntity requestEntity = new StringEntity(data, ContentType.APPLICATION_JSON);
-//        httpPost.setEntity(requestEntity);
-        CloseableHttpResponse response = client.execute(httpPost);
-        System.out.println(response);
-//        client.close();
+    private void loadDatabase() {
+        try {
+            loadInstituteNames();
+            loadWorkIdes();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void onAddContactBtnClicked(ActionEvent actionEvent) {
+    private void loadInstituteNames() throws SQLException {
+        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement("SELECT id, name FROM Institutes;");
+        ResultSet resultSet = pStatement.executeQuery();
+        ObservableList<Institute> institutes = FXCollections.observableArrayList();
+        while (resultSet.next()) {
+            int id = resultSet.getInt("id");
+            String name = resultSet.getString("name");
+            institutes.add(new Institute(id, name));
+        }
+        instituteComboBox.setItems(institutes);
+    }
+
+    private void loadWorkIdes() throws SQLException {
+        ObservableList<String> workIdes = FXCollections.observableArrayList();
+        String[] queries = {"SELECT workId FROM People;", "SELECT workId FROM NewRegistrations;"};
+        for (String query : queries) {
+            PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(query);
+            ResultSet resultSet = pStatement.executeQuery();
+            while (resultSet.next()) {
+                workIdes.add(resultSet.getString("workId"));
+            }
+        }
+        employeesWorkIdComboBox.setItems(workIdes);
+    }
+    public void onAddContactBtnClicked() {
         try {
             FXMLLoader loader = new FXMLLoader(Res.Fxml.ADD_CONTACTS_METHOD_WINDOW.getUrl(), Utils.getBundle());
             Pane rootPane = loader.load();
@@ -364,8 +291,34 @@ public class RegistrationWindowController implements Controllable {
             contactField.addCancelBtnEventFilter(ActionEvent.ANY, event -> contactsContainer.getChildren().remove(contactField));
     }
 
-    public void onEnterBtnClicked(ActionEvent actionEvent) {
+    public void onEnterBtnClicked() {
+        if (validate()) {
+            upload();
+        }
+    }
 
+    private void setupInputFields() {
+        firstNameTextField.setText("");
+        fatherNameTextField.setText("");
+        grandfatherNameTextField.setText("");
+        familyNameTextField.setText("");
+        birthdayDatePicker.setValue(null);
+        genderComboBox.setValue(Gender.MALE);
+        if (instituteComboBox.getValue() == null && instituteComboBox.getItems().size() > 0) {
+            instituteComboBox.setValue(instituteComboBox.getItems().get(0));
+        }
+        if (nationalityTextField.getText() == null || nationalityTextField.getText().isEmpty()) {
+            nationalityTextField.setText(Utils.getI18nString("LIBYAN"));
+        }
+        newEmployeeWorkIdTextField.setText("");
+//        contactsContainer.getChildren().remove(3, contactsContainer.getChildren().size());
+//        contactsContainer.getChildren().forEach(node -> {
+//            ContactField contactField = (ContactField) node;
+//            contactField.getInputField().setText("");
+//        });
+    }
+
+    private boolean validate() {
         boolean validate;
         validate = firstNameTextField.validate();
         validate &= fatherNameTextField.validate();
@@ -377,72 +330,136 @@ public class RegistrationWindowController implements Controllable {
         validate &= birthdayDatePicker.validate();
         validate &= nationalIdTextField.validate();
         validate &= nationalityTextField.validate();
-        if (isEmployeeToggleSwitch.getStatus()) {
+
+        if (relationshipComboBox.getValue().equals(Relationship.EMPLOYEE)) {
             validate &= newEmployeeWorkIdTextField.validate();
         } else {
             validate &= employeesWorkIdComboBox.validate();
-            validate &= relationshipComboBox.validate();
         }
 
         validate &= contactsContainer.getChildren().stream().map(node -> (ContactField) node).map(ContactField::validate).reduce(true, (a, b) -> a && b);
 
-        System.out.println("validate = " + validate);
-        if (!validate) return;
+        return validate;
+    }
 
+    private void upload() {
         new Thread(() -> {
             try {
-                CloseableHttpClient client = HttpClients.createDefault();
-                HttpPost httpPost = new HttpPost("http://huia.herokuapp.com//insert/");
+                final String INSERT_QUERY =
+                        "INSERT INTO NewRegistrations ("
+                                + "firstName,"
+                                + "fatherName,"
+                                + "grandfatherName,"
+                                + "familyName,"
+                                + "nationality,"
+                                + "nationalId,"
+                                + "birthday,"
+                                + "gender,"
+                                + "instituteId,"
+                                + "workId,"
+                                + "relationship,"
+                                + "rightThumbFingerprint,"
+                                + "rightIndexFingerprint,"
+                                + "rightMiddleFingerprint,"
+                                + "rightRingFingerprint,"
+                                + "rightLittleFingerprint,"
+                                + "leftThumbFingerprint,"
+                                + "leftIndexFingerprint,"
+                                + "leftMiddleFingerprint,"
+                                + "leftRingFingerprint,"
+                                + "leftLittleFingerprint,"
+                                + "fingerprintImagesDir,"
+                                + "user,"
+                                + "dateAdded"
+                                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-                List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
-                urlParameters.add(new BasicNameValuePair("firstName", firstNameTextField.getText()));
-                urlParameters.add(new BasicNameValuePair("fatherName", fatherNameTextField.getText()));
-                urlParameters.add(new BasicNameValuePair("grandfatherName", grandfatherNameTextField.getText()));
-                urlParameters.add(new BasicNameValuePair("familyName", familyNameTextField.getText()));
-                urlParameters.add(new BasicNameValuePair("nationality", nationalityTextField.getText()));
-                urlParameters.add(new BasicNameValuePair("nationalId", nationalIdTextField.getText()));
-                urlParameters.add(new BasicNameValuePair("birthday", birthdayDatePicker.getValue().toString()));
-                urlParameters.add(new BasicNameValuePair("gender", genderComboBox.getValue().toString()));
-                urlParameters.add(new BasicNameValuePair("institute", instituteComboBox.getValue()));
-                urlParameters.add(new BasicNameValuePair("workId", newEmployeeWorkIdTextField.getText()));
-                if (!isEmployeeToggleSwitch.getStatus()) {
-                    urlParameters.add(new BasicNameValuePair("relationship", relationshipComboBox.getValue().toString()));
-                }
+                PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(INSERT_QUERY);
 
-                contactsContainer.getChildren().forEach(node -> {
-                    ContactField contactField = (ContactField) node;
-                    urlParameters.add(new BasicNameValuePair(contactField.getType().name(), contactField.getText()));
-                });
+                pStatement.setString(1, firstNameTextField.getText());
+                pStatement.setString(2, fatherNameTextField.getText());
+                pStatement.setString(3, grandfatherNameTextField.getText());
+                pStatement.setString(4, familyNameTextField.getText());
+                pStatement.setString(5, nationalityTextField.getText());
+                pStatement.setString(6, nationalIdTextField.getText());
+                pStatement.setString(7, birthdayDatePicker.getValue().toString());
+                pStatement.setString(8, genderComboBox.getValue().toString());
+                pStatement.setInt(9, instituteComboBox.getValue().getId());
 
-                urlParameters.add(new BasicNameValuePair("rightThumbFinger", getFingerprintTemplate(fingerprintManager.getRightHand().getThumbFinger())));
-                urlParameters.add(new BasicNameValuePair("rightIndexFinger", getFingerprintTemplate(fingerprintManager.getRightHand().getIndexFinger())));
-                urlParameters.add(new BasicNameValuePair("rightMiddleFinger", getFingerprintTemplate(fingerprintManager.getRightHand().getMiddleFinger())));
-                urlParameters.add(new BasicNameValuePair("rightRingFinger", getFingerprintTemplate(fingerprintManager.getRightHand().getRingFinger())));
-                urlParameters.add(new BasicNameValuePair("rightPinkyFinger", getFingerprintTemplate(fingerprintManager.getRightHand().getPinkyFinger())));
+                String workId = relationshipComboBox.getValue().equals(Relationship.EMPLOYEE)? newEmployeeWorkIdTextField.getText() : employeesWorkIdComboBox.getValue();
+                pStatement.setString(10, workId);
+                pStatement.setString(11, relationshipComboBox.getValue().toString());
 
-                urlParameters.add(new BasicNameValuePair("leftThumbFinger", getFingerprintTemplate(fingerprintManager.getLeftHand().getThumbFinger())));
-                urlParameters.add(new BasicNameValuePair("leftIndexFinger", getFingerprintTemplate(fingerprintManager.getLeftHand().getIndexFinger())));
-                urlParameters.add(new BasicNameValuePair("leftMiddleFinger", getFingerprintTemplate(fingerprintManager.getLeftHand().getMiddleFinger())));
-                urlParameters.add(new BasicNameValuePair("leftRingFinger", getFingerprintTemplate(fingerprintManager.getLeftHand().getRingFinger())));
-                urlParameters.add(new BasicNameValuePair("leftPinkyFinger", getFingerprintTemplate(fingerprintManager.getLeftHand().getPinkyFinger())));
+                pStatement.setString(12, getFingerprintTemplate(fingerprintManager.getRightHand().getThumbFinger()));
+                pStatement.setString(13, getFingerprintTemplate(fingerprintManager.getRightHand().getIndexFinger()));
+                pStatement.setString(14, getFingerprintTemplate(fingerprintManager.getRightHand().getMiddleFinger()));
+                pStatement.setString(15, getFingerprintTemplate(fingerprintManager.getRightHand().getRingFinger()));
+                pStatement.setString(16, getFingerprintTemplate(fingerprintManager.getRightHand().getLittleFinger()));
 
-                System.out.println(urlParameters);
+                pStatement.setString(17, getFingerprintTemplate(fingerprintManager.getLeftHand().getThumbFinger()));
+                pStatement.setString(18, getFingerprintTemplate(fingerprintManager.getLeftHand().getIndexFinger()));
+                pStatement.setString(19, getFingerprintTemplate(fingerprintManager.getLeftHand().getMiddleFinger()));
+                pStatement.setString(20, getFingerprintTemplate(fingerprintManager.getLeftHand().getRingFinger()));
+                pStatement.setString(21, getFingerprintTemplate(fingerprintManager.getLeftHand().getLittleFinger()));
 
-                httpPost.setEntity(new UrlEncodedFormEntity(urlParameters, Charsets.UTF_8));
+                String imagesDir = DataStorage.getNewRegFingerprintDir(workId);
+                DataStorage.saveNewFingerprintImages(workId, fingerprintManager.getRightHand(), fingerprintManager.getLeftHand());
+                pStatement.setString(22, imagesDir);
 
-                HttpResponse response = client.execute(httpPost);
-                HttpEntity entity = response.getEntity();
-                String content = EntityUtils.toString(entity);
-                EntityUtils.consume(entity);
+                pStatement.setString(23, Auth.getCurrentUser().getUsername());
+                pStatement.setString(24, LocalDate.now().toString());
 
-                System.out.println("Content: " + content);
-            } catch (IOException e) {
+                pStatement.executeUpdate();
+
+                updateWorkIdes(workId);
+
+                updateAuthTable(constructSubscriber());
+
+                setupInputFields();
+
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
         }, "UPLOAD-THREAD").start();
     }
 
-    public String getFingerprintTemplate(Finger finger) {
+    private Subscriber constructSubscriber() {
+        Subscriber subscriber = new Subscriber();
+        subscriber.setFirstName(firstNameTextField.getText());
+        subscriber.setFatherName(fatherNameTextField.getText());
+        subscriber.setGrandfatherName(grandfatherNameTextField.getText());
+        subscriber.setFamilyName(familyNameTextField.getText());
+        subscriber.setNationality(nationalityTextField.getText());
+        subscriber.setNationalId(nationalIdTextField.getText());
+        subscriber.setBirthday(birthdayDatePicker.getValue());
+        subscriber.setGender(genderComboBox.getValue());
+
+        subscriber.setFirstName(firstNameTextField.getText());
+
+        String workId = relationshipComboBox.getValue().equals(Relationship.EMPLOYEE)? newEmployeeWorkIdTextField.getText() : employeesWorkIdComboBox.getValue();
+        subscriber.setWorkId(workId);
+        subscriber.setRelationship(relationshipComboBox.getValue());
+
+//        subscriber.setFirstName(firstNameTextField.getText());
+        return subscriber;
+    }
+
+    private void updateAuthTable(Subscriber subscriber) {
+        MainWindowController mwc = Windows.MAIN_WINDOW.getController();
+        FilteredList<Subscriber> oldFilteredSubscribers = (FilteredList<Subscriber>) mwc.getAuthenticationWindowController().tableView.getItems();
+        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(oldFilteredSubscribers.getSource());
+        subscribers.add(subscriber);
+        System.out.println(subscribers.size() + " subscriber");
+        mwc.getAuthenticationWindowController().addToTableView(subscribers);
+    }
+
+    private void updateWorkIdes(String newWorkId) {
+        ObservableSet<String> workIdes = FXCollections.observableSet();
+        workIdes.addAll(employeesWorkIdComboBox.getItems());
+        workIdes.add(newWorkId);
+        employeesWorkIdComboBox.setItems(FXCollections.observableArrayList(workIdes));
+    }
+
+    private String getFingerprintTemplate(Finger finger) {
         if (finger == null) return "";
         StringBuilder stringTemplate = new StringBuilder();
         for (byte b : finger.getFingerprintTemplate()) {
@@ -451,70 +468,35 @@ public class RegistrationWindowController implements Controllable {
         return stringTemplate.toString();
     }
 
-    public void onLogoutBtnClicked(ActionEvent actionEvent) {
+    public void onLogoutBtnClicked() {
         mainWindowController.lock(true);
     }
 
-    public void onRightHandClicked(ActionEvent event) {
-        sensor.setOnCaptureListener((imageBuffer, template) -> {
-            try {
-                Files.deleteIfExists(new File("fingerprint.bmp").toPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-        sensor.open();
-    }
+//    public void onRightHandClicked(ActionEvent event) {
+//        FingerprintManager.SENSOR.setOnCaptureListener((imageBuffer, template) -> {
+//            try {
+//                Files.deleteIfExists(new File("fingerprint.bmp").toPath());
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        });
+//    }
 
-    public void onLeftHandClicked(ActionEvent event) {
-        sensor.setOnCaptureListener((imageBuffer, template) -> {
-            try {
-                Files.deleteIfExists(new File("fingerprint.bmp").toPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-        sensor.open();
-    }
+//    public void onLeftHandClicked(ActionEvent event) {
+//        FingerprintManager.SENSOR.setOnCaptureListener((imageBuffer, template) -> {
+//            try {
+//                Files.deleteIfExists(new File("fingerprint.bmp").toPath());
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        });
+//    }
 
-    public void onZoomBtnClicked(ActionEvent event) {
-        isZoomed = !isZoomed;
-        double initWidth = rightHandImageView.getFitWidth();
-
-        final double zoomRatio = isZoomed ? 1.1 : 0.9;
-        if (isZoomed) {
-            zoomIconView.setIcon(FontAwesomeIcon.SEARCH_MINUS);
-        } else {
-            zoomIconView.setIcon(FontAwesomeIcon.SEARCH_PLUS);
-        }
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                Platform.runLater(() -> {
-                    rightHandImageView.setFitWidth(zoomRatio * rightHandImageView.getFitWidth());
-                    rightHandImageView.setFitHeight(zoomRatio * rightHandImageView.getFitHeight());
-
-                    leftHandImageView.setFitWidth(zoomRatio * leftHandImageView.getFitWidth());
-                    leftHandImageView.setFitHeight(zoomRatio * leftHandImageView.getFitHeight());
-                });
-                if (isZoomed) {
-                    if (rightHandImageView.getFitWidth() > 2 * initWidth) {
-                        cancel();
-                    }
-                } else {
-                    if (rightHandImageView.getFitWidth() < initWidth / 2) {
-                        cancel();
-                    }
-                }
-            }
-        }, 0, 100);
-    }
-
-    public void onRightHandImageViewClicked(MouseEvent mouseEvent) {
+    private void onRightHandImageViewClicked(MouseEvent mouseEvent) {
         onHandClicked(mouseEvent, rightThumbFingerImageView, rightIndexFingerImageView, rightMiddleFingerImageView, rightRingFingerImageView, rightPinkyFingerImageView, rightThumbFingerTrueImageView, rightIndexFingerTrueImageView, rightMiddleFingerTrueImageView, rightRingFingerTrueImageView, rightPinkyFingerTrueImageView, HandType.RIGHT);
     }
 
-    public void onLeftHandImageViewClicked(MouseEvent mouseEvent) {
+    private void onLeftHandImageViewClicked(MouseEvent mouseEvent) {
         onHandClicked(mouseEvent, leftThumbFingerImageView, leftIndexFingerImageView, leftMiddleFingerImageView, leftRingFingerImageView, leftPinkyFingerImageView, leftThumbFingerTrueImageView, leftIndexFingerTrueImageView, leftMiddleFingerTrueImageView, leftRingFingerTrueImageView, leftPinkyFingerTrueImageView, HandType.LEFT);
     }
 
@@ -605,7 +587,7 @@ public class RegistrationWindowController implements Controllable {
             checkFingers();
 
             fingerprintNoteLabel.setText(Utils.getI18nString("ENSURE_REGISTER"));
-            fingerprintManager.getSensor().setOnCaptureListener((imageBuffer, template) -> {
+            FingerprintManager.getSensor().addOnCaptureListener((imageBuffer, template) -> {
                 if (finger1.get() == null) {
                     finger1.set(new Finger(imageBuffer, template));
                     Platform.runLater(() -> fingerprintNoteLabel.setText(Utils.getI18nString("ENSURE_REGISTER2")));
@@ -615,7 +597,6 @@ public class RegistrationWindowController implements Controllable {
                 } else if (finger3.get() == null) {
                     finger3.set(new Finger(imageBuffer, template));
                     Platform.runLater(() -> fingerprintNoteLabel.setText(Utils.getI18nString("ENSURE_REGISTER")));
-                    pinkingTimerTask.setFinished(true);
                     fingerIV.get().setVisible(true);
                     trueFingerIV.get().setVisible(true);
 
@@ -623,26 +604,13 @@ public class RegistrationWindowController implements Controllable {
                 }
             });
             try {
-                if (!fingerprintManager.getSensor().isOpened())
-                    fingerprintManager.getSensor().open();
+                if (FingerprintManager.getSensor().isClosed())
+                    FingerprintManager.getSensor().open();
             } catch (Throwable throwable) {
 //                error.printStackTrace();
             }
 
-            if (pinkingTimerTask != null) {
-                pinkingTimerTask.setFinished(true);
-            }
-            pinkingTimerTask = new InterruptableTimerTask() {
-                @Override
-                public void run() {
-                    if (isFinished()) {
-                        cancel();
-                        return;
-                    }
-                    fingerIV.get().setVisible(!fingerIV.get().isVisible());
-                }
-            };
-            timer.scheduleAtFixedRate(pinkingTimerTask, 0, 1000);
+            executorService.scheduleAtFixedRate(() -> fingerIV.get().setVisible(!fingerIV.get().isVisible()), 0, 1, TimeUnit.SECONDS);
         };
     }
 
@@ -665,8 +633,8 @@ public class RegistrationWindowController implements Controllable {
         rightRingFingerImageView.setVisible(fingerprintManager.getRightHand().getRingFinger() != null);
         rightRingFingerTrueImageView.setVisible(fingerprintManager.getRightHand().getRingFinger() != null);
 
-        rightPinkyFingerImageView.setVisible(fingerprintManager.getRightHand().getPinkyFinger() != null);
-        rightPinkyFingerTrueImageView.setVisible(fingerprintManager.getRightHand().getPinkyFinger() != null);
+        rightPinkyFingerImageView.setVisible(fingerprintManager.getRightHand().getLittleFinger() != null);
+        rightPinkyFingerTrueImageView.setVisible(fingerprintManager.getRightHand().getLittleFinger() != null);
 
         leftThumbFingerImageView.setVisible(fingerprintManager.getLeftHand().getThumbFinger() != null);
         leftThumbFingerTrueImageView.setVisible(fingerprintManager.getLeftHand().getThumbFinger() != null);
@@ -680,7 +648,7 @@ public class RegistrationWindowController implements Controllable {
         leftRingFingerImageView.setVisible(fingerprintManager.getLeftHand().getRingFinger() != null);
         leftRingFingerTrueImageView.setVisible(fingerprintManager.getLeftHand().getRingFinger() != null);
 
-        leftPinkyFingerImageView.setVisible(fingerprintManager.getLeftHand().getPinkyFinger() != null);
-        leftPinkyFingerTrueImageView.setVisible(fingerprintManager.getLeftHand().getPinkyFinger() != null);
+        leftPinkyFingerImageView.setVisible(fingerprintManager.getLeftHand().getLittleFinger() != null);
+        leftPinkyFingerTrueImageView.setVisible(fingerprintManager.getLeftHand().getLittleFinger() != null);
     }
 }

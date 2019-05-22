@@ -45,6 +45,15 @@ public class ToggleSwitch extends Control {
         container.setAlignment(Pos.CENTER_LEFT);
         getChildren().add(container);
 
+        background.widthProperty().bind(container.widthProperty());
+        background.heightProperty().bind(container.heightProperty());
+
+        background.heightProperty().addListener((observable, oldValue, newValue) -> background.setStyle(
+                        "-fx-arc-width: " + newValue + ";" +
+                        "-fx-arc-height: " + newValue + ";"));
+
+        container.heightProperty().addListener((observable, oldValue, newValue) -> trigger.setRadius(newValue.doubleValue() / 2 - 1));
+
         setAnimation();
 
         Platform.runLater(() -> statusChangeListener.changed(null, null, getStatus()));

@@ -14,8 +14,16 @@
     -fx-background-color: transparent;
 }
 
-.jfx-combo-box .list-cell:hover,
-.jfx-combo-box .list-cell:selected {
+.jfx-combo-box .jfx-list-cell .jfx-rippler {
+    /*-jfx-rippler-fill: -rq-accent-unfocus;*/
+    -jfx-rippler-disabled: true;
+}
+
+.jfx-combo-box .list-view .jfx-list-cell:hover {
+    -fx-background-color: derive(-rq-accent-unfocus, 50%);
+}
+
+.jfx-combo-box .list-view .jfx-list-cell:selected {
     -fx-background-color: -rq-accent-unfocus;
     -fx-font-weight: bold;
     /*-fx-text-fill: white;*/

@@ -1,19 +1,22 @@
 package ly.rqmana.huia.java.util;
 
-import javafx.stage.StageStyle;
+import ly.rqmana.huia.java.controls.alerts.AlertAction;
+import ly.rqmana.huia.java.controls.alerts.Alerts;
+import ly.rqmana.huia.java.controls.alerts.InfoAlert;
 
 public class Windows {
 
-    public final static Window MAIN_WINDOW = new Window(Res.Fxml.MAIN_WINDOW);
-    public static final Window INSTALLATION_WINDOW = new Window(Res.Fxml.INSTALLATION_WINDOW);
+    public static final Window MAIN_WINDOW = new Window(Res.Fxml.MAIN_WINDOW);
+
+    public static InfoAlert NETWORK_ERROR_ALERT;
 
     static {
         MAIN_WINDOW.setTitle(Utils.getI18nString("APP_NAME"));
         MAIN_WINDOW.setMinWidth(1000);
         MAIN_WINDOW.setMinHeight(700);
 
-//        INSTALLATION_WINDOW.initStyle(StageStyle.UNDECORATED);
-        INSTALLATION_WINDOW.setResizable(false);
-
+        MAIN_WINDOW.addOnShown(event -> {
+            NETWORK_ERROR_ALERT = Alerts.getErrorAlert(Windows.MAIN_WINDOW, Utils.getI18nString("NETWORK_ERROR"), Utils.getI18nString("NO_INTERNET"), new Exception(), AlertAction.OK);
+        });
     }
 }

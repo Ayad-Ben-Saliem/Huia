@@ -18,7 +18,7 @@
         </center>
         <bottom>
             <HBox BorderPane.alignment="CENTER">
-                <JFXButton fx:id="registrationBan" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="Registration Page" HBox.hgrow="ALWAYS">
+                <JFXButton fx:id="registrationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="Registration Page" HBox.hgrow="ALWAYS">
                <HBox.margin>
                   <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
                </HBox.margin></JFXButton>

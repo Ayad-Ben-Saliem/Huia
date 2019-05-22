@@ -6,7 +6,7 @@ public class Hand {
     private Finger indexFinger;
     private Finger middleFinger;
     private Finger ringFinger;
-    private Finger pinkyFinger;
+    private Finger littleFinger;
 
     public Finger getThumbFinger() {
         return thumbFinger;
@@ -72,19 +72,19 @@ public class Hand {
         this.ringFinger = new Finger(imageBuffer1, imageBuffer2, imageBuffer3, template);
     }
 
-    public Finger getPinkyFinger() {
-        return pinkyFinger;
+    public Finger getLittleFinger() {
+        return littleFinger;
     }
 
-    public void setPinkyFinger(Finger pinkyFinger) {
-        this.pinkyFinger = pinkyFinger;
+    public void setLittleFinger(Finger littleFinger) {
+        this.littleFinger = littleFinger;
     }
 
     public void setPinkyFinger(byte[] imageBuffer, byte[] template) {
-        this.pinkyFinger = new Finger(imageBuffer, template);
+        this.littleFinger = new Finger(imageBuffer, template);
     }
 
     public void setPinkyFinger(byte[] imageBuffer1, byte[] imageBuffer2, byte[] imageBuffer3, byte[] template) {
-        this.pinkyFinger = new Finger(imageBuffer1, imageBuffer2, imageBuffer3, template);
+        this.littleFinger = new Finger(imageBuffer1, imageBuffer2, imageBuffer3, template);
     }
 }

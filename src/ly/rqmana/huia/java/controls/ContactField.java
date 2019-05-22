@@ -101,7 +101,6 @@ public class ContactField extends Control {
         getCancelBtn().setFocusTraversable(true);
 
 //        getCancelBtn().focusedProperty().addListener((observable, oldValue, newValue) -> {
-//            System.out.println("Here");
 //            if (newValue && !isCancelable()) {
 //                getInputField().requestFocus();
 //            }

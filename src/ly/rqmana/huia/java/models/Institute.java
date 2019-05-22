@@ -2,9 +2,24 @@ package ly.rqmana.huia.java.models;
 
 public class Institute {
 
+    private final int id;
     private String name;
-    private String address;
-    private Location location;
+    private String description;
+
+    public Institute(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public Institute(int id, String name, String description) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+    }
+
+    public int getId() {
+        return id;
+    }
 
     public String getName() {
         return name;
@@ -14,19 +29,16 @@ public class Institute {
         this.name = name;
     }
 
-    public String getAddress() {
-        return address;
+    public String getDescription() {
+        return description;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public Location getLocation() {
-        return location;
-    }
-
-    public void setLocation(Location location) {
-        this.location = location;
+    @Override
+    public String toString() {
+        return name;
     }
 }

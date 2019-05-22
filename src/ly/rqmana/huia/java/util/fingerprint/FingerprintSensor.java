@@ -6,8 +6,8 @@ import com.zkteco.biometric.FingerprintSensorEx;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class FingerprintSensor {
 
@@ -45,78 +45,78 @@ public class FingerprintSensor {
     private volatile boolean mbStop = true;
     private long deviceHandle = 0;
     private long mhDB = 0;
-    private WorkThread workThread = null;
 
     public void open() {
-        if (deviceHandle != 0) { // Already opened
-            System.out.println("Please close device first!");
-            return;
-        }
+        if (System.getProperty("os.name").contains("Windows")) {
+            if (deviceHandle != 0) { // Already opened
+                System.out.println("Hamster DX already opened, please close device first!");
+                return;
+            }
 
-        // Initialize
-        cbRegTemp = 0;
-        bRegister = false;
-        bIdentify = false;
-        iFid = 1;
-        enroll_idx = 0;
-        if (FingerprintSensorEx.Init() != FingerprintSensorErrorCode.ZKFP_ERR_OK) {
-            System.out.println("Init failed!");
-            return;
-        }
-        int deviceCount = FingerprintSensorEx.GetDeviceCount();
-        if (deviceCount < 0) {
-            System.out.println("No devices connected!");
-            freeSensor();
-            return;
-        }
-        if ((deviceHandle = FingerprintSensorEx.OpenDevice(0)) == 0) {
-            System.out.println("Open device fail, index = " + deviceCount + "!");
-            freeSensor();
-            return;
-        }
-        if ((mhDB = FingerprintSensorEx.DBInit()) == 0) {
-            System.out.println("Init DB fail, index = " + deviceCount + "!");
-            freeSensor();
-            return;
-        }
+            // Initialize
+            cbRegTemp = 0;
+            bRegister = false;
+            bIdentify = false;
+            iFid = 1;
+            enroll_idx = 0;
 
-        //For ISO/Ansi
-        int nFmt = 0;	//Ansi
+            if (FingerprintSensorEx.Init() != FingerprintSensorErrorCode.ZKFP_ERR_OK) {
+                System.out.println("Init failed!");
+                return;
+            }
+            int deviceCount = FingerprintSensorEx.GetDeviceCount();
+            if (deviceCount < 0) {
+                System.out.println("No devices connected!");
+                freeSensor();
+                return;
+            }
+            if ((deviceHandle = FingerprintSensorEx.OpenDevice(0)) == 0) {
+                System.out.println("Open device fail, index = " + deviceCount + "!");
+                freeSensor();
+                return;
+            }
+            if ((mhDB = FingerprintSensorEx.DBInit()) == 0) {
+                System.out.println("Init DB fail, index = " + deviceCount + "!");
+                freeSensor();
+                return;
+            }
+
+            //For ISO/Ansi
+            int nFmt = 0;    //Ansi
 //        if (radioISO.isSelected()) {
 //            nFmt = 1;	//ISO
 //        }
-        FingerprintSensorEx.DBSetParameter(mhDB,  ParameterCode.ANSI_ISO, nFmt);
-        FingerprintSensorEx.DBSetParameter(mhDB,  5010, nFmt);
-        //For ISO/Ansi End
+            FingerprintSensorEx.DBSetParameter(mhDB, ParameterCode.ANSI_ISO, nFmt);
+            FingerprintSensorEx.DBSetParameter(mhDB, 5010, nFmt);
+            //For ISO/Ansi End
 
-        //set fakefun offs
+            //set fakefun offs
 
 //        FingerprintSensorEx.SetParameters(deviceHandle, ParameterCode.ANTI_FAKE, changeByte(nFakeFunOn), 4);
-        //Set DPI
-        int nDPI = 750;
-        FingerprintSensorEx.SetParameters(deviceHandle, ParameterCode.IMAGE_DPI, changeByte(nDPI), 4);
+            //Set DPI
+            int nDPI = 750;
+            FingerprintSensorEx.SetParameters(deviceHandle, ParameterCode.IMAGE_DPI, changeByte(nDPI), 4);
 
-        byte[] paramValue = new byte[4];
-        int[] size = new int[1];
-        //GetFakeOn
-        size[0] = 4;
-        FingerprintSensorEx.GetParameters(deviceHandle, ParameterCode.ANTI_FAKE, paramValue, size);
+            byte[] paramValue = new byte[4];
+            int[] size = new int[1];
+            //GetFakeOn
+            size[0] = 4;
+            FingerprintSensorEx.GetParameters(deviceHandle, ParameterCode.ANTI_FAKE, paramValue, size);
 //        nFakeFunOn = byteArrayToInt(paramValue);
 
-        size[0] = 4;
-        FingerprintSensorEx.GetParameters(deviceHandle, ParameterCode.IMAGE_WIDTH, paramValue, size);
-        fingerprintWidth = byteArrayToInt(paramValue);
-        size[0] = 4;
-        FingerprintSensorEx.GetParameters(deviceHandle, ParameterCode.IMAGE_HEIGHT, paramValue, size);
-        fingerprintHeight = byteArrayToInt(paramValue);
-        // width = fingerprintSensor.getImageWidth();
-        // height = fingerprintSensor.getImageHeight();
-        imageBuffer = new byte[fingerprintWidth * fingerprintHeight];
-        mbStop = false;
-        WorkThread workThread = new WorkThread();
-//        workThread.start();
-        startCapturing();
-        System.out.println("Open succ!");
+            size[0] = 4;
+            FingerprintSensorEx.GetParameters(deviceHandle, ParameterCode.IMAGE_WIDTH, paramValue, size);
+            fingerprintWidth = byteArrayToInt(paramValue);
+            size[0] = 4;
+            FingerprintSensorEx.GetParameters(deviceHandle, ParameterCode.IMAGE_HEIGHT, paramValue, size);
+            fingerprintHeight = byteArrayToInt(paramValue);
+            // width = fingerprintSensor.getImageWidth();
+            // height = fingerprintSensor.getImageHeight();
+            imageBuffer = new byte[fingerprintWidth * fingerprintHeight];
+            mbStop = false;
+            startCapturing();
+            System.out.println("Open succ!");
+        }
     }
 
     public void close() {
@@ -326,54 +326,24 @@ public class FingerprintSensor {
     }
 
     public void startCapturing() {
-
-        new Timer().scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if (FingerprintSensorEx.AcquireFingerprint(deviceHandle, imageBuffer, template, new int[] {2048}) == 0) {
-                    onCaptureListeners.forEach(onCaptureListener -> {
-                        onCaptureDone(imageBuffer.clone());
-//                        onExtractDone(template.clone(), templateLen);
-                        onCaptureListener.onCapture(imageBuffer.clone(), template.clone());
-                    });
-                }
+        int[] size = {2048};
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+            if (FingerprintSensorEx.AcquireFingerprint(deviceHandle, imageBuffer, template, size) == 0) {
+                onCaptureListeners.forEach(onCaptureListener -> {
+                    onCaptureDone(imageBuffer.clone());
+                    onExtractDone(template.clone(), size[0]);
+                    onCaptureListener.onCapture(imageBuffer.clone(), template.clone());
+                });
             }
-        }, 0, 500);
+        }, 0, 100, TimeUnit.MILLISECONDS);
     }
 
     public boolean isOpened() {
         return deviceHandle != 0;
     }
 
-    private class WorkThread extends Thread {
-        @Override
-        public void run() {
-            int ret = 0;
-            while (!mbStop) {
-//                System.out.println("From worker: (deviceHandle: " + deviceHandle + ", imageBuffer: " + imageBuffer.length + ", template: " + template.length);
-                if ((ret = FingerprintSensorEx.AcquireFingerprint(deviceHandle, imageBuffer, template, new int[] {templateLen})) == 0) {
-                    byte[] paramValue = new byte[4];
-                    int[] size = new int[1];
-                    size[0] = 4;
-                    int nFakeStatus = 0;
-                    //GetFakeStatus
-                    ret = FingerprintSensorEx.GetParameters(deviceHandle, 2004, paramValue, size);
-                    nFakeStatus = byteArrayToInt(paramValue);
-                    System.out.println("ret = "+ ret +",nFakeStatus=" + nFakeStatus);
-                    if (ret == 0 && (byte)(nFakeStatus & 31) != 31) {
-                        System.out.println("Is a fake-finger?");
-                        return;
-                    }
-                    onCaptureDone(imageBuffer);
-                    onExtractDone(template, templateLen);
-                }
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+    public boolean isClosed() {
+        return !isOpened();
     }
 
     private void onCaptureDone(byte[] imgBuf) {
@@ -384,7 +354,7 @@ public class FingerprintSensor {
         }
     }
 
-    public byte[] merge(byte[] ... templates) {
+    byte[] merge(byte[]... templates) {
         byte[] resultTemplate = new byte[2048];
         if (FingerprintSensorEx.DBMerge(mhDB, templates[0], templates[1], templates[2], resultTemplate, new int[]{2048}) == 0 ) {
             return resultTemplate;
@@ -392,7 +362,7 @@ public class FingerprintSensor {
         return null;
     }
 
-    private void onExtractDone(byte[] template, int len) {
+    private void onExtractDone(byte[] template, int size) {
         if (bRegister) {
             int[] fid = new int[1];
             int[] score = new int [1];

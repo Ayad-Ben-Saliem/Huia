@@ -15,6 +15,7 @@ public final class Res {
 
     // Temporary
     private final static String INSTALLATION = "installation/";
+    private final static String ALERTS = "alerts/";
 
     private final static String AUTH = FXML + "auth/";
 
@@ -27,14 +28,20 @@ public final class Res {
         MAIN_WINDOW ("MainWindow.fxml"),
         HOME_WINDOW ("HomeWindow.fxml"),
         REGISTRATION_WINDOW("RegistrationWindow.fxml"),
-        LOGIN_WINDOW("LoginWindow.fxml"),
+        LOGIN_DIALOG("LoginDialog.fxml"),
         SIGN_UP_WINDOW("SignUpWindow.fxml"),
         AUTHENTICATION("AuthenticationWindow.fxml"),
         ADD_CONTACTS_METHOD_WINDOW("AddContactMethodDialog.fxml"),
         INSTALLATION_WINDOW(INSTALLATION + "InstallationWindow.fxml"),
         LICENSE_TERMS_PAGE(INSTALLATION + "License&TermsPage.fxml"),
         INSTALLATION_DIR_PAGE(INSTALLATION + "InstallationDirectoryPage.fxml"),
-        HEALTH_CENTER_INFO_PAGE(INSTALLATION + "HealthCenterInfoPage.fxml")
+        HEALTH_CENTER_INFO_PAGE(INSTALLATION + "HealthCenterInfoPage.fxml"),
+        INFO_DIALOG("AlertDialog.fxml"),
+        ERROR_DIALOG("AlertDialog.fxml"),
+        WARNING_DIALOG("AlertDialog.fxml"),
+
+        CUSTOM_ALERT_LAYOUT(ALERTS + "CustomAlertLayout.fxml"),
+        INFO_ALERT_DETAILS_LAYOUT(ALERTS + "InfoAlertDetailsLayout.fxml")
         ;
         private final String url;
         Fxml(String url){
@@ -53,16 +60,17 @@ public final class Res {
 
     public enum Stylesheet {
 
-        TEMPLATES(CSS + "templates.css"),
-        THEME(CSS + "theme.css"),
-        DEFAULT_CUSTOM_COMBO_BOX_STYLE(CSS + "default-custom-combo-box-style.css"),
-        DEFAULT_TOGGLE_SWITCH_STYLE(CSS + "default-toggle-switch-style.css"),
-        DEFAULT_CONTACT_FIELD_STYLE(CSS + "default-contact-field-style.css"),
+        TEMPLATES("templates.css"),
+        THEME("theme.css"),
+        DEFAULT_CUSTOM_COMBO_BOX_STYLE("default-custom-combo-box-style.css"),
+        DEFAULT_TOGGLE_SWITCH_STYLE("default-toggle-switch-style.css"),
+        DEFAULT_CONTACT_FIELD_STYLE("default-contact-field-style.css"),
+        DEFAULT_CUSTOM_ALERT_STYLE("default-custom-alert-style.css")
         ;
 
         private final String url;
         Stylesheet(String url) {
-            this.url = url;
+            this.url = CSS + url;
         }
 
         @NotNull

@@ -2,6 +2,7 @@ package ly.rqmana.huia.java.controls;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
+import com.jfoenix.controls.JFXListCell;
 import com.jfoenix.converters.ButtonTypeConverter;
 import com.jfoenix.validation.base.ValidatorBase;
 import com.sun.javafx.css.converters.BooleanConverter;
@@ -21,6 +22,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.util.Callback;
 import ly.rqmana.huia.java.util.Res;
 
 import java.util.ArrayList;
@@ -192,6 +194,25 @@ public class CustomComboBox<T> extends Control {
 
         getChildren().add(getContainer());
 
+        Callback<Boolean, JFXListCell<T>> callback = param -> {
+            return new JFXListCell<T>() {
+                @Override
+                protected void updateItem(T item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setText(null);
+                    } else {
+                        setText(item.toString());
+                    }
+                    if (param) {
+                        setVisible(!empty);
+                    }
+                }
+            };
+        };
+
+        getComboBox().setButtonCell(callback.call(true));
+        getComboBox().setCellFactory( param -> callback.call(false) );
 
         initializeStyle();
     }
