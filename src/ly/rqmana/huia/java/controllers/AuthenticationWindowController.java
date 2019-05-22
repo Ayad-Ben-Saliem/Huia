@@ -129,8 +129,7 @@ public class AuthenticationWindowController implements Controllable {
 
     private void loadDataFromDatabase() {
         try {
-            String connectionUrl = "jdbc:sqlite:/Users/ayad/PycharmProjects/SQLserver2SQLie/FingerprintData.db";
-            try (Connection connection = DriverManager.getConnection(connectionUrl)) {
+            try (Connection connection = DriverManager.getConnection(DAO.getDataDBUrl())) {
                 String query = "SELECT *  FROM Fingerprint";
                 try (Statement statement = connection.createStatement()) {
                     ResultSet resultSet = statement.executeQuery(query);

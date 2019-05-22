@@ -22,7 +22,6 @@ public class DataStorage {
     public static final String UNIX_DATA_DIR = System.getProperty("user.home") + "/.Huia/";
     public static final String MAC_DATA_DIR = System.getProperty("user.home") + "/Huia/";
 
-    public static final String DB_NAME = "Huia.db";
 
     public static final String FINGERPRINTS_DIR_NAME = "Fingerprints/";
     public static final String NEW_REG_DIR_NAME = "New Registrations/";
@@ -37,10 +36,6 @@ public class DataStorage {
             return MAC_DATA_DIR;
         }
         return null;
-    }
-
-    public static String getDBUrl() {
-        return "jdbc:sqlite:" + getDataDir() + DB_NAME;
     }
 
     public static String getFingerprintsDir() {

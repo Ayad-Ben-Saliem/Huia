@@ -14,7 +14,7 @@ public class DAO {
 
     static {
         try {
-            DB_CONNECTION = DriverManager.getConnection(DataStorage.getDBUrl());
+            DB_CONNECTION = DriverManager.getConnection(getDBUrl());
             STATEMENT = DB_CONNECTION.createStatement();
 
             String createQuery = "CREATE TABLE IF NOT EXISTS Users("
@@ -125,5 +125,19 @@ public class DAO {
             throw new RuntimeException(e);
         }
     }
+
+    public static final String DB_NAME = "Huia.db";
+
+    public static String getDBUrl() {
+        return "jdbc:sqlite:" + DataStorage.getDataDir() + DB_NAME;
+    }
+
+    public static final String DATA_DB_NAME = "FingerprintData.db";
+
+    public static String getDataDBUrl() {
+        return "jdbc:sqlite:" + DataStorage.getDataDir() + DATA_DB_NAME;
+    }
+
+
 
 }
