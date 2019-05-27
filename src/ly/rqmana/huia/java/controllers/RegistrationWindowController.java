@@ -21,6 +21,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.db.DAO;
@@ -33,6 +34,7 @@ import ly.rqmana.huia.java.storage.DataStorage;
 import ly.rqmana.huia.java.util.*;
 import ly.rqmana.huia.java.util.fingerprint.Finger;
 import ly.rqmana.huia.java.util.fingerprint.FingerprintManager;
+import ly.rqmana.huia.java.util.fingerprint.FingerprintSensor;
 
 import java.io.IOException;
 import java.net.URL;
@@ -41,8 +43,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -136,7 +137,8 @@ public class RegistrationWindowController implements Controllable {
     private final MenuItem pinkyMenuItem = new MenuItem("Pinky Finger");
 
     private final FingerprintManager fingerprintManager = new FingerprintManager();
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(10);
+    private FingerprintSensor.OnCaptureListener onCaptureListener;
+    ScheduledFuture<?> scheduledFuture;
 
     private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
 
@@ -188,7 +190,6 @@ public class RegistrationWindowController implements Controllable {
         leftHandImageContainer.addEventFilter(MouseEvent.MOUSE_CLICKED, this::onLeftHandImageViewClicked);
 
         setupInputFields();
-
     }
 
     private void loadDatabase() {
@@ -213,7 +214,7 @@ public class RegistrationWindowController implements Controllable {
     }
 
     private void loadWorkIdes() throws SQLException {
-        ObservableList<String> workIdes = FXCollections.observableArrayList();
+        ObservableSet<String> workIdes = FXCollections.observableSet();
         String[] queries = {"SELECT workId FROM People;", "SELECT workId FROM NewRegistrations;"};
         for (String query : queries) {
             PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(query);
@@ -222,7 +223,7 @@ public class RegistrationWindowController implements Controllable {
                 workIdes.add(resultSet.getString("workId"));
             }
         }
-        employeesWorkIdComboBox.setItems(workIdes);
+        employeesWorkIdComboBox.setItems(FXCollections.observableArrayList(workIdes));
     }
     public void onAddContactBtnClicked() {
         try {
@@ -389,19 +390,20 @@ public class RegistrationWindowController implements Controllable {
                 pStatement.setString(10, workId);
                 pStatement.setString(11, relationshipComboBox.getValue().toString());
 
-                pStatement.setString(12, getFingerprintTemplate(fingerprintManager.getRightHand().getThumbFinger()));
-                pStatement.setString(13, getFingerprintTemplate(fingerprintManager.getRightHand().getIndexFinger()));
-                pStatement.setString(14, getFingerprintTemplate(fingerprintManager.getRightHand().getMiddleFinger()));
-                pStatement.setString(15, getFingerprintTemplate(fingerprintManager.getRightHand().getRingFinger()));
-                pStatement.setString(16, getFingerprintTemplate(fingerprintManager.getRightHand().getLittleFinger()));
+                setTemplateToStatement(pStatement, 12, fingerprintManager.getRightHand().getThumbFinger());
+                setTemplateToStatement(pStatement, 13, fingerprintManager.getRightHand().getIndexFinger());
+                setTemplateToStatement(pStatement, 14, fingerprintManager.getRightHand().getMiddleFinger());
+                setTemplateToStatement(pStatement, 15, fingerprintManager.getRightHand().getRingFinger());
+                setTemplateToStatement(pStatement, 16, fingerprintManager.getRightHand().getLittleFinger());
 
-                pStatement.setString(17, getFingerprintTemplate(fingerprintManager.getLeftHand().getThumbFinger()));
-                pStatement.setString(18, getFingerprintTemplate(fingerprintManager.getLeftHand().getIndexFinger()));
-                pStatement.setString(19, getFingerprintTemplate(fingerprintManager.getLeftHand().getMiddleFinger()));
-                pStatement.setString(20, getFingerprintTemplate(fingerprintManager.getLeftHand().getRingFinger()));
-                pStatement.setString(21, getFingerprintTemplate(fingerprintManager.getLeftHand().getLittleFinger()));
+                setTemplateToStatement(pStatement, 17, fingerprintManager.getLeftHand().getThumbFinger());
+                setTemplateToStatement(pStatement, 18, fingerprintManager.getLeftHand().getIndexFinger());
+                setTemplateToStatement(pStatement, 19, fingerprintManager.getLeftHand().getMiddleFinger());
+                setTemplateToStatement(pStatement, 20, fingerprintManager.getLeftHand().getRingFinger());
+                setTemplateToStatement(pStatement, 21, fingerprintManager.getLeftHand().getLittleFinger());
 
                 String imagesDir = DataStorage.getNewRegFingerprintDir(workId);
+                System.out.println(imagesDir);
                 DataStorage.saveNewFingerprintImages(workId, fingerprintManager.getRightHand(), fingerprintManager.getLeftHand());
                 pStatement.setString(22, imagesDir);
 
@@ -410,7 +412,7 @@ public class RegistrationWindowController implements Controllable {
 
                 pStatement.executeUpdate();
 
-                updateWorkIdes(workId);
+                Platform.runLater(() -> updateWorkIdes(workId));
 
                 updateAuthTable(constructSubscriber());
 
@@ -420,6 +422,19 @@ public class RegistrationWindowController implements Controllable {
                 e.printStackTrace();
             }
         }, "UPLOAD-THREAD").start();
+    }
+
+    private void setTemplateToStatement(PreparedStatement statement, int columnIndex, Finger finger) {
+        try {
+            if (statement.isClosed()) return;
+            if (finger == null || finger.getFingerprintTemplate() == null) {
+                statement.setBytes(columnIndex, new byte[]{});
+            } else {
+                statement.setBytes(columnIndex, finger.getFingerprintTemplate());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private Subscriber constructSubscriber() {
@@ -439,7 +454,28 @@ public class RegistrationWindowController implements Controllable {
         subscriber.setWorkId(workId);
         subscriber.setRelationship(relationshipComboBox.getValue());
 
-//        subscriber.setFirstName(firstNameTextField.getText());
+        if (fingerprintManager.getRightHand().getThumbFinger() != null)
+            subscriber.setRightThumbFingerprint(fingerprintManager.getRightHand().getThumbFinger().getFingerprintTemplate());
+        if (fingerprintManager.getRightHand().getIndexFinger() != null)
+            subscriber.setRightIndexFingerprint(fingerprintManager.getRightHand().getIndexFinger().getFingerprintTemplate());
+        if (fingerprintManager.getRightHand().getMiddleFinger() != null)
+            subscriber.setRightMiddleFingerprint(fingerprintManager.getRightHand().getMiddleFinger().getFingerprintTemplate());
+        if (fingerprintManager.getRightHand().getRingFinger() != null)
+            subscriber.setRightRingFingerprint(fingerprintManager.getRightHand().getRingFinger().getFingerprintTemplate());
+        if (fingerprintManager.getRightHand().getLittleFinger() != null)
+            subscriber.setRightLittleFingerprint(fingerprintManager.getRightHand().getLittleFinger().getFingerprintTemplate());
+
+        if (fingerprintManager.getLeftHand().getThumbFinger() != null)
+            subscriber.setLeftThumbFingerprint(fingerprintManager.getLeftHand().getThumbFinger().getFingerprintTemplate());
+        if (fingerprintManager.getLeftHand().getIndexFinger() != null)
+            subscriber.setLeftIndexFingerprint(fingerprintManager.getLeftHand().getIndexFinger().getFingerprintTemplate());
+        if (fingerprintManager.getLeftHand().getMiddleFinger() != null)
+            subscriber.setLeftMiddleFingerprint(fingerprintManager.getLeftHand().getMiddleFinger().getFingerprintTemplate());
+        if (fingerprintManager.getLeftHand().getRingFinger() != null)
+            subscriber.setLeftRingFingerprint(fingerprintManager.getLeftHand().getRingFinger().getFingerprintTemplate());
+        if (fingerprintManager.getLeftHand().getLittleFinger() != null)
+            subscriber.setLeftLittleFingerprint(fingerprintManager.getLeftHand().getLittleFinger().getFingerprintTemplate());
+
         return subscriber;
     }
 
@@ -448,7 +484,6 @@ public class RegistrationWindowController implements Controllable {
         FilteredList<Subscriber> oldFilteredSubscribers = (FilteredList<Subscriber>) mwc.getAuthenticationWindowController().tableView.getItems();
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(oldFilteredSubscribers.getSource());
         subscribers.add(subscriber);
-        System.out.println(subscribers.size() + " subscriber");
         mwc.getAuthenticationWindowController().addToTableView(subscribers);
     }
 
@@ -459,38 +494,9 @@ public class RegistrationWindowController implements Controllable {
         employeesWorkIdComboBox.setItems(FXCollections.observableArrayList(workIdes));
     }
 
-    private String getFingerprintTemplate(Finger finger) {
-        if (finger == null) return "";
-        StringBuilder stringTemplate = new StringBuilder();
-        for (byte b : finger.getFingerprintTemplate()) {
-            stringTemplate.append(b);
-        }
-        return stringTemplate.toString();
-    }
-
     public void onLogoutBtnClicked() {
         mainWindowController.lock(true);
     }
-
-//    public void onRightHandClicked(ActionEvent event) {
-//        FingerprintManager.SENSOR.setOnCaptureListener((imageBuffer, template) -> {
-//            try {
-//                Files.deleteIfExists(new File("fingerprint.bmp").toPath());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        });
-//    }
-
-//    public void onLeftHandClicked(ActionEvent event) {
-//        FingerprintManager.SENSOR.setOnCaptureListener((imageBuffer, template) -> {
-//            try {
-//                Files.deleteIfExists(new File("fingerprint.bmp").toPath());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        });
-//    }
 
     private void onRightHandImageViewClicked(MouseEvent mouseEvent) {
         onHandClicked(mouseEvent, rightThumbFingerImageView, rightIndexFingerImageView, rightMiddleFingerImageView, rightRingFingerImageView, rightPinkyFingerImageView, rightThumbFingerTrueImageView, rightIndexFingerTrueImageView, rightMiddleFingerTrueImageView, rightRingFingerTrueImageView, rightPinkyFingerTrueImageView, HandType.RIGHT);
@@ -586,8 +592,10 @@ public class RegistrationWindowController implements Controllable {
         return event -> {
             checkFingers();
 
+            FingerprintManager.getSensor().removeOnCaptureListener("REG_LISTENER");
+
             fingerprintNoteLabel.setText(Utils.getI18nString("ENSURE_REGISTER"));
-            FingerprintManager.getSensor().addOnCaptureListener((imageBuffer, template) -> {
+            onCaptureListener = (imageBuffer, template) -> {
                 if (finger1.get() == null) {
                     finger1.set(new Finger(imageBuffer, template));
                     Platform.runLater(() -> fingerprintNoteLabel.setText(Utils.getI18nString("ENSURE_REGISTER2")));
@@ -600,17 +608,22 @@ public class RegistrationWindowController implements Controllable {
                     fingerIV.get().setVisible(true);
                     trueFingerIV.get().setVisible(true);
 
+                    scheduledFuture.cancel(false);
                     onFingerprintTaken.handle(finger1.get(), finger1.get(), finger3.get());
                 }
-            });
+            };
+
+            FingerprintManager.getSensor().addOnCaptureListener("REG_LISTENER", onCaptureListener);
             try {
                 if (FingerprintManager.getSensor().isClosed())
-                    FingerprintManager.getSensor().open();
-            } catch (Throwable throwable) {
-//                error.printStackTrace();
+                    FingerprintManager.getSensor().openDevice(0);
+            } catch (Throwable t) {
+                t.printStackTrace();
             }
 
-            executorService.scheduleAtFixedRate(() -> fingerIV.get().setVisible(!fingerIV.get().isVisible()), 0, 1, TimeUnit.SECONDS);
+            if (scheduledFuture != null)
+                scheduledFuture.cancel(false);
+            scheduledFuture = Threading.REGISTRATION_EXECUTOR_SERVICE.scheduleAtFixedRate(() -> fingerIV.get().setVisible(!fingerIV.get().isVisible()), 0, 1, TimeUnit.SECONDS);
         };
     }
 

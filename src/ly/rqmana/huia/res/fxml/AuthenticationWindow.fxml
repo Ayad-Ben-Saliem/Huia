@@ -15,7 +15,7 @@
 <?import javafx.scene.text.Font?>
 <?import ly.rqmana.huia.java.controls.CustomComboBox?>
 
-<VBox alignment="TOP_CENTER" prefHeight="640.0" prefWidth="1080.0" style="-fx-background-color: -rq-background;" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.AuthenticationWindowController">
+<VBox alignment="TOP_CENTER" prefHeight="640.0" prefWidth="1256.0" style="-fx-background-color: -rq-background;" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.AuthenticationWindowController">
     <Label fx:id="nameLabel" textFill="WHITE">
         <VBox.margin>
             <Insets top="32.0" />
@@ -47,7 +47,7 @@
                <HBox.margin>
                   <Insets />
                </HBox.margin></JFXTextField>
-            <JFXTextField fx:id="employeeIdTF" labelFloat="true" layoutX="10.0" layoutY="10.0" maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FILTER_BY_EMPLOYEE_ID" HBox.hgrow="ALWAYS">
+            <JFXTextField fx:id="workIdTF" labelFloat="true" layoutX="10.0" layoutY="10.0" maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FILTER_BY_EMPLOYEE_ID" HBox.hgrow="ALWAYS">
                <HBox.margin>
                   <Insets />
                </HBox.margin></JFXTextField>
@@ -81,7 +81,7 @@
             <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="nameColumn" maxWidth="1000.0" minWidth="250.0" prefWidth="250.0" text="%NAME" />
-               <TableColumn fx:id="employeeIdColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0" text="%EMPLOYEE_ID" />
+               <TableColumn fx:id="workIdColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0" text="%EMPLOYEE_ID" />
                     <TableColumn fx:id="birthdayColumn" maxWidth="800.0" minWidth="150.0" prefWidth="200.0" text="%BIRTHDAY" />
                     <TableColumn fx:id="genderColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0" text="%GENDER" />
                <TableColumn fx:id="relationshipColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0" text="%RELATIONSHIP" />

@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.*;
 
 
-class ParameterCode {
+public class ParameterCode {
 
     public static final int IMAGE_WIDTH = 1;
     public static final int IMAGE_HEIGHT = 2;

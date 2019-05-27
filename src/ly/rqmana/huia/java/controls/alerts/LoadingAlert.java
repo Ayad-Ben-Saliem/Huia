@@ -25,8 +25,7 @@ public class LoadingAlert{
         BAR,
     }
 
-    private final CustomAlert mainAlert;
-    private final AlertLayout layout;
+    private final CustomAlert<AlertLayout> mainAlert;
 
     private ProgressIndicator progressIndicator;
 
@@ -45,9 +44,10 @@ public class LoadingAlert{
     }
 
     public LoadingAlert(@Nullable Stage stage, LoadingStyle loadingStyle, AlertAction... actions){
-        this.mainAlert = new CustomAlert(stage);
+        this.mainAlert = new CustomAlert<>(stage);
         setLoadingStyle(loadingStyle);
 
+        AlertLayout layout;
         if (loadingStyle == LoadingStyle.SPINNER)
             layout = prepareSpinnerLayout();
         else

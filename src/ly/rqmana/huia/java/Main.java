@@ -5,6 +5,7 @@ import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
 

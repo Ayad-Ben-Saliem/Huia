@@ -4,6 +4,8 @@
       <root url="jar://$PROJECT_DIR$/lib/ZKFingerReader.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/ZKFingerReader.jar!/" />
+    </SOURCES>
   </library>
 </component>
