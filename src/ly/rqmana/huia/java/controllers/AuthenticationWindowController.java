@@ -159,39 +159,39 @@ public class AuthenticationWindowController implements Controllable {
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
         String query;
         try {
-            try (Connection connection = DriverManager.getConnection(DAO.getDataDBUrl())) {
-                query = "SELECT " +
-                        "first_name," +
-                        "father_name," +
-                        "last_name," +
-                        "birthday," +
-                        "national_id," +
-                        "sex," +
-                        "fingerprint_template," +
-                        "work_id," +
-                        "relationship," +
-                        "is_active FROM Fingerprint";
-                try (Statement statement = connection.createStatement()) {
-                    ResultSet resultSet = statement.executeQuery(query);
-
-                    while (resultSet.next()) {
-                        Subscriber subscriber = new Subscriber();
-                        subscriber.setFirstName(resultSet.getString(1));
-                        subscriber.setFatherName(resultSet.getString(2));
-                        subscriber.setFamilyName(resultSet.getString(3));
-
-                        subscriber.setBirthday(LocalDate.parse(resultSet.getString(4)));
-                        subscriber.setNationalId(resultSet.getString(5));
-                        subscriber.setGender("M".equals(resultSet.getString(6)) ? Gender.MALE : Gender.FEMALE);
-                        subscriber.setFingerprint(resultSet.getString(7));
-                        subscriber.setWorkId(resultSet.getString(8));
-                        subscriber.setRelationship(resultSet.getString(9));
-                        subscriber.setActive(resultSet.getString(10).equals("True"));
-
-                        subscribers.add(subscriber);
-                    }
-                }
-            }
+//            try (Connection connection = DriverManager.getConnection(DAO.getDataDBUrl())) {
+//                query = "SELECT " +
+//                        "first_name," +
+//                        "father_name," +
+//                        "last_name," +
+//                        "birthday," +
+//                        "national_id," +
+//                        "sex," +
+//                        "fingerprint_template," +
+//                        "work_id," +
+//                        "relationship," +
+//                        "is_active FROM Fingerprint";
+//                try (Statement statement = connection.createStatement()) {
+//                    ResultSet resultSet = statement.executeQuery(query);
+//
+//                    while (resultSet.next()) {
+//                        Subscriber subscriber = new Subscriber();
+//                        subscriber.setFirstName(resultSet.getString(1));
+//                        subscriber.setFatherName(resultSet.getString(2));
+//                        subscriber.setFamilyName(resultSet.getString(3));
+//
+//                        subscriber.setBirthday(LocalDate.parse(resultSet.getString(4)));
+//                        subscriber.setNationalId(resultSet.getString(5));
+//                        subscriber.setGender("M".equals(resultSet.getString(6)) ? Gender.MALE : Gender.FEMALE);
+//                        subscriber.setFingerprint(resultSet.getString(7));
+//                        subscriber.setWorkId(resultSet.getString(8));
+//                        subscriber.setRelationship(resultSet.getString(9));
+//                        subscriber.setActive(resultSet.getString(10).equals("True"));
+//
+//                        subscribers.add(subscriber);
+//                    }
+//                }
+//            }
 
             query = "SELECT " +
                     "firstName," +
