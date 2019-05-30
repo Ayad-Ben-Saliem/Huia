@@ -1,5 +1,6 @@
 package ly.rqmana.huia.java.storage;
 
+import com.sun.istack.internal.NotNull;
 import com.zkteco.biometric.FingerprintSensorEx;
 import ly.rqmana.huia.java.util.OSValidator;
 import ly.rqmana.huia.java.util.fingerprint.*;
@@ -46,36 +47,20 @@ public class DataStorage {
         return getFingerprintsDir() + NEW_REG_DIR_NAME;
     }
 
-    public static String getNewRegFingerprintDir(String workId) {
-        workId += "_";
-        Path path = Paths.get(getNewRegDir());
-        try {
-            Files.createDirectories(path);
-            List<Path> subfolder = Files.walk(path, 1)
-                    .filter(Files::isDirectory)
-                    .collect(Collectors.toList());
-            subfolder.remove(0);
+    public static String getNewRegFingerprintDir(@NotNull String institute, @NotNull String fullName, @NotNull String workId) {
+        if (institute == null || institute.isEmpty())
+            throw new RuntimeException("Invalid institute");
+        if (fullName == null || fullName.isEmpty())
+            throw new RuntimeException("Invalid name");
+        if (workId == null || workId.isEmpty())
+            throw new RuntimeException("Invalid work id");
 
-            int dirIndex = 1;
-            for (Path p : subfolder) {
-                StringBuilder stringPath = new StringBuilder(p.toString());
-                String substring = stringPath.substring(stringPath.lastIndexOf(File.separator) + 1);
-                if (substring.startsWith(workId)) {
-                    String dirInd = substring.substring(substring.indexOf('_') + 1);
-                    int dirI = Integer.parseInt(dirInd);
-                    if (dirI >= dirIndex) {
-                        dirIndex = dirI + 1;
-                    }
-                }
-            }
-            return getNewRegDir() + workId + dirIndex;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        String dirName = fullName + " (" + workId + ")";
+        return getNewRegDir() + institute + fullName;
     }
 
-    public static void saveNewFingerprintImages(String workId, Hand rightHand, Hand leftHand) {
-        String newDir = getNewRegFingerprintDir(workId);
+    public static void saveNewFingerprintImages(String institute, String fullName, String workId, Hand rightHand, Hand leftHand) {
+        String newDir = getNewRegFingerprintDir(institute, fullName, workId);
         try {
             String path = Files.createDirectories(Paths.get(newDir)).toString();
 

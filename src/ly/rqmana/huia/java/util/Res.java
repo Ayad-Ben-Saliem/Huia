@@ -10,6 +10,7 @@ public final class Res {
     private final static String RES = "/ly/rqmana/huia/res/";
     private final static String CSS = RES + "css/";
     private final static String FXML = RES + "fxml/";
+    private final static String FONTS = RES + "fonts/";
     private final static String IMAGES = RES + "images/";
     private final static String ICONS = IMAGES + "icons/";
 
@@ -127,6 +128,26 @@ public final class Res {
         @NotNull
         public javafx.scene.image.Image getImage() {
             return new javafx.scene.image.Image(getClass().getResourceAsStream(url));
+        }
+    }
+
+    public enum  Font {
+        CAIRO_BLACK("Cairo/Cairo-Black.ttf"),
+        CAIRO_BOLD("Cairo/Cairo-Bold.ttf"),
+        CAIRO_EXTRA_LIGHT("Cairo/Cairo-ExtraLight.ttf"),
+        CAIRO_LIGHT("Cairo/Cairo-Light.ttf"),
+        CAIRO_REGULAR("Cairo/Cairo-Regular.ttf"),
+        CAIRO_SEMI_BOLD("Cairo/Cairo-SemiBold.ttf"),
+        ;
+
+        final String url;
+
+        Font(String url) {
+            this.url = FONTS + url;
+        }
+
+        public String getUrl() {
+            return url;
         }
     }
 }

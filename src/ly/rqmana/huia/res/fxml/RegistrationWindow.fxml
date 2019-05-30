@@ -123,10 +123,10 @@
                         <ImageView fx:id="leftRingFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
                             <Image url="@../images/finger4true.png" />
                         </ImageView>
-                        <ImageView fx:id="leftPinkyFingerImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
+                        <ImageView fx:id="leftLittleFingerImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
                             <Image url="@../images/finger5.png" />
                         </ImageView>
-                        <ImageView fx:id="leftPinkyFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
+                        <ImageView fx:id="leftLittleFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
                             <Image url="@../images/finger5true.png" />
                         </ImageView>
 
@@ -159,10 +159,10 @@
                         <ImageView fx:id="rightRingFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
                             <Image url="@../images/finger4true.png" />
                         </ImageView>
-                        <ImageView fx:id="rightPinkyFingerImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
+                        <ImageView fx:id="rightLittleFingerImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
                             <Image url="@../images/finger5.png" />
                         </ImageView>
-                        <ImageView fx:id="rightPinkyFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
+                        <ImageView fx:id="rightLittleFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
                             <Image url="@../images/finger5true.png" />
                         </ImageView>
                     </StackPane>

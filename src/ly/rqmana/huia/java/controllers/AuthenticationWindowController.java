@@ -157,10 +157,10 @@ public class AuthenticationWindowController implements Controllable {
 
     private void loadDataFromDatabase() {
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
-
+        String query;
         try {
             try (Connection connection = DriverManager.getConnection(DAO.getDataDBUrl())) {
-                String query = "SELECT " +
+                query = "SELECT " +
                         "first_name," +
                         "father_name," +
                         "last_name," +
@@ -190,97 +190,96 @@ public class AuthenticationWindowController implements Controllable {
 
                         subscribers.add(subscriber);
                     }
-
                 }
+            }
 
-                query = "SELECT " +
-                        "firstName," +
-                        "fatherName," +
-                        "grandfatherName," +
-                        "familyName," +
-                        "birthday," +
-                        "nationalId," +
-                        "gender," +
-                        "workId," +
-                        "relationship" +
-                        " FROM People";
+            query = "SELECT " +
+                    "firstName," +
+                    "fatherName," +
+                    "grandfatherName," +
+                    "familyName," +
+                    "birthday," +
+                    "nationalId," +
+                    "gender," +
+                    "workId," +
+                    "relationship" +
+                    " FROM People";
 
-                try (Statement statement = DAO.DB_CONNECTION.createStatement()) {
-                    ResultSet resultSet = statement.executeQuery(query);
+            try (Statement statement = DAO.DB_CONNECTION.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
 
-                    while (resultSet.next()) {
-                        Subscriber subscriber = new Subscriber();
-                        subscriber.setFirstName(resultSet.getString(1));
-                        subscriber.setFatherName(resultSet.getString(2));
-                        subscriber.setGrandfatherName(resultSet.getString(3));
-                        subscriber.setFamilyName(resultSet.getString(4));
+                while (resultSet.next()) {
+                    Subscriber subscriber = new Subscriber();
+                    subscriber.setFirstName(resultSet.getString(1));
+                    subscriber.setFatherName(resultSet.getString(2));
+                    subscriber.setGrandfatherName(resultSet.getString(3));
+                    subscriber.setFamilyName(resultSet.getString(4));
 
-                        subscriber.setBirthday(LocalDate.parse(resultSet.getString(5)));
-                        subscriber.setNationalId(resultSet.getString(6));
-                        subscriber.setGender("M".equals(resultSet.getString(7)) ? Gender.MALE : Gender.FEMALE);
+                    subscriber.setBirthday(LocalDate.parse(resultSet.getString(5)));
+                    subscriber.setNationalId(resultSet.getString(6));
+                    subscriber.setGender("M".equals(resultSet.getString(7)) ? Gender.MALE : Gender.FEMALE);
 //                subscriber.setFingerprint(resultSet.getString(8));
-                        subscriber.setWorkId(resultSet.getString(8));
-                        subscriber.setRelationship(resultSet.getString(9));
+                    subscriber.setWorkId(resultSet.getString(8));
+                    subscriber.setRelationship(resultSet.getString(9));
 //                subscriber.setActive(resultSet.getString(15).equals("True"));
 
-                        subscribers.add(subscriber);
-                    }
+                    subscribers.add(subscriber);
                 }
+            }
 
-                query = "SELECT " +
-                        "firstName," +
-                        "fatherName," +
-                        "grandfatherName," +
-                        "familyName," +
-                        "birthday," +
-                        "nationalId," +
-                        "gender," +
-                        "workId," +
-                        "relationship," +
-                        "rightThumbFingerprint," +
-                        "rightIndexFingerprint," +
-                        "rightMiddleFingerprint," +
-                        "rightRingFingerprint," +
-                        "rightLittleFingerprint," +
-                        "leftThumbFingerprint," +
-                        "leftIndexFingerprint," +
-                        "leftMiddleFingerprint," +
-                        "leftRingFingerprint," +
-                        "leftLittleFingerprint" +
-                        " FROM NewRegistrations";
+            query = "SELECT " +
+                    "firstName," +
+                    "fatherName," +
+                    "grandfatherName," +
+                    "familyName," +
+                    "birthday," +
+                    "nationalId," +
+                    "gender," +
+                    "workId," +
+                    "relationship," +
+                    "rightThumbFingerprint," +
+                    "rightIndexFingerprint," +
+                    "rightMiddleFingerprint," +
+                    "rightRingFingerprint," +
+                    "rightLittleFingerprint," +
+                    "leftThumbFingerprint," +
+                    "leftIndexFingerprint," +
+                    "leftMiddleFingerprint," +
+                    "leftRingFingerprint," +
+                    "leftLittleFingerprint" +
+                    " FROM NewRegistrations";
 
-                try (Statement statement = DAO.DB_CONNECTION.createStatement()) {
-                    ResultSet resultSet = statement.executeQuery(query);
+            try (Statement statement = DAO.DB_CONNECTION.createStatement()) {
+                ResultSet resultSet = statement.executeQuery(query);
 
-                    while (resultSet.next()) {
-                        Subscriber subscriber = new Subscriber();
-                        subscriber.setFirstName(resultSet.getString("firstName"));
-                        subscriber.setFatherName(resultSet.getString("fatherName"));
-                        subscriber.setGrandfatherName(resultSet.getString("grandfatherName"));
-                        subscriber.setFamilyName(resultSet.getString("familyName"));
+                while (resultSet.next()) {
+                    Subscriber subscriber = new Subscriber();
+                    subscriber.setFirstName(resultSet.getString("firstName"));
+                    subscriber.setFatherName(resultSet.getString("fatherName"));
+                    subscriber.setGrandfatherName(resultSet.getString("grandfatherName"));
+                    subscriber.setFamilyName(resultSet.getString("familyName"));
 
-                        subscriber.setBirthday(LocalDate.parse(resultSet.getString("birthday")));
-                        subscriber.setNationalId(resultSet.getString("nationalId"));
-                        subscriber.setGender("M".equals(resultSet.getString("gender")) ? Gender.MALE : Gender.FEMALE);
+                    subscriber.setBirthday(LocalDate.parse(resultSet.getString("birthday")));
+                    subscriber.setNationalId(resultSet.getString("nationalId"));
+                    subscriber.setGender("M".equals(resultSet.getString("gender")) ? Gender.MALE : Gender.FEMALE);
 //                subscriber.setFingerprint(resultSet.getString(8));
-                        subscriber.setWorkId(resultSet.getString("workId"));
-                        subscriber.setRelationship(resultSet.getString("relationship"));
+                    subscriber.setWorkId(resultSet.getString("workId"));
+                    subscriber.setRelationship(resultSet.getString("relationship"));
 //                subscriber.setActive(resultSet.getString(15).equals("True"));
 
-                        subscriber.setRightThumbFingerprint(resultSet.getBytes("rightThumbFingerprint"));
-                        subscriber.setRightIndexFingerprint(resultSet.getBytes("rightIndexFingerprint"));
-                        subscriber.setRightMiddleFingerprint(resultSet.getBytes("rightMiddleFingerprint"));
-                        subscriber.setRightRingFingerprint(resultSet.getBytes("rightRingFingerprint"));
-                        subscriber.setRightLittleFingerprint(resultSet.getBytes("rightLittleFingerprint"));
+                    subscriber.setRightThumbFingerprint(resultSet.getBytes("rightThumbFingerprint"));
+                    subscriber.setRightIndexFingerprint(resultSet.getBytes("rightIndexFingerprint"));
+                    subscriber.setRightMiddleFingerprint(resultSet.getBytes("rightMiddleFingerprint"));
+                    subscriber.setRightRingFingerprint(resultSet.getBytes("rightRingFingerprint"));
+                    subscriber.setRightLittleFingerprint(resultSet.getBytes("rightLittleFingerprint"));
 
-                        subscriber.setLeftThumbFingerprint(resultSet.getBytes("leftThumbFingerprint"));
-                        subscriber.setLeftIndexFingerprint(resultSet.getBytes("leftIndexFingerprint"));
-                        subscriber.setLeftMiddleFingerprint(resultSet.getBytes("leftMiddleFingerprint"));
-                        subscriber.setLeftRingFingerprint(resultSet.getBytes("leftRingFingerprint"));
-                        subscriber.setLeftLittleFingerprint(resultSet.getBytes("leftLittleFingerprint"));
+                    subscriber.setLeftThumbFingerprint(resultSet.getBytes("leftThumbFingerprint"));
+                    subscriber.setLeftIndexFingerprint(resultSet.getBytes("leftIndexFingerprint"));
+                    subscriber.setLeftMiddleFingerprint(resultSet.getBytes("leftMiddleFingerprint"));
+                    subscriber.setLeftRingFingerprint(resultSet.getBytes("leftRingFingerprint"));
+                    subscriber.setLeftLittleFingerprint(resultSet.getBytes("leftLittleFingerprint"));
 
-                        subscribers.add(subscriber);
-                    }
+                    subscribers.add(subscriber);
                 }
             }
 
@@ -336,5 +335,4 @@ public class AuthenticationWindowController implements Controllable {
     public void onFingerprintBtnClicked(ActionEvent actionEvent) {
 
     }
-
 }

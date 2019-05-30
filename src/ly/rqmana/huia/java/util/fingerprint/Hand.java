@@ -80,11 +80,11 @@ public class Hand {
         this.littleFinger = littleFinger;
     }
 
-    public void setPinkyFinger(byte[] imageBuffer, byte[] template) {
+    public void setLittleFinger(byte[] imageBuffer, byte[] template) {
         this.littleFinger = new Finger(imageBuffer, template);
     }
 
-    public void setPinkyFinger(byte[] imageBuffer1, byte[] imageBuffer2, byte[] imageBuffer3, byte[] template) {
+    public void setLittleFinger(byte[] imageBuffer1, byte[] imageBuffer2, byte[] imageBuffer3, byte[] template) {
         this.littleFinger = new Finger(imageBuffer1, imageBuffer2, imageBuffer3, template);
     }
 }

@@ -1,9 +1,16 @@
 
-/*.root {*/
-    /*-fx-font-size: 16pt;*/
-    /*!*-fx-font-family: "Courier New";*!*/
-    /*!*-fx-base: rgb(132, 145, 47);*!*/
-    /*!*-fx-background: rgb(225, 228, 203);*!*/
+.root {
+/*    !*-fx-font-size: 16pt;*!*/
+/*    !*-fx-font-family: "Cairo";*!*/
+/*    !*-fx-base: rgb(132, 145, 47);*!*/
+/*    !*-fx-background: rgb(225, 228, 203);*!*/
+}
+
+/*@font-face {*/
+/*    font-family: 'Cairo';*/
+/*    font-style: normal;*/
+/*    font-weight: normal;*/
+/*    src: local('ly.'), url('http://font.samples/resources/sample.ttf';) format('truetype');*/
 /*}*/
 
 /*.glyph-icon{*/
@@ -15,6 +22,7 @@
 .text,
 .jfx-text-field,
 .jfx-password-field {
+    -fx-font-family: Cairo;
     -fx-font-size: 14pt;
 }
 

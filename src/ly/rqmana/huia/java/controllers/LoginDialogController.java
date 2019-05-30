@@ -52,7 +52,6 @@ public class LoginDialogController implements Controllable {
     }
 
     private void login(ActionEvent event) {
-        authFailed.setText("");
         authFailed.setVisible(false);
         formContainer.setDisable(true);
         progress.setVisible(true);
@@ -67,7 +66,6 @@ public class LoginDialogController implements Controllable {
                 MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
                 Platform.runLater(() -> mainWindowController.lock(false));
             } else {
-                authFailed.setText(Utils.getI18nString("INVALID_USERNAME_OR_PASSWORD"));
                 authFailed.setVisible(true);
             }
         });

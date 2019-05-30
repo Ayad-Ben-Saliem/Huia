@@ -101,9 +101,9 @@ public class RegistrationWindowController implements Controllable {
     @FXML
     public ImageView rightRingFingerTrueImageView;
     @FXML
-    public ImageView rightPinkyFingerImageView;
+    public ImageView rightLittleFingerImageView;
     @FXML
-    public ImageView rightPinkyFingerTrueImageView;
+    public ImageView rightLittleFingerTrueImageView;
 
     @FXML
     public ImageView leftThumbFingerImageView;
@@ -122,23 +122,23 @@ public class RegistrationWindowController implements Controllable {
     @FXML
     public ImageView leftRingFingerTrueImageView;
     @FXML
-    public ImageView leftPinkyFingerImageView;
+    public ImageView leftLittleFingerImageView;
     @FXML
-    public ImageView leftPinkyFingerTrueImageView;
+    public ImageView leftLittleFingerTrueImageView;
 
     @FXML
     public Label fingerprintNoteLabel;
 
     private final ContextMenu menu = new ContextMenu();
-    private final MenuItem thumbMenuItem = new MenuItem("Thumb Finger");
-    private final MenuItem indexMenuItem = new MenuItem("Index Finger");
-    private final MenuItem middleMenuItem = new MenuItem("Middle Finger");
-    private final MenuItem ringMenuItem = new MenuItem("Ring Finger");
-    private final MenuItem pinkyMenuItem = new MenuItem("Pinky Finger");
+    private final MenuItem thumbMenuItem = new MenuItem(Utils.getI18nString("THUMB_FINGER"));
+    private final MenuItem indexMenuItem = new MenuItem(Utils.getI18nString("INDEX_FINGER"));
+    private final MenuItem middleMenuItem = new MenuItem(Utils.getI18nString("MIDDLE_FINGER"));
+    private final MenuItem ringMenuItem = new MenuItem(Utils.getI18nString("RING_FINGER"));
+    private final MenuItem littleMenuItem = new MenuItem(Utils.getI18nString("LITTLE_FINGER"));
 
     private final FingerprintManager fingerprintManager = new FingerprintManager();
     private FingerprintSensor.OnCaptureListener onCaptureListener;
-    ScheduledFuture<?> scheduledFuture;
+    private ScheduledFuture<?> scheduledFuture;
 
     private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
 
@@ -155,7 +155,7 @@ public class RegistrationWindowController implements Controllable {
             employeesWorkIdComboBox.setManaged(!status);
         });
 
-        menu.getItems().addAll(thumbMenuItem, indexMenuItem, middleMenuItem, ringMenuItem, pinkyMenuItem);
+        menu.getItems().addAll(thumbMenuItem, indexMenuItem, middleMenuItem, ringMenuItem, littleMenuItem);
 
         loadDatabase();
 
@@ -402,9 +402,15 @@ public class RegistrationWindowController implements Controllable {
                 setTemplateToStatement(pStatement, 20, fingerprintManager.getLeftHand().getRingFinger());
                 setTemplateToStatement(pStatement, 21, fingerprintManager.getLeftHand().getLittleFinger());
 
-                String imagesDir = DataStorage.getNewRegFingerprintDir(workId);
+                String institute = instituteComboBox.getValue().getName();
+                String fullName = firstNameTextField.getText() + " " + fatherNameTextField.getText();
+                String gfn = grandfatherNameTextField.getText();
+                fullName += (gfn == null || gfn.isEmpty())? "" : gfn;
+                fullName += " " + familyNameTextField.getText();
+
+                String imagesDir = DataStorage.getNewRegFingerprintDir(institute, fullName, workId);
                 System.out.println(imagesDir);
-                DataStorage.saveNewFingerprintImages(workId, fingerprintManager.getRightHand(), fingerprintManager.getLeftHand());
+                DataStorage.saveNewFingerprintImages(institute, fullName,workId, fingerprintManager.getRightHand(), fingerprintManager.getLeftHand());
                 pStatement.setString(22, imagesDir);
 
                 pStatement.setString(23, Auth.getCurrentUser().getUsername());
@@ -499,14 +505,14 @@ public class RegistrationWindowController implements Controllable {
     }
 
     private void onRightHandImageViewClicked(MouseEvent mouseEvent) {
-        onHandClicked(mouseEvent, rightThumbFingerImageView, rightIndexFingerImageView, rightMiddleFingerImageView, rightRingFingerImageView, rightPinkyFingerImageView, rightThumbFingerTrueImageView, rightIndexFingerTrueImageView, rightMiddleFingerTrueImageView, rightRingFingerTrueImageView, rightPinkyFingerTrueImageView, HandType.RIGHT);
+        onHandClicked(mouseEvent, rightThumbFingerImageView, rightIndexFingerImageView, rightMiddleFingerImageView, rightRingFingerImageView, rightLittleFingerImageView, rightThumbFingerTrueImageView, rightIndexFingerTrueImageView, rightMiddleFingerTrueImageView, rightRingFingerTrueImageView, rightLittleFingerTrueImageView, HandType.RIGHT);
     }
 
     private void onLeftHandImageViewClicked(MouseEvent mouseEvent) {
-        onHandClicked(mouseEvent, leftThumbFingerImageView, leftIndexFingerImageView, leftMiddleFingerImageView, leftRingFingerImageView, leftPinkyFingerImageView, leftThumbFingerTrueImageView, leftIndexFingerTrueImageView, leftMiddleFingerTrueImageView, leftRingFingerTrueImageView, leftPinkyFingerTrueImageView, HandType.LEFT);
+        onHandClicked(mouseEvent, leftThumbFingerImageView, leftIndexFingerImageView, leftMiddleFingerImageView, leftRingFingerImageView, leftLittleFingerImageView, leftThumbFingerTrueImageView, leftIndexFingerTrueImageView, leftMiddleFingerTrueImageView, leftRingFingerTrueImageView, leftLittleFingerTrueImageView, HandType.LEFT);
     }
 
-    private void onHandClicked(MouseEvent mouseEvent, ImageView thumbIV, ImageView indexIV, ImageView middleIV, ImageView ringIV, ImageView pinkyIV, ImageView trueThumbIV, ImageView trueIndexIV, ImageView trueMiddleIV, ImageView trueRingIV, ImageView truePinkyIV, HandType handType) {
+    private void onHandClicked(MouseEvent mouseEvent, ImageView thumbIV, ImageView indexIV, ImageView middleIV, ImageView ringIV, ImageView littleIV, ImageView trueThumbIV, ImageView trueIndexIV, ImageView trueMiddleIV, ImageView trueRingIV, ImageView trueLittleIV, HandType handType) {
         if (handType.equals(HandType.RIGHT))
             menu.show(rightHandImageView, mouseEvent.getScreenX(), mouseEvent.getScreenY());
         else
@@ -561,14 +567,14 @@ public class RegistrationWindowController implements Controllable {
             };
         });
 
-        pinkyMenuItem.setOnAction(event1 -> {
-            setupMenuItemAction(fingerIV, pinkyIV, trueFingerIV, truePinkyIV, eventHandler);
+        littleMenuItem.setOnAction(event1 -> {
+            setupMenuItemAction(fingerIV, littleIV, trueFingerIV, trueLittleIV, eventHandler);
             onFingerprintTaken = (finger1, finger2, finger3) -> {
                 byte[] template = fingerprintManager.mergeTemplates(finger1.getFingerprintTemplate(), finger2.getFingerprintTemplate(), finger3.getFingerprintTemplate());
                 if (handType.equals(HandType.RIGHT))
-                    fingerprintManager.getRightHand().setPinkyFinger(finger1.getFingerprintImage(), finger2.getFingerprintImage(), finger3.getFingerprintImage(), template);
+                    fingerprintManager.getRightHand().setLittleFinger(finger1.getFingerprintImage(), finger2.getFingerprintImage(), finger3.getFingerprintImage(), template);
                 else
-                    fingerprintManager.getLeftHand().setPinkyFinger(finger1.getFingerprintImage(), finger2.getFingerprintImage(), finger3.getFingerprintImage(), template);
+                    fingerprintManager.getLeftHand().setLittleFinger(finger1.getFingerprintImage(), finger2.getFingerprintImage(), finger3.getFingerprintImage(), template);
             };
         });
     }
@@ -646,8 +652,8 @@ public class RegistrationWindowController implements Controllable {
         rightRingFingerImageView.setVisible(fingerprintManager.getRightHand().getRingFinger() != null);
         rightRingFingerTrueImageView.setVisible(fingerprintManager.getRightHand().getRingFinger() != null);
 
-        rightPinkyFingerImageView.setVisible(fingerprintManager.getRightHand().getLittleFinger() != null);
-        rightPinkyFingerTrueImageView.setVisible(fingerprintManager.getRightHand().getLittleFinger() != null);
+        rightLittleFingerImageView.setVisible(fingerprintManager.getRightHand().getLittleFinger() != null);
+        rightLittleFingerTrueImageView.setVisible(fingerprintManager.getRightHand().getLittleFinger() != null);
 
         leftThumbFingerImageView.setVisible(fingerprintManager.getLeftHand().getThumbFinger() != null);
         leftThumbFingerTrueImageView.setVisible(fingerprintManager.getLeftHand().getThumbFinger() != null);
@@ -661,7 +667,7 @@ public class RegistrationWindowController implements Controllable {
         leftRingFingerImageView.setVisible(fingerprintManager.getLeftHand().getRingFinger() != null);
         leftRingFingerTrueImageView.setVisible(fingerprintManager.getLeftHand().getRingFinger() != null);
 
-        leftPinkyFingerImageView.setVisible(fingerprintManager.getLeftHand().getLittleFinger() != null);
-        leftPinkyFingerTrueImageView.setVisible(fingerprintManager.getLeftHand().getLittleFinger() != null);
+        leftLittleFingerImageView.setVisible(fingerprintManager.getLeftHand().getLittleFinger() != null);
+        leftLittleFingerTrueImageView.setVisible(fingerprintManager.getLeftHand().getLittleFinger() != null);
     }
 }

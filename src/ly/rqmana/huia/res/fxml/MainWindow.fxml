@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 
-<StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.MainWindowController">
+<StackPane fx:id="rootStack" nodeOrientation="RIGHT_TO_LEFT" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.MainWindowController">
     <stylesheets>
         <URL value="@../css/theme.css" />
         <URL value="@../css/templates.css" />
@@ -18,11 +18,11 @@
         </center>
         <bottom>
             <HBox BorderPane.alignment="CENTER">
-                <JFXButton fx:id="registrationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="Registration Page" HBox.hgrow="ALWAYS">
+                <JFXButton fx:id="registrationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%REGISTRATION_PAGE" HBox.hgrow="ALWAYS">
                <HBox.margin>
                   <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
                </HBox.margin></JFXButton>
-                <JFXButton fx:id="authenticationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="Authintication Page" HBox.hgrow="ALWAYS">
+                <JFXButton fx:id="authenticationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%AUTHENTICATION_PAGE" HBox.hgrow="ALWAYS">
                <HBox.margin>
                   <Insets bottom="1.0" top="1.0" />
                </HBox.margin></JFXButton>

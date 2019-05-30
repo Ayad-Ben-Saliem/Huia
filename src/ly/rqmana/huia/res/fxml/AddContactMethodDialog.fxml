@@ -9,49 +9,49 @@
 
 <FlowPane alignment="CENTER" hgap="20.0" prefWidth="500.0" prefWrapLength="340.0" style="-fx-background-radius: 10; -fx-background-color: -rq-background-alt;" stylesheets="@../css/theme.css" vgap="20.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.AddContactMethodDialogController">
 
-   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" mnemonicParsing="false" onAction="#onPhoneBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-border-radius: 10; -fx-background-radius: 10;" text="%PHONE">
+   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" mnemonicParsing="false" onAction="#onPhoneBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-border-radius: 10; -fx-background-radius: 10;" styleClass="common-button" text="%PHONE" wrapText="true">
       <graphic>
          <FontAwesomeIconView glyphName="PHONE" size="32" strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-fill: -rq-background-alt;" />
       </graphic>
    </JFXButton>
-   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="30.0" layoutY="30.0" mnemonicParsing="false" onAction="#onMailboxBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-border-radius: 10; -fx-background-radius: 10;" text="%MAILBOX">
+   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="30.0" layoutY="30.0" mnemonicParsing="false" onAction="#onMailboxBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-border-radius: 10; -fx-background-radius: 10;" styleClass="common-button" text="%MAILBOX" wrapText="true">
       <graphic>
          <FontAwesomeIconView glyphName="INBOX" size="32" strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-fill: -rq-background-alt;" />
       </graphic>
    </JFXButton>
-   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="150.0" layoutY="150.0" mnemonicParsing="false" onAction="#onEmailBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" text="%EMAIL">
+   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="150.0" layoutY="150.0" mnemonicParsing="false" onAction="#onEmailBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" styleClass="common-button" text="%EMAIL" wrapText="true">
       <graphic>
          <FontAwesomeIconView glyphName="ENVELOPE" size="32" strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-fill: -rq-background-alt;" />
       </graphic>
    </JFXButton>
-   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" mnemonicParsing="false" onAction="#onFacebookBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" text="%FACEBOOK">
+   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" mnemonicParsing="false" onAction="#onFacebookBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" styleClass="common-button" text="%FACEBOOK" wrapText="true">
       <graphic>
          <FontAwesomeIconView glyphName="FACEBOOK" size="32" strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-fill: -rq-background-alt;" />
       </graphic>
    </JFXButton>
-   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="95.0" layoutY="10.0" mnemonicParsing="false" onAction="#onInstagramBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" text="%INSTAGRAM">
+   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="95.0" layoutY="10.0" mnemonicParsing="false" onAction="#onInstagramBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" styleClass="common-button" text="%INSTAGRAM" wrapText="true">
       <graphic>
          <FontAwesomeIconView glyphName="INSTAGRAM" size="32" strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-fill: -rq-background-alt;" />
       </graphic>
    </JFXButton>
-   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="161.0" layoutY="10.0" mnemonicParsing="false" onAction="#onTwitterBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" text="%TWITTER">
+   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="161.0" layoutY="10.0" mnemonicParsing="false" onAction="#onTwitterBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" styleClass="common-button" text="%TWITTER" wrapText="true">
       <graphic>
          <FontAwesomeIconView glyphName="TWITTER" size="32" strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-fill: -rq-background-alt;" />
       </graphic>
    </JFXButton>
-   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="150.0" layoutY="30.0" mnemonicParsing="false" onAction="#onWhatsAppBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-border-radius: 10; -fx-background-radius: 10;" text="%WHATSAPP">
+   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="150.0" layoutY="30.0" mnemonicParsing="false" onAction="#onWhatsAppBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-border-radius: 10; -fx-background-radius: 10;" styleClass="common-button" text="%WHATSAPP" wrapText="true">
       <graphic>
          <FontAwesomeIconView glyphName="WHATSAPP" size="32" strokeType="OUTSIDE" strokeWidth="0.0" style="-fx-fill: -rq-background-alt;" />
       </graphic>
    </JFXButton>
-   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="161.0" layoutY="10.0" mnemonicParsing="false" onAction="#onViberBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" text="%VIBER">
+   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="161.0" layoutY="10.0" mnemonicParsing="false" onAction="#onViberBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" styleClass="common-button" text="%VIBER" wrapText="true">
       <graphic>
          <ImageView fitHeight="45.0" fitWidth="45.0" pickOnBounds="true" preserveRatio="true">
             <Image url="@../images/viber.png" />
          </ImageView>
       </graphic>
    </JFXButton>
-   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="227.0" layoutY="10.0" mnemonicParsing="false" onAction="#onOtherContactsBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" text="%OTHER_CONTACT">
+   <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" layoutX="227.0" layoutY="10.0" mnemonicParsing="false" onAction="#onOtherContactsBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-background-radius: 10; -fx-border-radius: 10;" styleClass="common-button" text="%OTHER_CONTACT" wrapText="true">
       <graphic>
          <ImageView fitHeight="45.0" fitWidth="45.0" pickOnBounds="true" preserveRatio="true">
             <Image url="@../images/contacts.png" />

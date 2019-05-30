@@ -56,7 +56,7 @@ public class FingerprintManager {
         return templateToByteArrayInputStream(finger.getFingerprintTemplate());
     }
 
-    public static ByteArrayInputStream templateToByteArrayInputStream(byte[] template) {
+    private static ByteArrayInputStream templateToByteArrayInputStream(byte[] template) {
         if (template == null)
             return new ByteArrayInputStream(new byte[]{});
         return new ByteArrayInputStream(template);
