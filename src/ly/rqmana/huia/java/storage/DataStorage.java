@@ -6,6 +6,8 @@ import ly.rqmana.huia.java.fingerprints.hand.Finger;
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.util.OSValidator;
 
+import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -49,7 +51,7 @@ public class DataStorage {
             throw new RuntimeException("Invalid work id");
 
         String dirName = fullName + " (" + workId + ")";
-        return getNewRegDir() + institute + fullName;
+        return getNewRegDir() + institute + File.separator + dirName;
     }
 
     public static void saveNewFingerprintImages(String institute, String fullName, String workId, Hand rightHand, Hand leftHand) {
@@ -73,19 +75,19 @@ public class DataStorage {
             e.printStackTrace();
         }
     }
-//
-//    private static void saveImage(String path, Finger finger) {
+
+    private static void saveImage(String path, Finger finger) {
 //        if (finger == null) return;
 //        for (int i = 0; i < finger.getFingerprintImages().size(); i++) {
 //            try {
-//                writeBitmap(finger.getFingerprintImages().get(i), FingerprintManager.device().getImageWidth(), FingerprintManager.device().getImageHeight(), path + (i+1) + ".bmp");
+////                writeBitmap(finger.getFingerprintImages().get(i), FingerprintManager.device().getImageWidth(), FingerprintManager.device().getImageHeight(), path + (i+1) + ".bmp");
 ////                BufferedImage image = ImageIO.read( new ByteArrayInputStream( finger.getFingerprintImages().get(i)));
 ////                ImageIO.write(image, "BMP", new File(path + (i+1) + ".bmp"));
 //            } catch (IOException e) {
 //                e.printStackTrace();
 //            }
 //        }
-//    }
+    }
 
     public static void writeBitmap(byte[] imageBuf, int nWidth, int nHeight, String path) throws IOException {
         java.io.FileOutputStream fos = new java.io.FileOutputStream(path);

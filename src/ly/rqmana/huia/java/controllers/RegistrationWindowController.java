@@ -12,8 +12,10 @@ import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.util.Pair;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
@@ -71,8 +73,6 @@ public class RegistrationWindowController implements Controllable {
     public CustomComboBox<Gender> genderComboBox;
     @FXML
     public CustomComboBox<Relationship> relationshipComboBox;
-
-    private ScheduledFuture<?> scheduledFuture;
 
     private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
 
@@ -226,7 +226,7 @@ public class RegistrationWindowController implements Controllable {
 
     public void onEnterBtnClicked() {
         if (validate()) {
-            upload();
+            saveToDB();
         }
     }
 
@@ -273,14 +273,14 @@ public class RegistrationWindowController implements Controllable {
         validate &= contactsContainer.getChildren().stream().map(node -> (ContactField) node).map(ContactField::validate).reduce(true, (a, b) -> a && b);
 
         if (rightHand == null && leftHand == null) {
-//            TODO: print validation message
+            Alerts.warningAlert(Windows.MAIN_WINDOW, "WARNING", "Please enter a fingerprint", AlertAction.OK);
             validate = false;
         }
 
         return validate;
     }
 
-    private void upload() {
+    private void saveToDB() {
         new Thread(() -> {
             try {
                 final String INSERT_QUERY =
@@ -463,15 +463,6 @@ public class RegistrationWindowController implements Controllable {
                 fingerprintDeviceError(event.getSource().getException());
             }).start();
         }
-
-//        catch (IOException ex) {
-//            Alerts.errorAlert(
-//                    Windows.MAIN_WINDOW,
-//                    Utils.getI18nString("ERROR"),
-//                    ex.getMessage(),
-//                    ex,
-//                    AlertAction.CANCEL);
-//        }
     }
 
     private void fingerprintDeviceError(Throwable throwable) {
@@ -498,6 +489,25 @@ public class RegistrationWindowController implements Controllable {
             if (alertAction.isPresent() && alertAction.get().equals(AlertAction.TRY_AGAIN)) {
                 onFingerprintBtnClicked(null);
             }
+        } else
+            if (throwable instanceof IOException) {
+            Alerts.errorAlert(
+                    Windows.MAIN_WINDOW,
+                    Utils.getI18nString("ERROR"),
+                    throwable.getLocalizedMessage(),
+                    throwable,
+                    AlertAction.CANCEL);
         }
+    }
+
+    public void onPersonalImageViewClicked(MouseEvent mouseEvent) {
+        try {
+            Region content = FXMLLoader.load(Res.Fxml.PERSONAL_IMAGE_WINDOW.getUrl(), Utils.getBundle());
+            JFXDialog dialog = new JFXDialog(getMainController().getRootStack(), content, JFXDialog.DialogTransition.CENTER);
+            dialog.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }

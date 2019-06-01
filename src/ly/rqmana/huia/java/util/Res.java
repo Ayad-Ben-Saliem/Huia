@@ -33,6 +33,7 @@ public final class Res {
         SIGN_UP_WINDOW("SignUpWindow.fxml"),
         AUTHENTICATION("AuthenticationWindow.fxml"),
         ADD_CONTACTS_METHOD_WINDOW("AddContactMethodDialog.fxml"),
+        PERSONAL_IMAGE_WINDOW("PersonalImageLoader.fxml"),
         INSTALLATION_WINDOW(INSTALLATION + "InstallationWindow.fxml"),
         LICENSE_TERMS_PAGE(INSTALLATION + "License&TermsPage.fxml"),
         INSTALLATION_DIR_PAGE(INSTALLATION + "InstallationDirectoryPage.fxml"),
