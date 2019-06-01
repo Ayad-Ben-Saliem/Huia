@@ -129,13 +129,13 @@ public class DAO {
     public static final String DB_NAME = "Huia.db";
 
     public static String getDBUrl() {
-        return "jdbc:sqlite:" + DataStorage.getDataDir() + DB_NAME;
+        return "jdbc:sqlite:" + DataStorage.getDataDirectory().toString() + "\\" + DB_NAME;
     }
 
     public static final String DATA_DB_NAME = "FingerprintData.db";
 
     public static String getDataDBUrl() {
-        return "jdbc:sqlite:" + DataStorage.getDataDir() + DATA_DB_NAME;
+        return "jdbc:sqlite:" + DataStorage.getDataDirectory().toString() + "\\"+ DATA_DB_NAME;
     }
 
 

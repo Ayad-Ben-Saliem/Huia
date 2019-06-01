@@ -260,6 +260,7 @@ public class HamsterDX extends FingerprintDevice {
 
     @Override
     public void open() throws IOException {
+
         NBioBSPJNI.DEVICE_ENUM_INFO deviceEnum = BSP.new DEVICE_ENUM_INFO();
         BSP.EnumerateDevice(deviceEnum);
 
@@ -269,10 +270,23 @@ public class HamsterDX extends FingerprintDevice {
         initInfo0.SecurityLevel = hamsterSecurityLevelFromHuiaSecurityLevel();
         BSP.SetInitInfo(initInfo0);
 
-        BSP.OpenDevice(deviceEnum.DeviceInfo[0].DeviceID,
-                deviceEnum.DeviceInfo[0].Instance);
+        boolean errorOccurred = false;
 
-        if (BSP.IsErrorOccured()){
+        // an empty array of DeviceInfo means the
+        // NBioBSP couldn't detect the device for some reason
+        // eg driver failure, device not connected, ... etc.
+
+        if (deviceEnum.DeviceInfo.length >= 1) {
+            BSP.OpenDevice(deviceEnum.DeviceInfo[0].DeviceID,
+                    deviceEnum.DeviceInfo[0].Instance);
+        }
+        else{
+            errorOccurred = true;
+        }
+
+        errorOccurred = errorOccurred || BSP.IsErrorOccured();
+
+        if (errorOccurred){
             throw new IOException("Could not open hamster dx [error code: " + BSP.GetErrorCode() +" ] ");
         }
     }

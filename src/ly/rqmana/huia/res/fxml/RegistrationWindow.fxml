@@ -90,7 +90,7 @@
                     <FontAwesomeIconView glyphName="PLUS" size="20" style="-fx-fill: -rq-background-alt;" textAlignment="CENTER" />
                 </graphic>
             </JFXButton>
-         <JFXButton id="fingerprintBtn" buttonType="RAISED" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#onFingerprintBtnClicked" style="-fx-background-radius: 64;">
+         <JFXButton id="fingerprintBtn" buttonType="RAISED" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#fingerprintButtonAction" style="-fx-background-radius: 64;">
             <graphic>
                 <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
                     <Image url="@../images/huia_logo.png" />

@@ -27,6 +27,14 @@ public class Finger {
             setFingerprintImages(fingerprintImages);
     }
 
+    public void fill(Finger other){
+        if (other.getId() != id)
+            return;
+
+        this.fingerprintTemplate = other.fingerprintTemplate;
+        this.fingerprintImages.setAll(other.fingerprintImages);
+    }
+
     public FingerID getId(){
         return this.id;
     }
@@ -45,5 +53,30 @@ public class Finger {
 
     public void setFingerprintImages(List<BufferedImage> fingerprintImages) {
         this.fingerprintImages.setAll(fingerprintImages);
+    }
+
+    public boolean isEmpty(){
+        return (fingerprintTemplate == null || fingerprintImages.isEmpty())
+                && fingerprintImages.isEmpty();
+    }
+
+    public boolean isThumb(){
+        return id == FingerID.L_THUMB || id == FingerID.R_THUMB;
+    }
+
+    public boolean isIndex(){
+        return id == FingerID.L_INDEX || id == FingerID.R_INDEX;
+    }
+
+    public boolean isMiddle(){
+        return id == FingerID.L_MIDDLE || id == FingerID.R_MIDDLE;
+    }
+
+    public boolean isRing(){
+        return id == FingerID.L_RING || id == FingerID.R_RING;
+    }
+
+    public boolean isLittle(){
+        return id == FingerID.L_LITTLE || id == FingerID.R_LITTLE;
     }
 }

@@ -1,20 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="FingerprintData.db" uuid="58a3607a-302c-44ac-9aae-19b2ce865630">
+    <data-source source="LOCAL" name="Huia.db" uuid="b2052805-f649-4e73-9628-7bb113f22d39">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:/ProgramData/Huia/FingerprintData.db</jdbc-url>
-      <driver-properties>
-        <property name="enable_load_extension" value="true" />
-      </driver-properties>
-    </data-source>
-    <data-source source="LOCAL" name="Huia.db" uuid="90aced19-134a-47dd-b681-b447f8204026">
-      <driver-ref>sqlite.xerial</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$USER_HOME$/Huia/Huia.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:C:/ProgramData/Huia/Huia.db</jdbc-url>
       <driver-properties>
         <property name="enable_load_extension" value="true" />
       </driver-properties>

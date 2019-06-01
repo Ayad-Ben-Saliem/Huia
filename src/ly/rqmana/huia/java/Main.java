@@ -30,7 +30,11 @@ public class Main extends Application {
 
     @Override
     public void stop() throws Exception {
-        FingerprintManager.closeDevice();
+
+        if (FingerprintManager.isDeviceOpen())
+            FingerprintManager.closeDevice();
+
+        Threading.shutdown();
     }
 
     public static void main(String[] args) {
