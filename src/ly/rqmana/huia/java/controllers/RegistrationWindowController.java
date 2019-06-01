@@ -4,7 +4,6 @@ import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.validation.base.ValidatorBase;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -13,10 +12,14 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.Cursor;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.util.Pair;
+import ly.rqmana.huia.java.concurrent.Task;
+import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
@@ -43,37 +46,24 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 public class RegistrationWindowController implements Controllable {
 
-    @FXML
-    public FlowPane contactsContainer;
-    @FXML
-    public JFXTextField firstNameTextField;
-    @FXML
-    public JFXTextField fatherNameTextField;
-    @FXML
-    public JFXTextField grandfatherNameTextField;
-    @FXML
-    public JFXTextField familyNameTextField;
-    @FXML
-    public JFXTextField newEmployeeWorkIdTextField;
-    @FXML
-    public CustomComboBox<String> employeesWorkIdComboBox;
-    @FXML
-    public CustomComboBox<Institute> instituteComboBox;
-    @FXML
-    public JFXDatePicker birthdayDatePicker;
-    @FXML
-    public JFXTextField nationalityTextField;
-    @FXML
-    public JFXTextField nationalIdTextField;
-    @FXML
-    public CustomComboBox<Gender> genderComboBox;
-    @FXML
-    public CustomComboBox<Relationship> relationshipComboBox;
-
+    @FXML public FlowPane contactsContainer;
+    @FXML public JFXTextField firstNameTextField;
+    @FXML public JFXTextField fatherNameTextField;
+    @FXML public JFXTextField grandfatherNameTextField;
+    @FXML public JFXTextField familyNameTextField;
+    @FXML public JFXTextField newEmployeeWorkIdTextField;
+    @FXML public CustomComboBox<String> employeesWorkIdComboBox;
+    @FXML public CustomComboBox<Institute> instituteComboBox;
+    @FXML public JFXDatePicker birthdayDatePicker;
+    @FXML public JFXTextField nationalityTextField;
+    @FXML public JFXTextField nationalIdTextField;
+    @FXML public CustomComboBox<Gender> genderComboBox;
+    @FXML public CustomComboBox<Relationship> relationshipComboBox;
     private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
 
     private Hand rightHand;
@@ -157,6 +147,7 @@ public class RegistrationWindowController implements Controllable {
         }
         employeesWorkIdComboBox.setItems(FXCollections.observableArrayList(workIdes));
     }
+
     public void onAddContactBtnClicked() {
         try {
             FXMLLoader loader = new FXMLLoader(Res.Fxml.ADD_CONTACTS_METHOD_WINDOW.getUrl(), Utils.getBundle());
@@ -224,6 +215,40 @@ public class RegistrationWindowController implements Controllable {
             contactField.addCancelBtnEventFilter(ActionEvent.ANY, event -> contactsContainer.getChildren().remove(contactField));
     }
 
+    public void fingerprintButtonAction(ActionEvent actionEvent) {
+
+        Supplier<Pair<Hand, Hand>> captureCallable = () -> {
+            Pair<Hand, Hand> handHandPair = FingerprintManager.device().captureHands();
+            rightHand = handHandPair.getKey();
+            leftHand = handHandPair.getValue();
+            return handHandPair;
+        };
+
+        if (! FingerprintManager.isDeviceOpen()) {
+
+            Task<Boolean> openDeviceTask =  FingerprintManager.openDevice(FingerprintDeviceType.HAMSTER_DX);
+
+            openDeviceTask.addOnSucceeded(event -> {
+                captureCallable.get();
+            });
+
+            openDeviceTask.addOnFailed(event -> {
+                event.getSource().getException().printStackTrace();
+                fingerprintDeviceError(event.getSource().getException());
+            });
+
+            Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
+        }
+        else{
+            try {
+                captureCallable.get();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                fingerprintDeviceError(ex);
+            }
+        }
+    }
+
     public void onEnterBtnClicked() {
         if (validate()) {
             saveToDB();
@@ -281,8 +306,12 @@ public class RegistrationWindowController implements Controllable {
     }
 
     private void saveToDB() {
-        new Thread(() -> {
-            try {
+
+        Task<Subscriber> saveTask = new Task<Subscriber>() {
+            @Override
+            protected Subscriber call() throws Exception {
+
+                Subscriber newSubscriber = constructSubscriber();
                 final String INSERT_QUERY =
                         "INSERT INTO NewRegistrations ("
                                 + "firstName,"
@@ -323,35 +352,29 @@ public class RegistrationWindowController implements Controllable {
                 pStatement.setString(8, genderComboBox.getValue().toString());
                 pStatement.setInt(9, instituteComboBox.getValue().getId());
 
-                String workId = relationshipComboBox.getValue().equals(Relationship.EMPLOYEE)? newEmployeeWorkIdTextField.getText() : employeesWorkIdComboBox.getValue();
+                String workId = relationshipComboBox.getValue().equals(Relationship.EMPLOYEE) ? newEmployeeWorkIdTextField.getText() : employeesWorkIdComboBox.getValue();
                 pStatement.setString(10, workId);
                 pStatement.setString(11, relationshipComboBox.getValue().toString());
 
                 if (rightHand != null) {
-                    pStatement.setString(12, rightHand.getThumbFinger().getFingerprintTemplate());
-                    pStatement.setString(13, rightHand.getIndexFinger().getFingerprintTemplate());
-                    pStatement.setString(14, rightHand.getMiddleFinger().getFingerprintTemplate());
-                    pStatement.setString(15, rightHand.getRingFinger().getFingerprintTemplate());
-                    pStatement.setString(16, rightHand.getLittleFinger().getFingerprintTemplate());
+                    pStatement.setString(12, rightHand.getThumb().getFingerprintTemplate());
+                    pStatement.setString(13, rightHand.getIndex().getFingerprintTemplate());
+                    pStatement.setString(14, rightHand.getMiddle().getFingerprintTemplate());
+                    pStatement.setString(15, rightHand.getRing().getFingerprintTemplate());
+                    pStatement.setString(16, rightHand.getLittle().getFingerprintTemplate());
                 }
 
                 if (leftHand != null) {
-                    pStatement.setString(17, leftHand.getThumbFinger().getFingerprintTemplate());
-                    pStatement.setString(18, leftHand.getIndexFinger().getFingerprintTemplate());
-                    pStatement.setString(19, leftHand.getMiddleFinger().getFingerprintTemplate());
-                    pStatement.setString(20, leftHand.getRingFinger().getFingerprintTemplate());
-                    pStatement.setString(21, leftHand.getLittleFinger().getFingerprintTemplate());
+                    pStatement.setString(17, leftHand.getThumb().getFingerprintTemplate());
+                    pStatement.setString(18, leftHand.getIndex().getFingerprintTemplate());
+                    pStatement.setString(19, leftHand.getMiddle().getFingerprintTemplate());
+                    pStatement.setString(20, leftHand.getRing().getFingerprintTemplate());
+                    pStatement.setString(21, leftHand.getLittle().getFingerprintTemplate());
                 }
 
-                String institute = instituteComboBox.getValue().getName();
-                String fullName = firstNameTextField.getText() + " " + fatherNameTextField.getText();
-                String gfn = grandfatherNameTextField.getText();
-                fullName += (gfn == null || gfn.isEmpty())? "" : gfn;
-                fullName += " " + familyNameTextField.getText();
-
-                String imagesDir = DataStorage.getNewRegFingerprintDir(institute, fullName, workId);
+                String imagesDir = DataStorage.saveSubscriberFingerprintImages(newSubscriber).toString();
                 System.out.println(imagesDir);
-                DataStorage.saveNewFingerprintImages(institute, fullName,workId, rightHand, leftHand);
+
                 pStatement.setString(22, imagesDir);
 
                 pStatement.setString(23, Auth.getCurrentUser().getUsername());
@@ -359,16 +382,30 @@ public class RegistrationWindowController implements Controllable {
 
                 pStatement.executeUpdate();
 
-                Platform.runLater(() -> updateWorkIdes(workId));
-
-                updateAuthTable(constructSubscriber());
-
                 setupInputFields();
 
-            } catch (SQLException e) {
-                e.printStackTrace();
+                return newSubscriber;
             }
-        }, "UPLOAD-THREAD").start();
+        };
+
+        saveTask.addOnSucceeded(event -> {
+
+            Subscriber newSubscriber = saveTask.getValue();
+            updateWorkIdes(newSubscriber.getWorkId());
+            updateAuthTable(newSubscriber);
+        });
+
+        saveTask.addOnFailed(event -> {
+            event.getSource().getException().printStackTrace();
+            Alerts.errorAlert(Windows.MAIN_WINDOW,
+                        "Couldn't Enter",
+                          "An error occurred while entering a new subscriber",
+                                event.getSource().getException(),
+                                AlertAction.OK);
+        });
+
+        saveTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
+        Threading.MAIN_EXECUTOR_SERVICE.submit(saveTask);
     }
 
     private void setTemplateToStatement(PreparedStatement statement, int columnIndex, Finger finger) {
@@ -386,6 +423,7 @@ public class RegistrationWindowController implements Controllable {
 
     private Subscriber constructSubscriber() {
         Subscriber subscriber = new Subscriber();
+
         subscriber.setFirstName(firstNameTextField.getText());
         subscriber.setFatherName(fatherNameTextField.getText());
         subscriber.setGrandfatherName(grandfatherNameTextField.getText());
@@ -401,31 +439,10 @@ public class RegistrationWindowController implements Controllable {
         subscriber.setWorkId(workId);
         subscriber.setRelationship(relationshipComboBox.getValue());
 
-        if (rightHand != null) {
-            if (rightHand.getThumbFinger() != null)
-                subscriber.setRightThumbFingerprint(rightHand.getThumbFinger().getFingerprintTemplate());
-            if (rightHand.getIndexFinger() != null)
-                subscriber.setRightIndexFingerprint(rightHand.getIndexFinger().getFingerprintTemplate());
-            if (rightHand.getMiddleFinger() != null)
-                subscriber.setRightMiddleFingerprint(rightHand.getMiddleFinger().getFingerprintTemplate());
-            if (rightHand.getRingFinger() != null)
-                subscriber.setRightRingFingerprint(rightHand.getRingFinger().getFingerprintTemplate());
-            if (rightHand.getLittleFinger() != null)
-                subscriber.setRightLittleFingerprint(rightHand.getLittleFinger().getFingerprintTemplate());
-        }
+        subscriber.setRightHand(rightHand);
+        subscriber.setLeftHand(leftHand);
 
-        if (leftHand != null) {
-            if (leftHand.getThumbFinger() != null)
-                subscriber.setLeftThumbFingerprint(leftHand.getThumbFinger().getFingerprintTemplate());
-            if (leftHand.getIndexFinger() != null)
-                subscriber.setLeftIndexFingerprint(leftHand.getIndexFinger().getFingerprintTemplate());
-            if (leftHand.getMiddleFinger() != null)
-                subscriber.setLeftMiddleFingerprint(leftHand.getMiddleFinger().getFingerprintTemplate());
-            if (leftHand.getRingFinger() != null)
-                subscriber.setLeftRingFingerprint(leftHand.getRingFinger().getFingerprintTemplate());
-            if (leftHand.getLittleFinger() != null)
-                subscriber.setLeftLittleFingerprint(leftHand.getLittleFinger().getFingerprintTemplate());
-        }
+        subscriber.setInstuteId(String.valueOf(instituteComboBox.getValue().getId()));
 
         return subscriber;
     }
@@ -464,9 +481,22 @@ public class RegistrationWindowController implements Controllable {
             }).start();
         }
     }
+    private void updateLoadingView(boolean loading){
+        StackPane rootStack = getMainController().rootStack;
+        rootStack.setDisable(loading);
+
+        if (loading)
+            rootStack.setCursor(Cursor.WAIT);
+        else
+            rootStack.setCursor(Cursor.DEFAULT);
+    }
+
 
     private void fingerprintDeviceError(Throwable throwable) {
-        if (throwable instanceof FingerprintDeviceNotOpenedException) {
+
+        if (throwable instanceof FingerprintDeviceNotOpenedException ||
+                throwable instanceof IOException) {
+
             Optional<AlertAction> alertAction = Alerts.errorAlert(
                     Windows.MAIN_WINDOW,
                     Utils.getI18nString("ERROR"),
@@ -475,7 +505,7 @@ public class RegistrationWindowController implements Controllable {
                     AlertAction.CANCEL, AlertAction.TRY_AGAIN);
 
             if (alertAction.isPresent() && alertAction.get().equals(AlertAction.TRY_AGAIN)) {
-                onFingerprintBtnClicked(null);
+                fingerprintButtonAction(null);
             }
         } else
         if (throwable instanceof UnsatisfiedLinkError) {
@@ -487,7 +517,7 @@ public class RegistrationWindowController implements Controllable {
                     AlertAction.CANCEL, AlertAction.TRY_AGAIN);
 
             if (alertAction.isPresent() && alertAction.get().equals(AlertAction.TRY_AGAIN)) {
-                onFingerprintBtnClicked(null);
+                fingerprintButtonAction(null);
             }
         } else
             if (throwable instanceof IOException) {
@@ -510,4 +540,5 @@ public class RegistrationWindowController implements Controllable {
         }
 
     }
+
 }

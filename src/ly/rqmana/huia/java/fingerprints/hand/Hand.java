@@ -13,112 +13,89 @@ public class Hand {
 
     private final HandType type;
 
-    private final ObservableList<Finger> fingers = FXCollections.observableArrayList();
+    private final Finger thumb;
+    private final Finger index;
+    private final Finger middle;
+    private final Finger ring;
+    private final Finger little;
 
     public Hand(@NotNull HandType type){
         this(type, new ArrayList<>());
     }
 
+    /**
+     *
+     * @param type
+     * @param fingers used only to update this {@code Hand} fingers and not replace them;
+     */
     public Hand(@NotNull HandType type, List<Finger> fingers){
         this.type = type;
-        setFingers(fingers);
+
+        this.thumb = new Finger(type == HandType.RIHGT? FingerID.R_THUMB : FingerID.L_THUMB, "", null);
+        this.index = new Finger(type == HandType.RIHGT? FingerID.R_INDEX : FingerID.L_INDEX, "", null);
+        this.middle = new Finger(type == HandType.RIHGT? FingerID.R_MIDDLE : FingerID.L_MIDDLE, "", null);
+        this.ring = new Finger(type == HandType.RIHGT? FingerID.R_RING : FingerID.L_RING, "", null);
+        this.little = new Finger(type == HandType.RIHGT? FingerID.R_LITTLE : FingerID.L_LITTLE, "", null);
+        updateFingers(fingers);
     }
 
-    public Finger getFinger(FingerID fingerID){
-        for (Finger finger : this.fingers) {
-            if (finger.getId() == fingerID)
-                return finger;
-        }
-        return null;
-    }
+    private void updateFingers(List<Finger> fingers){
 
-    public void addFinger(Finger finger){
-        isValidFinger(finger);
-        fingers.add(finger);
-    }
-
-    public void addFingers(Collection<Finger> fingers){
         for (Finger finger : fingers) {
-            isValidFinger(finger);
+
+            if (finger.isThumb())
+                thumb.fill(finger);
+            else if (finger.isIndex())
+                index.fill(finger);
+            else if (finger.isMiddle())
+                middle.fill(finger);
+            else if (finger.isRing())
+                ring.fill(finger);
+            else if (finger.isLittle())
+                little.fill(finger);
         }
-
-        this.fingers.addAll(fingers);
-    }
-
-    public void setFingers(Collection<Finger> fingers){
-        for (Finger finger : fingers) {
-            isValidFinger(finger);
-        }
-
-        this.fingers.addAll(fingers);
-    }
-
-    public boolean fingerExists(Finger finger){
-        return fingerExists(finger.getId());
-    }
-
-    public boolean fingerExists(FingerID fingerID){
-        for (Finger finger : fingers) {
-            return finger.getId() == fingerID;
-        }
-        return false;
     }
 
     public ObservableList<Finger> getFingersUnmodifiable(){
-        return FXCollections.unmodifiableObservableList(this.fingers);
+
+        return FXCollections.unmodifiableObservableList(
+                FXCollections.observableArrayList(
+                        thumb,
+                        index,
+                        middle,
+                        ring,
+                        little));
     }
 
-    private void isValidFinger(Finger finger){
-
-        boolean valid;
+    public boolean isValidFinger(Finger finger){
 
         boolean con1 = finger.getId().isRightFinger() && getType() == HandType.RIHGT;
         boolean con2 = ! finger.getId().isRightFinger() && getType() == HandType.LEFT;
 
-        valid = con1 || con2;
-
-        if (! valid || fingerExists(finger)) {
-            String info = String.format("%s [%d]", finger.getId().name(), finger.getId().index());
-            throw new DuplicateFingersException("finger not valid duplicate may exists or unknown finger, FingerID: " + info);
-        }
+        return con1 || con2;
     }
 
     public HandType getType() {
         return type;
     }
 
-    public Finger getThumbFinger() {
-        if (getType().equals(HandType.RIHGT))
-            return getFinger(FingerID.R_THUMB);
-        else
-            return getFinger(FingerID.L_THUMB);
+    public Finger getThumb() {
+        return this.thumb;
     }
 
-    public Finger getIndexFinger() {
-        if (getType().equals(HandType.RIHGT))
-            return getFinger(FingerID.R_INDEX);
-        else
-            return getFinger(FingerID.L_INDEX);
+    public Finger getIndex() {
+        return this.index;
     }
 
-    public Finger getMiddleFinger() {
-        if (getType().equals(HandType.RIHGT))
-            return getFinger(FingerID.R_MIDDLE);
-        else
-            return getFinger(FingerID.L_MIDDLE);
+    public Finger getMiddle() {
+       return this.middle;
     }
 
-    public Finger getRingFinger() {
-        if (getType().equals(HandType.RIHGT))
-            return getFinger(FingerID.R_RING);
-        else
-            return getFinger(FingerID.L_RING);
+    public Finger getRing() {
+        return this.ring;
     }
 
-    public Finger getLittleFinger() {
-        if (getType().equals(HandType.RIHGT))
-            return getFinger(FingerID.R_LITTLE);
-        else
-            return getFinger(FingerID.L_LITTLE);
+    public Finger getLittle() {
+        return this.little;
     }
 }

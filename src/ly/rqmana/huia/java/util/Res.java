@@ -9,8 +9,9 @@ public final class Res {
 
     private final static String RES = "/ly/rqmana/huia/res/";
     private final static String CSS = RES + "css/";
-    private final static String FXML = RES + "fxml/";
     private final static String FONTS = RES + "fonts/";
+    private final static String FXML = RES + "fxml/";
+    private final static String DEVELOPER_FXML = "developer/";
     private final static String IMAGES = RES + "images/";
     private final static String ICONS = IMAGES + "icons/";
 
@@ -26,12 +27,13 @@ public final class Res {
 
 
     public enum Fxml {
-        MAIN_WINDOW ("MainWindow.fxml"),
-        HOME_WINDOW ("HomeWindow.fxml"),
-        REGISTRATION_WINDOW("RegistrationWindow.fxml"),
-        LOGIN_DIALOG("LoginDialog.fxml"),
-        SIGN_UP_WINDOW("SignUpWindow.fxml"),
-        AUTHENTICATION("AuthenticationWindow.fxml"),
+        MAIN_WINDOW             ("MainWindow.fxml"),
+        HOME_WINDOW             ("HomeWindow.fxml"),
+        REGISTRATION_WINDOW     ("RegistrationWindow.fxml"),
+        LOGIN_DIALOG            ("LoginDialog.fxml"),
+        SIGN_UP_WINDOW          ("SignUpWindow.fxml"),
+        AUTHENTICATION          ("AuthenticationWindow.fxml"),
+
         ADD_CONTACTS_METHOD_WINDOW("AddContactMethodDialog.fxml"),
         PERSONAL_IMAGE_WINDOW("PersonalImageLoader.fxml"),
         INSTALLATION_WINDOW(INSTALLATION + "InstallationWindow.fxml"),
@@ -42,9 +44,11 @@ public final class Res {
         ERROR_DIALOG("AlertDialog.fxml"),
         WARNING_DIALOG("AlertDialog.fxml"),
 
-        CUSTOM_ALERT_LAYOUT(ALERTS + "CustomAlertLayout.fxml"),
-        INFO_ALERT_DETAILS_LAYOUT(ALERTS + "InfoAlertDetailsLayout.fxml")
-        ;
+        CUSTOM_ALERT_LAYOUT     (ALERTS + "CustomAlertLayout.fxml"),
+        INFO_ALERT_DETAILS_LAYOUT(ALERTS + "InfoAlertDetailsLayout.fxml"),
+
+        FINGERPRINT_TEST_WINDOW_D (DEVELOPER_FXML + "FingerprintTestWindow.fxml"),
+                ;
         private final String url;
         Fxml(String url){
             this.url = url;
@@ -56,9 +60,10 @@ public final class Res {
 
         @Override
         public String toString() {
-            return FXML + url;
+            return url;
         }
-    }
+        }
+
 
     public enum Stylesheet {
 

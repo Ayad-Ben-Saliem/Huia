@@ -1,10 +1,15 @@
 package ly.rqmana.huia.java.models;
 
+import ly.rqmana.huia.java.fingerprints.hand.Hand;
+
 import java.time.LocalDate;
 
 public class Subscriber extends Person {
 
     private String fingerprint;
+
+    private Hand rightHand;
+    private Hand leftHand;
 
     private String rightThumbFingerprint;
     private String rightIndexFingerprint;
@@ -82,11 +87,11 @@ public class Subscriber extends Person {
         this.beneficiaryName = beneficiaryName;
     }
 
-    public String getCompanyId() {
+    public String getInstituteId() {
         return companyId;
     }
 
-    public void setCompanyId(String companyId) {
+    public void setInstuteId(String companyId) {
         this.companyId = companyId;
     }
 
@@ -112,6 +117,23 @@ public class Subscriber extends Person {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+
+    public Hand getRightHand() {
+        return rightHand;
+    }
+
+    public void setRightHand(Hand rightHand) {
+        this.rightHand = rightHand;
+    }
+
+    public Hand getLeftHand() {
+        return leftHand;
+    }
+
+    public void setLeftHand(Hand leftHand) {
+        this.leftHand = leftHand;
     }
 
     public String getRightThumbFingerprint() {

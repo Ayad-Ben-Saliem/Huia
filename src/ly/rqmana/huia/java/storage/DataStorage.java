@@ -1,51 +1,84 @@
 package ly.rqmana.huia.java.storage;
 
-import com.sun.istack.internal.NotNull;
-import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import ly.rqmana.huia.java.fingerprints.hand.Finger;
-import ly.rqmana.huia.java.fingerprints.hand.Hand;
+import ly.rqmana.huia.java.fingerprints.hand.FingerID;
+import ly.rqmana.huia.java.models.Subscriber;
 import ly.rqmana.huia.java.util.OSValidator;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class DataStorage {
 
-    public static final String WINDOWS_DATA_DIR = "C:/ProgramData/Huia/";
-    public static final String UNIX_DATA_DIR = System.getProperty("user.home") + "/.Huia/";
-    public static final String MAC_DATA_DIR = System.getProperty("user.home") + "/Huia/";
+    private static final String HUIA_DIRECTORY_NAME = "Huia";
 
+    public static final String WINDOWS_DATA_DIR = "C:\\ProgramData\\";
+    public static final String UNIX_DATA_DIR = System.getProperty("user.home");
+    public static final String MAC_DATA_DIR = System.getProperty("user.home");
 
-    public static final String FINGERPRINTS_DIR_NAME = "Fingerprints/";
-    public static final String NEW_REG_DIR_NAME = "New Registrations/";
-    public static final String TEMP_FINGERPRINT_IMAGES = getNewRegDir() + "Temp/";
+    public static final String FINGERPRINTS_DIR_NAME = "Fingerprints";
+    public static final String NEW_REG_DIR_NAME = "New Registrations";
+//    public static final String TEMP_FINGERPRINT_IMAGES = getNewRegistrationsDir() + "Temp/";
 
-    public static String getDataDir() {
+    private static final Path DATA_DIRECTORY;
+
+    static {
+
+        String osDataDirectory;
         if (OSValidator.isWindows()) {
-            return WINDOWS_DATA_DIR;
+            osDataDirectory = WINDOWS_DATA_DIR;
         } else if(OSValidator.isUnix()) {
-            return UNIX_DATA_DIR;
+            osDataDirectory = UNIX_DATA_DIR;
         } else if (OSValidator.isMac()) {
-            return MAC_DATA_DIR;
+            osDataDirectory = MAC_DATA_DIR;
+        }else{
+            osDataDirectory = System.getProperty("user.home");
         }
-        return null;
+
+        DATA_DIRECTORY = Paths.get(osDataDirectory, HUIA_DIRECTORY_NAME);
+
     }
 
-    public static String getFingerprintsDir() {
-        return getDataDir() + FINGERPRINTS_DIR_NAME;
+    public static Path getDataDirectory(){
+        return DATA_DIRECTORY;
     }
 
-    public static String getNewRegDir() {
-        return getFingerprintsDir() + NEW_REG_DIR_NAME;
+    public static Path getFingerprintsDir() {
+        return DATA_DIRECTORY.resolve(FINGERPRINTS_DIR_NAME);
     }
 
-    public static String getNewRegFingerprintDir(@NotNull String institute, @NotNull String fullName, @NotNull String workId) {
-        if (institute == null || institute.isEmpty())
-            throw new RuntimeException("Invalid institute");
-        if (fullName == null || fullName.isEmpty())
+    public static Path getNewRegistrationsDir() {
+        return getFingerprintsDir().resolve(NEW_REG_DIR_NAME);
+    }
+
+    public static Path saveSubscriberFingerprintImages(Subscriber subscriber) throws IOException {
+
+        // the store hirechery is as follows:
+        //
+        // NEW_REG_DIR
+        //  - {INSTITUTE_ID}
+        //      - {WORK_ID}
+        //          - {SUBSCRIBER_NAME}
+        //              - FINGER_{FINGER_INDEX}_{IMAGE_ID}.jpg
+        //              - ...
+
+        String instituteId = subscriber.getInstituteId();
+        String subscriberName = subscriber.getFullName();
+        String workId = subscriber.getWorkId();
+
+        if (instituteId == null || instituteId.isEmpty())
+            throw new RuntimeException("Invalid institute id");
+        if (subscriberName == null || subscriberName.isEmpty())
             throw new RuntimeException("Invalid name");
         if (workId == null || workId.isEmpty())
             throw new RuntimeException("Invalid work id");
@@ -53,40 +86,53 @@ public class DataStorage {
         String dirName = fullName + " (" + workId + ")";
         return getNewRegDir() + institute + File.separator + dirName;
     }
+        Path mainEmployeeDir = getNewRegistrationsDir().resolve(instituteId).resolve(workId);
 
-    public static void saveNewFingerprintImages(String institute, String fullName, String workId, Hand rightHand, Hand leftHand) {
-        String newDir = getNewRegFingerprintDir(institute, fullName, workId);
-        try {
-            String path = Files.createDirectories(Paths.get(newDir)).toString();
-
-//            saveImage( path + "/RightThumb", rightHand.getThumbFinger());
-//            saveImage( path + "/RightIndex", rightHand.getIndexFinger());
-//            saveImage( path + "/RightMiddle", rightHand.getMiddleFinger());
-//            saveImage( path + "/RightRing", rightHand.getRingFinger());
-//            saveImage( path + "/RightLittle", rightHand.getLittleFinger());
-//
-//            saveImage( path + "/LeftThumb", leftHand.getThumbFinger());
-//            saveImage( path + "/LeftIndex", leftHand.getIndexFinger());
-//            saveImage( path + "/LeftMiddle", leftHand.getMiddleFinger());
-//            saveImage( path + "/LeftRing", leftHand.getRingFinger());
-//            saveImage( path + "/LeftLittle", leftHand.getLittleFinger());
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        // the first time the employee is being added.
+        if (! Files.exists(mainEmployeeDir)){
+            // try to create it
+            Files.createDirectories(mainEmployeeDir);
         }
+
+        Path subscriberDir = mainEmployeeDir.resolve(subscriberName);
+
+        // the subscriber dir is not found
+        if (! Files.exists(subscriberDir)){
+            // try to create it
+            Files.createDirectories(subscriberDir);
+        }
+
+        // ok time to store the images
+        ObservableList<Finger> fingersList = FXCollections.observableArrayList();
+
+        fingersList.addAll(subscriber.getRightHand().getFingersUnmodifiable());
+        fingersList.addAll(subscriber.getLeftHand().getFingersUnmodifiable());
+
+        for (Finger finger : fingersList) {
+            saveFingerprintImages(subscriberDir, finger);
+        }
+
+        return subscriberDir;
     }
 
-    private static void saveImage(String path, Finger finger) {
-//        if (finger == null) return;
-//        for (int i = 0; i < finger.getFingerprintImages().size(); i++) {
-//            try {
-////                writeBitmap(finger.getFingerprintImages().get(i), FingerprintManager.device().getImageWidth(), FingerprintManager.device().getImageHeight(), path + (i+1) + ".bmp");
-////                BufferedImage image = ImageIO.read( new ByteArrayInputStream( finger.getFingerprintImages().get(i)));
-////                ImageIO.write(image, "BMP", new File(path + (i+1) + ".bmp"));
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
+    private static void saveFingerprintImages(Path imageDir, Finger finger) throws IOException {
+
+        if (finger == null)
+            return;
+
+        String fileExtension = ".jpg";
+        ObservableList<BufferedImage> fingerprintImages = finger.getFingerprintImages();
+
+        for (int imageIndex = 0; imageIndex < fingerprintImages.size(); imageIndex++) {
+
+            BufferedImage fingerprintImage = fingerprintImages.get(imageIndex);
+            FingerID fingerId = finger.getId();
+
+            String fileName = String.format("finger_%d_%d%s", fingerId.index(), imageIndex, fileExtension);
+            File imageFile = Paths.get(imageDir.toString(), fileName).toFile();
+
+            ImageIO.write(fingerprintImage, "JPEG", imageFile);
+        }
     }
 
     public static void writeBitmap(byte[] imageBuf, int nWidth, int nHeight, String path) throws IOException {
