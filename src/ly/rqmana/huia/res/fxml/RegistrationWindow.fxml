@@ -6,7 +6,6 @@
 <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
@@ -16,11 +15,9 @@
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import ly.rqmana.huia.java.controls.ContactField?>
 <?import ly.rqmana.huia.java.controls.CustomComboBox?>
-<?import ly.rqmana.huia.java.controls.ToggleSwitch?>
 
 <VBox xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.RegistrationWindowController">
     <stylesheets>
@@ -67,7 +64,7 @@
                 <Pane prefWidth="1.0" styleClass="separator" />
                 <JFXTextField fx:id="familyNameTextField" labelFloat="true" promptText="%FAMILY_NAME" />
             </HBox>
-            <FlowPane alignment="TOP_CENTER" hgap="32.0" vgap="32.0">
+            <FlowPane alignment="TOP_CENTER" hgap="32.0" vgap="50.0">
                 <JFXDatePicker fx:id="birthdayDatePicker" prefWidth="217.0" promptText="%BIRTHDAY" />
                 <CustomComboBox fx:id="genderComboBox" labelFloat="true" prefWidth="217.0" promptText="%GENDER" />
                 <CustomComboBox fx:id="instituteComboBox" labelFloat="true" prefWidth="217.0" promptText="%INSTITUTE" />
@@ -80,7 +77,7 @@
                     <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
                 </padding>
             </FlowPane>
-            <FlowPane fx:id="contactsContainer" alignment="TOP_CENTER" hgap="32.0" prefWrapLength="0.0" vgap="32.0">
+            <FlowPane fx:id="contactsContainer" alignment="TOP_CENTER" hgap="32.0" prefWrapLength="0.0" vgap="50.0">
                 <ContactField cancelable="false" labelFloat="true" promptText="%ADDRESS" type="ADDRESS" />
                 <ContactField cancelable="false" labelFloat="true" layoutX="175.0" layoutY="30.0" promptText="%PHONE" type="PHONE" />
                 <ContactField cancelable="false" labelFloat="true" layoutX="328.0" layoutY="30.0" promptText="%EMAIL" type="EMAIL" />
@@ -93,82 +90,13 @@
                     <FontAwesomeIconView glyphName="PLUS" size="20" style="-fx-fill: -rq-background-alt;" textAlignment="CENTER" />
                 </graphic>
             </JFXButton>
-            <VBox alignment="CENTER" spacing="32.0" VBox.vgrow="ALWAYS">
-                <HBox alignment="CENTER">
-                    <StackPane fx:id="leftHandImageContainer" nodeOrientation="RIGHT_TO_LEFT">
-                        <ImageView fx:id="leftHandImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true">
-                            <Image url="@../images/hand.png" />
-                        </ImageView>
-                        <ImageView fx:id="leftThumbFingerImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger1.png" />
-                        </ImageView>
-                        <ImageView fx:id="leftThumbFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger1true.png" />
-                        </ImageView>
-                        <ImageView fx:id="leftIndexFingerImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger2.png" />
-                        </ImageView>
-                        <ImageView fx:id="leftIndexFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger2true.png" />
-                        </ImageView>
-                        <ImageView fx:id="leftMiddleFingerImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger3.png" />
-                        </ImageView>
-                        <ImageView fx:id="leftMiddleFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger3true.png" />
-                        </ImageView>
-                        <ImageView fx:id="leftRingFingerImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger4.png" />
-                        </ImageView>
-                        <ImageView fx:id="leftRingFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger4true.png" />
-                        </ImageView>
-                        <ImageView fx:id="leftLittleFingerImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger5.png" />
-                        </ImageView>
-                        <ImageView fx:id="leftLittleFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger5true.png" />
-                        </ImageView>
-
-                    </StackPane>
-                    <StackPane fx:id="rightHandImageContainer">
-                        <ImageView fx:id="rightHandImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true">
-                            <Image url="@../images/hand.png" />
-                        </ImageView>
-                        <ImageView fx:id="rightThumbFingerImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger1.png" />
-                        </ImageView>
-                        <ImageView fx:id="rightThumbFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger1true.png" />
-                        </ImageView>
-                        <ImageView fx:id="rightIndexFingerImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger2.png" />
-                        </ImageView>
-                        <ImageView fx:id="rightIndexFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger2true.png" />
-                        </ImageView>
-                        <ImageView fx:id="rightMiddleFingerImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger3.png" />
-                        </ImageView>
-                        <ImageView fx:id="rightMiddleFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger3true.png" />
-                        </ImageView>
-                        <ImageView fx:id="rightRingFingerImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger4.png" />
-                        </ImageView>
-                        <ImageView fx:id="rightRingFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger4true.png" />
-                        </ImageView>
-                        <ImageView fx:id="rightLittleFingerImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger5.png" />
-                        </ImageView>
-                        <ImageView fx:id="rightLittleFingerTrueImageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" visible="false">
-                            <Image url="@../images/finger5true.png" />
-                        </ImageView>
-                    </StackPane>
-                </HBox>
-                <Label fx:id="fingerprintNoteLabel" text="Click on hands to enter fingerprints" />
-            </VBox>
+         <JFXButton id="fingerprintBtn" buttonType="RAISED" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#onFingerprintBtnClicked" style="-fx-background-radius: 64;">
+            <graphic>
+                <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@../images/huia_logo.png" />
+                </ImageView>
+            </graphic>
+         </JFXButton>
 
             <JFXButton buttonType="RAISED" mnemonicParsing="false" onAction="#onEnterBtnClicked" prefWidth="100.0" styleClass="common-button" text="ENTER" />
             <padding>

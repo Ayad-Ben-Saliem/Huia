@@ -7,6 +7,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import ly.rqmana.huia.java.concurrent.Threading;
+import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.util.Res;
 import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
@@ -25,6 +26,11 @@ public class Main extends Application {
         Font.loadFont(getClass().getResource(Res.Font.CAIRO_SEMI_BOLD.getUrl()).toExternalForm(), 14);
 
         Windows.MAIN_WINDOW.open();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        FingerprintManager.closeDevice();
     }
 
     public static void main(String[] args) {

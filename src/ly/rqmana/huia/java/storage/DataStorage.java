@@ -1,21 +1,14 @@
 package ly.rqmana.huia.java.storage;
 
 import com.sun.istack.internal.NotNull;
-import com.zkteco.biometric.FingerprintSensorEx;
+import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
+import ly.rqmana.huia.java.fingerprints.hand.Finger;
+import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.util.OSValidator;
-import ly.rqmana.huia.java.util.fingerprint.*;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class DataStorage {
 
@@ -64,35 +57,35 @@ public class DataStorage {
         try {
             String path = Files.createDirectories(Paths.get(newDir)).toString();
 
-            saveImage( path + "/RightThumb", rightHand.getThumbFinger());
-            saveImage( path + "/RightIndex", rightHand.getIndexFinger());
-            saveImage( path + "/RightMiddle", rightHand.getMiddleFinger());
-            saveImage( path + "/RightRing", rightHand.getRingFinger());
-            saveImage( path + "/RightLittle", rightHand.getLittleFinger());
-
-            saveImage( path + "/LeftThumb", leftHand.getThumbFinger());
-            saveImage( path + "/LeftIndex", leftHand.getIndexFinger());
-            saveImage( path + "/LeftMiddle", leftHand.getMiddleFinger());
-            saveImage( path + "/LeftRing", leftHand.getRingFinger());
-            saveImage( path + "/LeftLittle", leftHand.getLittleFinger());
+//            saveImage( path + "/RightThumb", rightHand.getThumbFinger());
+//            saveImage( path + "/RightIndex", rightHand.getIndexFinger());
+//            saveImage( path + "/RightMiddle", rightHand.getMiddleFinger());
+//            saveImage( path + "/RightRing", rightHand.getRingFinger());
+//            saveImage( path + "/RightLittle", rightHand.getLittleFinger());
+//
+//            saveImage( path + "/LeftThumb", leftHand.getThumbFinger());
+//            saveImage( path + "/LeftIndex", leftHand.getIndexFinger());
+//            saveImage( path + "/LeftMiddle", leftHand.getMiddleFinger());
+//            saveImage( path + "/LeftRing", leftHand.getRingFinger());
+//            saveImage( path + "/LeftLittle", leftHand.getLittleFinger());
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-    private static void saveImage(String path, Finger finger) {
-        if (finger == null) return;
-        for (int i = 0; i < finger.getFingerprintImages().size(); i++) {
-            try {
-                writeBitmap(finger.getFingerprintImages().get(i), FingerprintManager.SENSOR.getImageWidth(), FingerprintManager.SENSOR.getImageHeight(), path + (i+1) + ".bmp");
-//                BufferedImage image = ImageIO.read( new ByteArrayInputStream( finger.getFingerprintImages().get(i)));
-//                ImageIO.write(image, "BMP", new File(path + (i+1) + ".bmp"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+//
+//    private static void saveImage(String path, Finger finger) {
+//        if (finger == null) return;
+//        for (int i = 0; i < finger.getFingerprintImages().size(); i++) {
+//            try {
+//                writeBitmap(finger.getFingerprintImages().get(i), FingerprintManager.device().getImageWidth(), FingerprintManager.device().getImageHeight(), path + (i+1) + ".bmp");
+////                BufferedImage image = ImageIO.read( new ByteArrayInputStream( finger.getFingerprintImages().get(i)));
+////                ImageIO.write(image, "BMP", new File(path + (i+1) + ".bmp"));
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
     public static void writeBitmap(byte[] imageBuf, int nWidth, int nHeight, String path) throws IOException {
         java.io.FileOutputStream fos = new java.io.FileOutputStream(path);

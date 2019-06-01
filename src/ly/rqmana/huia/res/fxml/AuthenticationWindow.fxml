@@ -15,81 +15,113 @@
 <?import javafx.scene.text.Font?>
 <?import ly.rqmana.huia.java.controls.CustomComboBox?>
 
-<VBox alignment="TOP_CENTER" prefHeight="640.0" prefWidth="1256.0" style="-fx-background-color: -rq-background;" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.AuthenticationWindowController">
+<VBox alignment="TOP_CENTER" prefHeight="640.0" prefWidth="1256.0" style="-fx-background-color: -rq-background;"
+      stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ly.rqmana.huia.java.controllers.AuthenticationWindowController">
     <Label fx:id="nameLabel" textFill="WHITE">
         <VBox.margin>
-            <Insets top="32.0" />
+            <Insets top="32.0"/>
         </VBox.margin>
         <font>
-            <Font size="18.0" />
+            <Font size="18.0"/>
         </font>
     </Label>
 
-    <JFXButton id="fingerprintBtn" fx:id="fingerprintBtn" buttonType="RAISED" contentDisplay="GRAPHIC_ONLY" disable="true" mnemonicParsing="false" onAction="#onFingerprintBtnClicked">
+    <JFXButton id="fingerprintBtn" fx:id="fingerprintBtn" buttonType="RAISED" contentDisplay="GRAPHIC_ONLY"
+               disable="true" mnemonicParsing="false" onAction="#onFingerprintBtnClicked">
         <graphic>
             <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
-                <Image url="@../images/huia_logo.png" />
+                <Image url="@../images/huia_logo.png"/>
             </ImageView>
         </graphic>
         <VBox.margin>
-            <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+            <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
         </VBox.margin>
     </JFXButton>
     <Label fx:id="fingerprintLabel" layoutX="330.0" layoutY="42.0" textFill="WHITE">
         <VBox.margin>
-            <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+            <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
         </VBox.margin>
     </Label>
     <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS">
         <VBox style="-fx-background-color: red;">
-            <HBox alignment="BOTTOM_LEFT" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="75.0" spacing="8.0" style="-fx-background-color: -rq-background-alt;">
-                <JFXTextField fx:id="nameFilterTF" labelFloat="true" maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FILTER_BY_NAME" HBox.hgrow="ALWAYS">
-               <HBox.margin>
-                  <Insets />
-               </HBox.margin></JFXTextField>
-            <JFXTextField fx:id="workIdTF" labelFloat="true" layoutX="10.0" layoutY="10.0" maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FILTER_BY_WORK_ID" HBox.hgrow="ALWAYS">
-               <HBox.margin>
-                  <Insets />
-               </HBox.margin></JFXTextField>
-                <JFXDatePicker fx:id="fromDateFilterDatePicker" maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FROM" HBox.hgrow="ALWAYS">
-               <HBox.margin>
-                  <Insets />
-               </HBox.margin></JFXDatePicker>
-                <JFXDatePicker fx:id="toDateFilterDatePicker" maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%TO" HBox.hgrow="ALWAYS">
-               <HBox.margin>
-                  <Insets />
-               </HBox.margin></JFXDatePicker>
-                <CustomComboBox fx:id="genderFilterComboBox" labelFloat="true" maxHeight="27.0" maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FILTER_BY_GENDER" HBox.hgrow="ALWAYS">
-               <HBox.margin>
-                  <Insets bottom="6.0" />
-               </HBox.margin></CustomComboBox>
-                <CustomComboBox fx:id="relationshipFilterComboBox" labelFloat="true" maxHeight="27.0" maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FILTER_BY_FINGERPRINT" HBox.hgrow="ALWAYS">
-               <HBox.margin>
-                  <Insets bottom="6.0" />
-               </HBox.margin></CustomComboBox>
-                <CustomComboBox fx:id="fingerprintFilterComboBox" labelFloat="true" layoutX="921.0" layoutY="33.0" maxHeight="27.0" maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FILTER_BY_RELATIONSHIP">
-               <HBox.margin>
-                  <Insets bottom="6.0" />
-               </HBox.margin></CustomComboBox>
-                <CustomComboBox fx:id="isActiveFilterComboBox" buttonType="RAISED" labelFloat="true" layoutX="944.0" layoutY="33.0" maxHeight="27.0" maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FILTER_BY_ACTIVATION">
-               <HBox.margin>
-                  <Insets bottom="6.0" />
-               </HBox.margin></CustomComboBox>
+            <HBox alignment="BOTTOM_LEFT" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="75.0" spacing="8.0"
+                  style="-fx-background-color: -rq-background-alt;">
+                <JFXTextField fx:id="nameFilterTF" labelFloat="true" maxWidth="1.7976931348623157E308" minWidth="0.0"
+                              promptText="%FILTER_BY_NAME" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets/>
+                    </HBox.margin>
+                </JFXTextField>
+                <JFXTextField fx:id="workIdTF" labelFloat="true" layoutX="10.0" layoutY="10.0"
+                              maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FILTER_BY_WORK_ID"
+                              HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets/>
+                    </HBox.margin>
+                </JFXTextField>
+                <JFXDatePicker fx:id="fromDateFilterDatePicker" maxWidth="1.7976931348623157E308" minWidth="0.0"
+                               promptText="%FROM" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets/>
+                    </HBox.margin>
+                </JFXDatePicker>
+                <JFXDatePicker fx:id="toDateFilterDatePicker" maxWidth="1.7976931348623157E308" minWidth="0.0"
+                               promptText="%TO" HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets/>
+                    </HBox.margin>
+                </JFXDatePicker>
+                <CustomComboBox fx:id="genderFilterComboBox" labelFloat="true" maxHeight="27.0"
+                                maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FILTER_BY_GENDER"
+                                HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets bottom="6.0"/>
+                    </HBox.margin>
+                </CustomComboBox>
+                <CustomComboBox fx:id="relationshipFilterComboBox" labelFloat="true" maxHeight="27.0"
+                                maxWidth="1.7976931348623157E308" minWidth="0.0" promptText="%FILTER_BY_FINGERPRINT"
+                                HBox.hgrow="ALWAYS">
+                    <HBox.margin>
+                        <Insets bottom="6.0"/>
+                    </HBox.margin>
+                </CustomComboBox>
+                <CustomComboBox fx:id="fingerprintFilterComboBox" labelFloat="true" layoutX="921.0" layoutY="33.0"
+                                maxHeight="27.0" maxWidth="1.7976931348623157E308" minWidth="0.0"
+                                promptText="%FILTER_BY_RELATIONSHIP">
+                    <HBox.margin>
+                        <Insets bottom="6.0"/>
+                    </HBox.margin>
+                </CustomComboBox>
+                <CustomComboBox fx:id="isActiveFilterComboBox" buttonType="RAISED" labelFloat="true" layoutX="944.0"
+                                layoutY="33.0" maxHeight="27.0" maxWidth="1.7976931348623157E308" minWidth="0.0"
+                                promptText="%FILTER_BY_ACTIVATION">
+                    <HBox.margin>
+                        <Insets bottom="6.0"/>
+                    </HBox.margin>
+                </CustomComboBox>
             </HBox>
 
 
             <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
                 <columns>
-                    <TableColumn fx:id="nameColumn" maxWidth="1000.0" minWidth="250.0" prefWidth="250.0" text="%FULL_NAME" />
-               <TableColumn fx:id="workIdColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0" text="%WORK_ID" />
-                    <TableColumn fx:id="birthdayColumn" maxWidth="800.0" minWidth="150.0" prefWidth="200.0" text="%BIRTHDAY" />
-                    <TableColumn fx:id="genderColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0" text="%GENDER" />
-               <TableColumn fx:id="relationshipColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0" text="%RELATIONSHIP" />
-                    <TableColumn fx:id="fingerprintColumn" maxWidth="1000.0" minWidth="250.0" prefWidth="250.0" text="%FINGERPRINT" />
-               <TableColumn fx:id="isActiveColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0" text="%IS_ACTIVE" />
+                    <TableColumn fx:id="nameColumn" maxWidth="1000.0" minWidth="250.0" prefWidth="250.0"
+                                 text="%FULL_NAME"/>
+                    <TableColumn fx:id="workIdColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0"
+                                 text="%WORK_ID"/>
+                    <TableColumn fx:id="birthdayColumn" maxWidth="800.0" minWidth="150.0" prefWidth="200.0"
+                                 text="%BIRTHDAY"/>
+                    <TableColumn fx:id="genderColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0"
+                                 text="%GENDER"/>
+                    <TableColumn fx:id="relationshipColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0"
+                                 text="%RELATIONSHIP"/>
+                    <TableColumn fx:id="fingerprintColumn" maxWidth="1000.0" minWidth="250.0" prefWidth="250.0"
+                                 text="%FINGERPRINT"/>
+                    <TableColumn fx:id="isActiveColumn" maxWidth="400.0" minWidth="150.0" prefWidth="100.0"
+                                 text="%IS_ACTIVE"/>
                 </columns>
                 <columnResizePolicy>
-                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
                 </columnResizePolicy>
             </TableView>
         </VBox>

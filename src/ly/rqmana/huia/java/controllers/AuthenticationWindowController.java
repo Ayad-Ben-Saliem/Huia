@@ -2,10 +2,7 @@ package ly.rqmana.huia.java.controllers;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXDatePicker;
-import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXTextField;
-import com.sun.xml.internal.ws.message.ByteArrayAttachment;
-import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -17,10 +14,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.HBox;
 import ly.rqmana.huia.java.controls.CustomComboBox;
-import ly.rqmana.huia.java.controls.alerts.AlertAction;
-import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Person;
@@ -29,22 +23,15 @@ import ly.rqmana.huia.java.models.Subscriber;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
-import ly.rqmana.huia.java.util.fingerprint.FingerprintManager;
 
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.ResourceBundle;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class AuthenticationWindowController implements Controllable {
-
-    private final FingerprintManager fingerprintManager = new FingerprintManager();
 
     private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
 
@@ -121,78 +108,36 @@ public class AuthenticationWindowController implements Controllable {
             }
         });
 
-        try {
-            FingerprintManager.SENSOR.addOnCaptureListener("AUTH_LISTENER", (imageBuffer, template) -> {
-                if (mainWindowController.selectedPageProperty.get().equals(MainWindowController.SelectedPage.AUTHENTICATION)) {
-                    ExecutorService executorService = Executors.newWorkStealingPool(tableView.getItems().size());
-                    for (Subscriber subscriber : tableView.getItems()) {
-                        executorService.submit(() -> {
-
-                            int rt = FingerprintManager.MatchFP(subscriber.getRightThumbFingerprint(), template);
-                            int ri = FingerprintManager.MatchFP(subscriber.getRightIndexFingerprint(), template);
-                            int rm = FingerprintManager.MatchFP(subscriber.getRightMiddleFingerprint(), template);
-                            int rr = FingerprintManager.MatchFP(subscriber.getRightRingFingerprint(), template);
-                            int rl = FingerprintManager.MatchFP(subscriber.getRightLittleFingerprint(), template);
-
-                            int lt = FingerprintManager.MatchFP(subscriber.getLeftThumbFingerprint(), template);
-                            int li = FingerprintManager.MatchFP(subscriber.getLeftIndexFingerprint(), template);
-                            int lm = FingerprintManager.MatchFP(subscriber.getLeftMiddleFingerprint(), template);
-                            int lr = FingerprintManager.MatchFP(subscriber.getLeftRingFingerprint(), template);
-                            int ll = FingerprintManager.MatchFP(subscriber.getRightLittleFingerprint(), template);
-
-                            int matchResult = Math.max(rt, Math.max(ri, Math.max(rm, Math.max(rr, Math.max(rl, Math.max(lt, Math.max(li, Math.max(lm, Math.max(ll, lr)))))))));
-                            System.out.println("matchResult = " + matchResult);
-
-                            if (matchResult > 50) {
-                                Platform.runLater(() -> Alerts.infoAlert(Windows.MAIN_WINDOW, "Recognition", subscriber.getFullName(), AlertAction.OK));
-                            }
-                        });
-                    }
-                }
-            });
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
+//        ExecutorService executorService = Executors.newWorkStealingPool(tableView.getItems().size());
+//        for (Subscriber subscriber : tableView.getItems()) {
+//            executorService.submit(() -> {
+//
+//                int rt = FingerprintManager.MatchFP(subscriber.getRightThumbFingerprint(), template);
+//                int ri = FingerprintManager.MatchFP(subscriber.getRightIndexFingerprint(), template);
+//                int rm = FingerprintManager.MatchFP(subscriber.getRightMiddleFingerprint(), template);
+//                int rr = FingerprintManager.MatchFP(subscriber.getRightRingFingerprint(), template);
+//                int rl = FingerprintManager.MatchFP(subscriber.getRightLittleFingerprint(), template);
+//
+//                int lt = FingerprintManager.MatchFP(subscriber.getLeftThumbFingerprint(), template);
+//                int li = FingerprintManager.MatchFP(subscriber.getLeftIndexFingerprint(), template);
+//                int lm = FingerprintManager.MatchFP(subscriber.getLeftMiddleFingerprint(), template);
+//                int lr = FingerprintManager.MatchFP(subscriber.getLeftRingFingerprint(), template);
+//                int ll = FingerprintManager.MatchFP(subscriber.getRightLittleFingerprint(), template);
+//
+//                int matchResult = Math.max(rt, Math.max(ri, Math.max(rm, Math.max(rr, Math.max(rl, Math.max(lt, Math.max(li, Math.max(lm, Math.max(ll, lr)))))))));
+//                System.out.println("matchResult = " + matchResult);
+//
+//                if (matchResult > 50) {
+//                    Platform.runLater(() -> Alerts.infoAlert(Windows.MAIN_WINDOW, "Recognition", subscriber.getFullName(), AlertAction.OK));
+//                }
+//            });
+//        }
     }
 
     private void loadDataFromDatabase() {
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
         String query;
         try {
-//            try (Connection connection = DriverManager.getConnection(DAO.getDataDBUrl())) {
-//                query = "SELECT " +
-//                        "first_name," +
-//                        "father_name," +
-//                        "last_name," +
-//                        "birthday," +
-//                        "national_id," +
-//                        "sex," +
-//                        "fingerprint_template," +
-//                        "work_id," +
-//                        "relationship," +
-//                        "is_active FROM Fingerprint";
-//                try (Statement statement = connection.createStatement()) {
-//                    ResultSet resultSet = statement.executeQuery(query);
-//
-//                    while (resultSet.next()) {
-//                        Subscriber subscriber = new Subscriber();
-//                        subscriber.setFirstName(resultSet.getString(1));
-//                        subscriber.setFatherName(resultSet.getString(2));
-//                        subscriber.setFamilyName(resultSet.getString(3));
-//
-//                        subscriber.setBirthday(LocalDate.parse(resultSet.getString(4)));
-//                        subscriber.setNationalId(resultSet.getString(5));
-//                        subscriber.setGender("M".equals(resultSet.getString(6)) ? Gender.MALE : Gender.FEMALE);
-//                        subscriber.setFingerprint(resultSet.getString(7));
-//                        subscriber.setWorkId(resultSet.getString(8));
-//                        subscriber.setRelationship(resultSet.getString(9));
-//                        subscriber.setActive(resultSet.getString(10).equals("True"));
-//
-//                        subscribers.add(subscriber);
-//                    }
-//                }
-//            }
-
             query = "SELECT " +
                     "firstName," +
                     "fatherName," +
@@ -267,17 +212,17 @@ public class AuthenticationWindowController implements Controllable {
                     subscriber.setRelationship(resultSet.getString("relationship"));
 //                subscriber.setActive(resultSet.getString(15).equals("True"));
 
-                    subscriber.setRightThumbFingerprint(resultSet.getBytes("rightThumbFingerprint"));
-                    subscriber.setRightIndexFingerprint(resultSet.getBytes("rightIndexFingerprint"));
-                    subscriber.setRightMiddleFingerprint(resultSet.getBytes("rightMiddleFingerprint"));
-                    subscriber.setRightRingFingerprint(resultSet.getBytes("rightRingFingerprint"));
-                    subscriber.setRightLittleFingerprint(resultSet.getBytes("rightLittleFingerprint"));
+                    subscriber.setRightThumbFingerprint(resultSet.getString("rightThumbFingerprint"));
+                    subscriber.setRightIndexFingerprint(resultSet.getString("rightIndexFingerprint"));
+                    subscriber.setRightMiddleFingerprint(resultSet.getString("rightMiddleFingerprint"));
+                    subscriber.setRightRingFingerprint(resultSet.getString("rightRingFingerprint"));
+                    subscriber.setRightLittleFingerprint(resultSet.getString("rightLittleFingerprint"));
 
-                    subscriber.setLeftThumbFingerprint(resultSet.getBytes("leftThumbFingerprint"));
-                    subscriber.setLeftIndexFingerprint(resultSet.getBytes("leftIndexFingerprint"));
-                    subscriber.setLeftMiddleFingerprint(resultSet.getBytes("leftMiddleFingerprint"));
-                    subscriber.setLeftRingFingerprint(resultSet.getBytes("leftRingFingerprint"));
-                    subscriber.setLeftLittleFingerprint(resultSet.getBytes("leftLittleFingerprint"));
+                    subscriber.setLeftThumbFingerprint(resultSet.getString("leftThumbFingerprint"));
+                    subscriber.setLeftIndexFingerprint(resultSet.getString("leftIndexFingerprint"));
+                    subscriber.setLeftMiddleFingerprint(resultSet.getString("leftMiddleFingerprint"));
+                    subscriber.setLeftRingFingerprint(resultSet.getString("leftRingFingerprint"));
+                    subscriber.setLeftLittleFingerprint(resultSet.getString("leftLittleFingerprint"));
 
                     subscribers.add(subscriber);
                 }

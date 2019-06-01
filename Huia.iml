@@ -13,5 +13,6 @@
     <orderEntry type="library" name="org.xerial:sqlite-jdbc:3.27.2.1" level="project" />
     <orderEntry type="library" name="Simple Logging Facade for Java:1.7.26" level="project" />
     <orderEntry type="library" name="NBioBSPJNI" level="project" />
+    <orderEntry type="library" name="javax.media:jmf:2.1.1e" level="project" />
   </component>
 </module>

@@ -6,17 +6,17 @@ public class Subscriber extends Person {
 
     private String fingerprint;
 
-    private byte[] rightThumbFingerprint;
-    private byte[] rightIndexFingerprint;
-    private byte[] rightMiddleFingerprint;
-    private byte[] rightRingFingerprint;
-    private byte[] rightLittleFingerprint;
+    private String rightThumbFingerprint;
+    private String rightIndexFingerprint;
+    private String rightMiddleFingerprint;
+    private String rightRingFingerprint;
+    private String rightLittleFingerprint;
 
-    private byte[] leftThumbFingerprint;
-    private byte[] leftIndexFingerprint;
-    private byte[] leftMiddleFingerprint;
-    private byte[] leftRingFingerprint;
-    private byte[] leftLittleFingerprint;
+    private String leftThumbFingerprint;
+    private String leftIndexFingerprint;
+    private String leftMiddleFingerprint;
+    private String leftRingFingerprint;
+    private String leftLittleFingerprint;
 
     private String workId;
     private Relationship relationship;
@@ -114,83 +114,83 @@ public class Subscriber extends Person {
         isActive = active;
     }
 
-    public byte[] getRightThumbFingerprint() {
+    public String getRightThumbFingerprint() {
         return rightThumbFingerprint;
     }
 
-    public void setRightThumbFingerprint(byte[] rightThumbFingerprint) {
+    public void setRightThumbFingerprint(String rightThumbFingerprint) {
         this.rightThumbFingerprint = rightThumbFingerprint;
     }
 
-    public byte[] getRightIndexFingerprint() {
+    public String getRightIndexFingerprint() {
         return rightIndexFingerprint;
     }
 
-    public void setRightIndexFingerprint(byte[] rightIndexFingerprint) {
+    public void setRightIndexFingerprint(String rightIndexFingerprint) {
         this.rightIndexFingerprint = rightIndexFingerprint;
     }
 
-    public byte[] getRightMiddleFingerprint() {
+    public String getRightMiddleFingerprint() {
         return rightMiddleFingerprint;
     }
 
-    public void setRightMiddleFingerprint(byte[] rightMiddleFingerprint) {
+    public void setRightMiddleFingerprint(String rightMiddleFingerprint) {
         this.rightMiddleFingerprint = rightMiddleFingerprint;
     }
 
-    public byte[] getRightRingFingerprint() {
+    public String getRightRingFingerprint() {
         return rightRingFingerprint;
     }
 
-    public void setRightRingFingerprint(byte[] rightRingFingerprint) {
+    public void setRightRingFingerprint(String rightRingFingerprint) {
         this.rightRingFingerprint = rightRingFingerprint;
     }
 
-    public byte[] getRightLittleFingerprint() {
+    public String getRightLittleFingerprint() {
         return rightLittleFingerprint;
     }
 
-    public void setRightLittleFingerprint(byte[] rightLittleFingerprint) {
+    public void setRightLittleFingerprint(String rightLittleFingerprint) {
         this.rightLittleFingerprint = rightLittleFingerprint;
     }
 
-    public byte[] getLeftThumbFingerprint() {
+    public String getLeftThumbFingerprint() {
         return leftThumbFingerprint;
     }
 
-    public void setLeftThumbFingerprint(byte[] leftThumbFingerprint) {
+    public void setLeftThumbFingerprint(String leftThumbFingerprint) {
         this.leftThumbFingerprint = leftThumbFingerprint;
     }
 
-    public byte[] getLeftIndexFingerprint() {
+    public String getLeftIndexFingerprint() {
         return leftIndexFingerprint;
     }
 
-    public void setLeftIndexFingerprint(byte[] leftIndexFingerprint) {
+    public void setLeftIndexFingerprint(String leftIndexFingerprint) {
         this.leftIndexFingerprint = leftIndexFingerprint;
     }
 
-    public byte[] getLeftMiddleFingerprint() {
+    public String getLeftMiddleFingerprint() {
         return leftMiddleFingerprint;
     }
 
-    public void setLeftMiddleFingerprint(byte[] leftMiddleFingerprint) {
+    public void setLeftMiddleFingerprint(String leftMiddleFingerprint) {
         this.leftMiddleFingerprint = leftMiddleFingerprint;
     }
 
-    public byte[] getLeftRingFingerprint() {
+    public String getLeftRingFingerprint() {
         return leftRingFingerprint;
     }
 
-    public void setLeftRingFingerprint(byte[] leftRingFingerprint) {
+    public void setLeftRingFingerprint(String leftRingFingerprint) {
         this.leftRingFingerprint = leftRingFingerprint;
     }
 
-    public byte[] getLeftLittleFingerprint() {
+    public String getLeftLittleFingerprint() {
         return leftLittleFingerprint;
     }
 
-    public void setLeftLittleFingerprint(byte[] leftLittleFingerprint) {
+    public void setLeftLittleFingerprint(String leftLittleFingerprint) {
         this.leftLittleFingerprint = leftLittleFingerprint;
     }
 }
