@@ -2,6 +2,8 @@ package ly.rqmana.huia.java.db;
 
 import ly.rqmana.huia.java.storage.DataStorage;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -129,13 +131,13 @@ public class DAO {
     public static final String DB_NAME = "Huia.db";
 
     public static String getDBUrl() {
-        return "jdbc:sqlite:" + DataStorage.getDataDirectory().toString() + "\\" + DB_NAME;
+        return "jdbc:sqlite:" + DataStorage.getDataDirectory().toString() + File.separator + DB_NAME;
     }
 
     public static final String DATA_DB_NAME = "FingerprintData.db";
 
     public static String getDataDBUrl() {
-        return "jdbc:sqlite:" + DataStorage.getDataDirectory().toString() + "\\"+ DATA_DB_NAME;
+        return "jdbc:sqlite:" + DataStorage.getDataDirectory().toString() + File.separator + DATA_DB_NAME;
     }
 
 

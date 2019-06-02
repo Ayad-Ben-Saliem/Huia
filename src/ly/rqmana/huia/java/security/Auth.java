@@ -60,8 +60,9 @@ public class Auth {
                         "lastLogin       " +
                         "FROM Users WHERE username=? COLLATE NOCASE";
 
+
                 PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(query);
-                pStatement.setString(1, username.toLowerCase());
+                pStatement.setString(1, username);
                 ResultSet resultSet = pStatement.executeQuery();
 
                 String hashPassword = resultSet.getString("password");

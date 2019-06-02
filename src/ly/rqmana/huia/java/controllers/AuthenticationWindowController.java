@@ -238,6 +238,10 @@ public class AuthenticationWindowController implements Controllable {
     public void addToTableView(ObservableList<Subscriber> subscribers) {
         filteredList = new FilteredList<>(subscribers, subscriber -> true);
 
+//        filteredList.setPredicate(subscriber -> {
+//
+//        });
+
         nameFilterTF.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == null) return;
             if (newValue.isEmpty()) filteredList.setPredicate(subscriber -> true);

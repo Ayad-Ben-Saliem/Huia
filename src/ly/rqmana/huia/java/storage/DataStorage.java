@@ -63,7 +63,7 @@ public class DataStorage {
 
     public static Path saveSubscriberFingerprintImages(Subscriber subscriber) throws IOException {
 
-        // the store hirechery is as follows:
+        // the store hatchery is as follows:
         //
         // NEW_REG_DIR
         //  - {INSTITUTE_ID}
@@ -83,9 +83,13 @@ public class DataStorage {
         if (workId == null || workId.isEmpty())
             throw new RuntimeException("Invalid work id");
 
-        String dirName = fullName + " (" + workId + ")";
-        return getNewRegDir() + institute + File.separator + dirName;
-    }
+//        String dirName = fullName + " (" + workId + ")";
+//        return getNewRegDir() + institute + File.separator + dirName;
+
+
+
+
+
         Path mainEmployeeDir = getNewRegistrationsDir().resolve(instituteId).resolve(workId);
 
         // the first time the employee is being added.
@@ -113,6 +117,7 @@ public class DataStorage {
         }
 
         return subscriberDir;
+
     }
 
     private static void saveFingerprintImages(Path imageDir, Finger finger) throws IOException {
