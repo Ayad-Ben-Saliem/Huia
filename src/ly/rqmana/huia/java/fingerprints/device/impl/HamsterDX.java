@@ -12,6 +12,7 @@ import ly.rqmana.huia.java.fingerprints.hand.Finger;
 import ly.rqmana.huia.java.fingerprints.hand.FingerID;
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.fingerprints.hand.HandType;
+import ly.rqmana.huia.java.util.Triplet;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -113,18 +114,12 @@ public class HamsterDX extends FingerprintDevice {
         return fingerImages;
     }
 
-    private byte[] exportISOData(NBioBSPJNI.INPUT_FIR dataInput){
-
-        NBioBSPJNI.Export.DATA data = exportEngine.new DATA();
-        exportEngine.ExportFIR(dataInput, data, NBioBSPJNI.EXPORT_MINCONV_TYPE.ISO);
-        return data.FingerData[0].Template[0].Data;
-    }
-
     @Override
-    public Pair<Hand, Hand> captureHands() {
+    public FingerprintCaptureResult captureHands() {
 
         Hand rightHand = null;
         Hand leftHand = null;
+        String fingerprintsCode = "";
 
         NBioBSPJNI.FIR_HANDLE firDataHandler = BSP.new FIR_HANDLE();
         NBioBSPJNI.FIR_HANDLE auditDataHandler = BSP.new FIR_HANDLE();
@@ -163,7 +158,7 @@ public class HamsterDX extends FingerprintDevice {
             List<Finger> leftFingers = new ArrayList<>();
 
             // each finger has two Templates. In this case a Template contains
-            // info about the fingerprint code not the image
+            // info about the fingerprint code not the fingerprint image
             for (NBioBSPJNI.Export.FINGER_DATA fingerData: exportFirData.FingerData) {
 
                 String fingerprintCode = null;
@@ -211,20 +206,25 @@ public class HamsterDX extends FingerprintDevice {
 
             rightHand = new Hand(HandType.RIHGT, rightFingers);
             leftHand = new Hand(HandType.LEFT, leftFingers);
+
+            NBioBSPJNI.FIR_TEXTENCODE fingersCodeEncoder = BSP.new FIR_TEXTENCODE();
+            BSP.GetTextFIRFromHandle(firDataHandler, fingersCodeEncoder, SCAN_FORMAT);
+            fingerprintsCode =  fingersCodeEncoder.TextFIR;
         }
 
-        return new Pair<>(rightHand, leftHand);
+        return new FingerprintCaptureResult(rightHand, leftHand, fingerprintsCode);
     }
 
     @Override
     public boolean matchFingerprintCode(String sourceFingerprint, String targetFingerprint) {
+
         FIR_TEXTENCODE sourceTextEncode = BSP.new FIR_TEXTENCODE();
         sourceTextEncode.TextFIR = sourceFingerprint;
         NBioBSPJNI.INPUT_FIR sourceInput = BSP.new INPUT_FIR();
         sourceInput.SetTextFIR(sourceTextEncode);
 
         FIR_TEXTENCODE targetTextEncode = BSP.new FIR_TEXTENCODE();
-        sourceTextEncode.TextFIR = targetFingerprint;
+        targetTextEncode.TextFIR = targetFingerprint;
         NBioBSPJNI.INPUT_FIR targetInput = BSP.new INPUT_FIR();
         targetInput.SetTextFIR(targetTextEncode);
 

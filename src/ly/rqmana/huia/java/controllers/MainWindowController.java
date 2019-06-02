@@ -11,7 +11,6 @@ import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.WindowEvent;
-import ly.rqmana.huia.java.models.Subscriber;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Res;
 import ly.rqmana.huia.java.util.Utils;
@@ -26,7 +25,7 @@ public class MainWindowController implements Controllable {
     public StackPane centralStack;
     public BorderPane mainContainer;
     public JFXButton registrationBtn;
-    public JFXButton authenticationBtn;
+    public JFXButton identificationBtn;
 
     private BooleanProperty locked = new SimpleBooleanProperty(true);
 
@@ -36,7 +35,7 @@ public class MainWindowController implements Controllable {
 
     private HomeWindowController homeWindowController;
     private RegistrationWindowController registrationWindowController;
-    private AuthenticationWindowController authenticationWindowController;
+    private IdentificationWindowController identificationWindowController;
 
     private EventHandler<WindowEvent> windowEventHandler;
 
@@ -58,14 +57,14 @@ public class MainWindowController implements Controllable {
                 case REGISTRATION:
                     registrationBtn.setStyle("-fx-background-color: -rq-background-alt;" +
                                              "-fx-text-fill: -rq-text-background-alt;");
-                    authenticationBtn.setStyle("-fx-background-color: -rq-background;" +
+                    identificationBtn.setStyle("-fx-background-color: -rq-background;" +
                                                "-fx-text-fill: -rq-text-background;");
                     getRegistrationWindow().toFront();
                     break;
                 case AUTHENTICATION:
                     registrationBtn.setStyle("-fx-background-color: -rq-background;" +
                                              "-fx-text-fill: -rq-text-background;");
-                    authenticationBtn.setStyle("-fx-background-color: -rq-background-alt;" +
+                    identificationBtn.setStyle("-fx-background-color: -rq-background-alt;" +
                                                "-fx-text-fill: -rq-text-background-alt;");
                     getAuthenticationWindow().toFront();
                     break;
@@ -73,7 +72,7 @@ public class MainWindowController implements Controllable {
         });
 
         registrationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.REGISTRATION));
-        authenticationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.AUTHENTICATION));
+        identificationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.AUTHENTICATION));
 
         registrationBtn.fire();
 
@@ -127,7 +126,7 @@ public class MainWindowController implements Controllable {
             try {
                 FXMLLoader loader = new FXMLLoader(Res.Fxml.AUTHENTICATION.getUrl(), Utils.getBundle());
                 authenticationWindow = loader.load();
-                authenticationWindowController = loader.getController();
+                identificationWindowController = loader.getController();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -143,8 +142,8 @@ public class MainWindowController implements Controllable {
         return registrationWindowController;
     }
 
-    public AuthenticationWindowController getAuthenticationWindowController() {
-        return authenticationWindowController;
+    public IdentificationWindowController getIdentificationWindowController() {
+        return identificationWindowController;
     }
 
     public StackPane getRootStack() {
@@ -162,4 +161,5 @@ public class MainWindowController implements Controllable {
     public void setOnCloseRequest(EventHandler<WindowEvent> eventHandler) {
         windowEventHandler = eventHandler;
     }
+
 }

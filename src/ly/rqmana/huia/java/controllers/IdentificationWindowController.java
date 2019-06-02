@@ -2,7 +2,9 @@ package ly.rqmana.huia.java.controllers;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXDatePicker;
+import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXTextField;
+import com.sun.istack.internal.Nullable;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -10,12 +12,18 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import ly.rqmana.huia.java.concurrent.Task;
+import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.CustomComboBox;
+import ly.rqmana.huia.java.controls.alerts.AlertAction;
+import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.db.DAO;
+import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
+import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
+import ly.rqmana.huia.java.fingerprints.hand.Finger;
+import ly.rqmana.huia.java.fingerprints.hand.FingerID;
 import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Person;
 import ly.rqmana.huia.java.models.Relationship;
@@ -29,11 +37,10 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
-public class AuthenticationWindowController implements Controllable {
-
-    private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
+public class IdentificationWindowController implements Controllable {
 
     @FXML public Label nameLabel;
     @FXML public Label fingerprintLabel;
@@ -104,7 +111,6 @@ public class AuthenticationWindowController implements Controllable {
             if (nameLabel != null) {
                 lastSelectedPerson.setValue(newValue);
                 nameLabel.setText(newValue.getFullName());
-                fingerprintBtn.setDisable(false);
             }
         });
 
@@ -136,41 +142,11 @@ public class AuthenticationWindowController implements Controllable {
 
     private void loadDataFromDatabase() {
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
+
         String query;
         try {
-            query = "SELECT " +
-                    "firstName," +
-                    "fatherName," +
-                    "grandfatherName," +
-                    "familyName," +
-                    "birthday," +
-                    "nationalId," +
-                    "gender," +
-                    "workId," +
-                    "relationship" +
-                    " FROM People";
 
-            try (Statement statement = DAO.DB_CONNECTION.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
-
-                while (resultSet.next()) {
-                    Subscriber subscriber = new Subscriber();
-                    subscriber.setFirstName(resultSet.getString(1));
-                    subscriber.setFatherName(resultSet.getString(2));
-                    subscriber.setGrandfatherName(resultSet.getString(3));
-                    subscriber.setFamilyName(resultSet.getString(4));
-
-                    subscriber.setBirthday(LocalDate.parse(resultSet.getString(5)));
-                    subscriber.setNationalId(resultSet.getString(6));
-                    subscriber.setGender("M".equals(resultSet.getString(7)) ? Gender.MALE : Gender.FEMALE);
-//                subscriber.setFingerprint(resultSet.getString(8));
-                    subscriber.setWorkId(resultSet.getString(8));
-                    subscriber.setRelationship(resultSet.getString(9));
-//                subscriber.setActive(resultSet.getString(15).equals("True"));
-
-                    subscribers.add(subscriber);
-                }
-            }
+            //todo: change this to load from People table not NewRegeneration
 
             query = "SELECT " +
                     "firstName," +
@@ -182,6 +158,7 @@ public class AuthenticationWindowController implements Controllable {
                     "gender," +
                     "workId," +
                     "relationship," +
+                    "fingerprintsCode," +
                     "rightThumbFingerprint," +
                     "rightIndexFingerprint," +
                     "rightMiddleFingerprint," +
@@ -199,6 +176,7 @@ public class AuthenticationWindowController implements Controllable {
 
                 while (resultSet.next()) {
                     Subscriber subscriber = new Subscriber();
+
                     subscriber.setFirstName(resultSet.getString("firstName"));
                     subscriber.setFatherName(resultSet.getString("fatherName"));
                     subscriber.setGrandfatherName(resultSet.getString("grandfatherName"));
@@ -207,11 +185,11 @@ public class AuthenticationWindowController implements Controllable {
                     subscriber.setBirthday(LocalDate.parse(resultSet.getString("birthday")));
                     subscriber.setNationalId(resultSet.getString("nationalId"));
                     subscriber.setGender("M".equals(resultSet.getString("gender")) ? Gender.MALE : Gender.FEMALE);
-//                subscriber.setFingerprint(resultSet.getString(8));
+
                     subscriber.setWorkId(resultSet.getString("workId"));
                     subscriber.setRelationship(resultSet.getString("relationship"));
-//                subscriber.setActive(resultSet.getString(15).equals("True"));
 
+                    subscriber.setFingerprintsCode(resultSet.getString("fingerprintsCode"));
                     subscriber.setRightThumbFingerprint(resultSet.getString("rightThumbFingerprint"));
                     subscriber.setRightIndexFingerprint(resultSet.getString("rightIndexFingerprint"));
                     subscriber.setRightMiddleFingerprint(resultSet.getString("rightMiddleFingerprint"));
@@ -237,10 +215,6 @@ public class AuthenticationWindowController implements Controllable {
 
     public void addToTableView(ObservableList<Subscriber> subscribers) {
         filteredList = new FilteredList<>(subscribers, subscriber -> true);
-
-//        filteredList.setPredicate(subscriber -> {
-//
-//        });
 
         nameFilterTF.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == null) return;
@@ -271,9 +245,9 @@ public class AuthenticationWindowController implements Controllable {
                     return true;
                 }
                 if (newValue.equals("Filled")) {
-                    return !person.getFingerprint().isEmpty();
+                    return !person.getFingerprintsCode().isEmpty();
                 } else {
-                    return person.getFingerprint().isEmpty();
+                    return person.getFingerprintsCode().isEmpty();
                 }
             });
         });
@@ -281,7 +255,78 @@ public class AuthenticationWindowController implements Controllable {
         tableView.setItems(filteredList);
     }
 
-    public void onFingerprintBtnClicked(ActionEvent actionEvent) {
+    @FXML
+    public void fingerprintButtonAction(ActionEvent actionEvent) {
 
+        ObservableList<Subscriber> searchSubs = tableView.getItems();
+
+        Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
+
+        openDeviceTask.addOnSucceeded(event -> {
+
+            Finger scannedFinger = FingerprintManager.device().captureFinger(FingerID.UNKNOWN);
+
+            // if the user cancels capturing
+            // an empty finger is returned
+            if (scannedFinger.isEmpty())
+                return;
+
+            boolean foundMatch = false;
+
+            for (Subscriber subscriber : searchSubs) {
+
+                String subscriberFingerprint = subscriber.getFingerprintsCode();
+                if (subscriberFingerprint != null && ! subscriberFingerprint.isEmpty()){
+
+                    String scannedFingerprint = scannedFinger.getFingerprintTemplate();
+                    boolean match = FingerprintManager.device().matchFingerprintCode(scannedFingerprint, subscriberFingerprint);
+
+                    if (match) {
+                        foundMatch = true;
+                        showIdentificationStateError(true, subscriber);
+                        break;
+                    }
+                }
+            }
+
+            if (! foundMatch) {
+                showIdentificationStateError(false, null);
+            }
+        });
+
+        openDeviceTask.addOnFailed(event -> {
+
+            Optional<AlertAction> result = Windows.showFingerprintDeviceError(event.getSource().getException());
+            if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN){
+                fingerprintButtonAction(null);
+            }
+
+        });
+
+        Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
+    }
+
+    private void showIdentificationStateError(boolean state, @Nullable Subscriber subscriber){
+
+        if (state) {
+            System.out.printf("[Found match] %s%n", subscriber.getFullName());
+
+            String heading = Utils.getI18nString("IDENTIFICATION_FOUND_HEADING");
+            String body = Utils.getI18nString("IDENTIFICATION_FOUND_BODY").replace("{0}", subscriber.getFullName());
+
+            Alert alert= new Alert(Alert.AlertType.INFORMATION, body, ButtonType.OK);
+            alert.setTitle(heading);
+            alert.show();
+        }
+        else {
+
+            String heading = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_HEADING");
+            String body = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_BODY");
+
+            Alerts.infoAlert(Windows.MAIN_WINDOW,
+                    heading,
+                    body,
+                    AlertAction.OK);
+        }
     }
 }

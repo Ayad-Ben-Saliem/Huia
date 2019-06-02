@@ -6,10 +6,9 @@ import java.time.LocalDate;
 
 public class Subscriber extends Person {
 
-    private String fingerprint;
-
     private Hand rightHand;
     private Hand leftHand;
+    private String fingerprintsCode;
 
     private String rightThumbFingerprint;
     private String rightIndexFingerprint;
@@ -31,12 +30,12 @@ public class Subscriber extends Person {
     private LocalDate endDate;
     private Boolean isActive;
 
-    public String getFingerprint() {
-        return fingerprint;
+    public String getFingerprintsCode() {
+        return fingerprintsCode;
     }
 
-    public void setFingerprint(String fingerprint) {
-        this.fingerprint = fingerprint;
+    public void setFingerprintsCode(String fingerprintsCode) {
+        this.fingerprintsCode = fingerprintsCode;
     }
 
     public String getWorkId() {

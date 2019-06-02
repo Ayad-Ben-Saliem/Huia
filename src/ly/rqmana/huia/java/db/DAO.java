@@ -58,6 +58,7 @@ public class DAO {
                     + "instituteId          INTEGER NOT NULL,"
                     + "workId               TEXT NOT NULL,"
                     + "relationship         TEXT NOT NULL,"
+                    + "fingerprintsCode        TEXT,"
                     + "rightThumbFingerprint   TEXT,"
                     + "rightIndexFingerprint   TEXT,"
                     + "rightMiddleFingerprint  TEXT,"
@@ -91,6 +92,7 @@ public class DAO {
                     + "instituteId          INTEGER NOT NULL,"
                     + "workId               TEXT NOT NULL,"
                     + "relationship         TEXT NOT NULL,"
+                    + "fingerprintsCode        TEXT,"
                     + "rightThumbFingerprint   TEXT,"
                     + "rightIndexFingerprint   TEXT,"
                     + "rightMiddleFingerprint  TEXT,"
@@ -131,13 +133,13 @@ public class DAO {
     public static final String DB_NAME = "Huia.db";
 
     public static String getDBUrl() {
-        return "jdbc:sqlite:" + DataStorage.getDataDirectory().toString() + File.separator + DB_NAME;
+        return "jdbc:sqlite:" + DataStorage.getDataDirectory().resolve(DB_NAME).toString();
     }
 
     public static final String DATA_DB_NAME = "FingerprintData.db";
 
     public static String getDataDBUrl() {
-        return "jdbc:sqlite:" + DataStorage.getDataDirectory().toString() + File.separator + DATA_DB_NAME;
+        return "jdbc:sqlite:" + DataStorage.getDataDirectory().resolve(DATA_DB_NAME).toString();
     }
 
 

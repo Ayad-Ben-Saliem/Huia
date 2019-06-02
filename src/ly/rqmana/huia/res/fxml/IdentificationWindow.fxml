@@ -17,7 +17,7 @@
 
 <VBox alignment="TOP_CENTER" prefHeight="640.0" prefWidth="1256.0" style="-fx-background-color: -rq-background;"
       stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="ly.rqmana.huia.java.controllers.AuthenticationWindowController">
+      fx:controller="ly.rqmana.huia.java.controllers.IdentificationWindowController">
     <Label fx:id="nameLabel" textFill="WHITE">
         <VBox.margin>
             <Insets top="32.0"/>
@@ -28,7 +28,7 @@
     </Label>
 
     <JFXButton id="fingerprintBtn" fx:id="fingerprintBtn" buttonType="RAISED" contentDisplay="GRAPHIC_ONLY"
-               disable="true" mnemonicParsing="false" onAction="#onFingerprintBtnClicked">
+               mnemonicParsing="false" onAction="#fingerprintButtonAction">
         <graphic>
             <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
                 <Image url="@../images/huia_logo.png"/>

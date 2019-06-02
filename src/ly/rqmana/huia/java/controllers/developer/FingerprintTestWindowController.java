@@ -14,10 +14,12 @@ import javafx.scene.layout.VBox;
 import javafx.util.Pair;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
+import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
 import ly.rqmana.huia.java.fingerprints.hand.Finger;
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
+import ly.rqmana.huia.java.util.Triplet;
 
 public class FingerprintTestWindowController {
     
@@ -50,9 +52,9 @@ public class FingerprintTestWindowController {
 
             clearFingerprintsStages();
 
-            Pair<Hand, Hand> hands = FingerprintManager.device().captureHands();
-            Hand rightHand = hands.getKey();
-            Hand leftHand = hands.getValue();
+            FingerprintCaptureResult captureResult = FingerprintManager.device().captureHands();
+            Hand rightHand = captureResult.getRightHand();
+            Hand leftHand = captureResult.getRightHand();
 
             if (rightHand == null || leftHand == null){
                 // null hands usually means the use canceled

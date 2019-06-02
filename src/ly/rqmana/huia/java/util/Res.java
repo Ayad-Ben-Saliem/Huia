@@ -32,7 +32,7 @@ public final class Res {
         REGISTRATION_WINDOW     ("RegistrationWindow.fxml"),
         LOGIN_DIALOG            ("LoginDialog.fxml"),
         SIGN_UP_WINDOW          ("SignUpWindow.fxml"),
-        AUTHENTICATION          ("AuthenticationWindow.fxml"),
+        AUTHENTICATION          ("IdentificationWindow.fxml"),
 
         ADD_CONTACTS_METHOD_WINDOW("AddContactMethodDialog.fxml"),
         PERSONAL_IMAGE_WINDOW("PersonalImageLoader.fxml"),

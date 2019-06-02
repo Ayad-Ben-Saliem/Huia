@@ -7,7 +7,12 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.FlowPane?>
 
-<FlowPane alignment="CENTER" hgap="20.0" prefWidth="500.0" prefWrapLength="340.0" style="-fx-background-radius: 10; -fx-background-color: -rq-background-alt;" stylesheets="@../css/theme.css" vgap="20.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.AddContactMethodDialogController">
+<FlowPane alignment="CENTER" hgap="20.0" prefWidth="500.0" prefWrapLength="340.0" style="-fx-background-radius: 10; -fx-background-color: -rq-background-alt;"
+          stylesheets="@../css/theme.css"
+          vgap="20.0"
+          xmlns="http://javafx.com/javafx/8.0.172-ea"
+          xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="ly.rqmana.huia.java.controllers.AddContactMethodDialogController">
 
    <JFXButton buttonType="RAISED" contentDisplay="TOP" graphicTextGap="16.0" mnemonicParsing="false" onAction="#onPhoneBtnClicked" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: -rq-accent-light; -fx-border-radius: 10; -fx-background-radius: 10;" styleClass="common-button" text="%PHONE" wrapText="true">
       <graphic>

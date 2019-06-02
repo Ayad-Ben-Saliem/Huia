@@ -17,7 +17,6 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.util.Pair;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.ContactField;
@@ -25,10 +24,9 @@ import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.db.DAO;
-import ly.rqmana.huia.java.fingerprints.activity.FingerprintDeviceNotOpenedException;
+import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
-import ly.rqmana.huia.java.fingerprints.hand.Finger;
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Institute;
@@ -46,7 +44,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.function.Supplier;
 
 public class RegistrationWindowController implements Controllable {
 
@@ -65,8 +62,7 @@ public class RegistrationWindowController implements Controllable {
     @FXML public CustomComboBox<Relationship> relationshipComboBox;
     private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
 
-    private Hand rightHand;
-    private Hand leftHand;
+    private FingerprintCaptureResult fingerprintCaptureResult;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -216,36 +212,16 @@ public class RegistrationWindowController implements Controllable {
 
     public void fingerprintButtonAction(ActionEvent actionEvent) {
 
-        Supplier<Pair<Hand, Hand>> captureCallable = () -> {
-            Pair<Hand, Hand> handHandPair = FingerprintManager.device().captureHands();
-            rightHand = handHandPair.getKey();
-            leftHand = handHandPair.getValue();
-            return handHandPair;
-        };
+        Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
+        openDeviceTask.addOnSucceeded(event -> {
+            fingerprintCaptureResult = FingerprintManager.device().captureHands();
 
-        if (! FingerprintManager.isDeviceOpen()) {
-
-            Task<Boolean> openDeviceTask =  FingerprintManager.openDevice(FingerprintDeviceType.HAMSTER_DX);
-
-            openDeviceTask.addOnSucceeded(event -> {
-                captureCallable.get();
-            });
-
-            openDeviceTask.addOnFailed(event -> {
-                event.getSource().getException().printStackTrace();
+        })
+            .addOnFailed(event -> {
                 fingerprintDeviceError(event.getSource().getException());
-            });
+        });
 
-            Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
-        }
-        else{
-            try {
-                captureCallable.get();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                fingerprintDeviceError(ex);
-            }
-        }
+        Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
     }
 
     public void onEnterBtnClicked() {
@@ -255,11 +231,13 @@ public class RegistrationWindowController implements Controllable {
     }
 
     private void setupInputFields() {
+
         firstNameTextField.setText("");
         fatherNameTextField.setText("");
         grandfatherNameTextField.setText("");
         familyNameTextField.setText("");
         birthdayDatePicker.setValue(null);
+
         genderComboBox.setValue(Gender.MALE);
         if (instituteComboBox.getValue() == null && instituteComboBox.getItems().size() > 0) {
             instituteComboBox.setValue(instituteComboBox.getItems().get(0));
@@ -268,6 +246,7 @@ public class RegistrationWindowController implements Controllable {
             nationalityTextField.setText(Utils.getI18nString("LIBYAN"));
         }
         newEmployeeWorkIdTextField.setText("");
+
 //        contactsContainer.getChildren().remove(3, contactsContainer.getChildren().size());
 //        contactsContainer.getChildren().forEach(node -> {
 //            ContactField contactField = (ContactField) node;
@@ -276,6 +255,7 @@ public class RegistrationWindowController implements Controllable {
     }
 
     private boolean validate() {
+
         boolean validate;
         validate = firstNameTextField.validate();
         validate &= fatherNameTextField.validate();
@@ -296,7 +276,7 @@ public class RegistrationWindowController implements Controllable {
 
         validate &= contactsContainer.getChildren().stream().map(node -> (ContactField) node).map(ContactField::validate).reduce(true, (a, b) -> a && b);
 
-        if (rightHand == null && leftHand == null) {
+        if (fingerprintCaptureResult == null) {
             Alerts.warningAlert(Windows.MAIN_WINDOW, "WARNING", "Please enter a fingerprint", AlertAction.OK);
             validate = false;
         }
@@ -324,6 +304,7 @@ public class RegistrationWindowController implements Controllable {
                                 + "instituteId,"
                                 + "workId,"
                                 + "relationship,"
+                                + "fingerprintsCode,"
                                 + "rightThumbFingerprint,"
                                 + "rightIndexFingerprint,"
                                 + "rightMiddleFingerprint,"
@@ -337,7 +318,7 @@ public class RegistrationWindowController implements Controllable {
                                 + "fingerprintImagesDir,"
                                 + "user,"
                                 + "dateAdded"
-                                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
                 PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(INSERT_QUERY);
 
@@ -355,29 +336,35 @@ public class RegistrationWindowController implements Controllable {
                 pStatement.setString(10, workId);
                 pStatement.setString(11, relationshipComboBox.getValue().toString());
 
-                if (rightHand != null) {
-                    pStatement.setString(12, rightHand.getThumb().getFingerprintTemplate());
-                    pStatement.setString(13, rightHand.getIndex().getFingerprintTemplate());
-                    pStatement.setString(14, rightHand.getMiddle().getFingerprintTemplate());
-                    pStatement.setString(15, rightHand.getRing().getFingerprintTemplate());
-                    pStatement.setString(16, rightHand.getLittle().getFingerprintTemplate());
-                }
+                if (fingerprintCaptureResult != null) {
 
-                if (leftHand != null) {
-                    pStatement.setString(17, leftHand.getThumb().getFingerprintTemplate());
-                    pStatement.setString(18, leftHand.getIndex().getFingerprintTemplate());
-                    pStatement.setString(19, leftHand.getMiddle().getFingerprintTemplate());
-                    pStatement.setString(20, leftHand.getRing().getFingerprintTemplate());
-                    pStatement.setString(21, leftHand.getLittle().getFingerprintTemplate());
-                }
+                    String fingerprintsCode = fingerprintCaptureResult.getFingerprintsCode();
+                    pStatement.setString(12, fingerprintsCode);
 
+                    Hand rightHand = fingerprintCaptureResult.getRightHand();
+                    if (rightHand != null) {
+                        pStatement.setString(13, rightHand.getThumb().getFingerprintTemplate());
+                        pStatement.setString(14, rightHand.getIndex().getFingerprintTemplate());
+                        pStatement.setString(15, rightHand.getMiddle().getFingerprintTemplate());
+                        pStatement.setString(16, rightHand.getRing().getFingerprintTemplate());
+                        pStatement.setString(17, rightHand.getLittle().getFingerprintTemplate());
+                    }
+
+                    Hand leftHand = fingerprintCaptureResult.getLeftHand();
+                    if (leftHand != null) {
+                        pStatement.setString(18, leftHand.getThumb().getFingerprintTemplate());
+                        pStatement.setString(19, leftHand.getIndex().getFingerprintTemplate());
+                        pStatement.setString(20, leftHand.getMiddle().getFingerprintTemplate());
+                        pStatement.setString(21, leftHand.getRing().getFingerprintTemplate());
+                        pStatement.setString(22, leftHand.getLittle().getFingerprintTemplate());
+                    }
+                }
                 String imagesDir = DataStorage.saveSubscriberFingerprintImages(newSubscriber).toString();
-                System.out.println(imagesDir);
 
-                pStatement.setString(22, imagesDir);
+                pStatement.setString(23, imagesDir);
 
-                pStatement.setString(23, Auth.getCurrentUser().getUsername());
-                pStatement.setString(24, LocalDate.now().toString());
+                pStatement.setString(24, Auth.getCurrentUser().getUsername());
+                pStatement.setString(25, LocalDate.now().toString());
 
                 pStatement.executeUpdate();
 
@@ -407,19 +394,6 @@ public class RegistrationWindowController implements Controllable {
         Threading.MAIN_EXECUTOR_SERVICE.submit(saveTask);
     }
 
-    private void setTemplateToStatement(PreparedStatement statement, int columnIndex, Finger finger) {
-        try {
-            if (statement.isClosed()) return;
-            if (finger == null || finger.getFingerprintTemplate() == null) {
-//                statement.setString(columnIndex, "");
-            } else {
-                statement.setString(columnIndex, finger.getFingerprintTemplate());
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
     private Subscriber constructSubscriber() {
         Subscriber subscriber = new Subscriber();
 
@@ -438,8 +412,9 @@ public class RegistrationWindowController implements Controllable {
         subscriber.setWorkId(workId);
         subscriber.setRelationship(relationshipComboBox.getValue());
 
-        subscriber.setRightHand(rightHand);
-        subscriber.setLeftHand(leftHand);
+        subscriber.setRightHand(fingerprintCaptureResult.getRightHand());
+        subscriber.setLeftHand(fingerprintCaptureResult.getLeftHand());
+        subscriber.setFingerprintsCode(fingerprintCaptureResult.getFingerprintsCode());
 
         subscriber.setInstuteId(String.valueOf(instituteComboBox.getValue().getId()));
 
@@ -448,10 +423,10 @@ public class RegistrationWindowController implements Controllable {
 
     private void updateAuthTable(Subscriber subscriber) {
         MainWindowController mwc = Windows.MAIN_WINDOW.getController();
-        FilteredList<Subscriber> oldFilteredSubscribers = (FilteredList<Subscriber>) mwc.getAuthenticationWindowController().tableView.getItems();
+        FilteredList<Subscriber> oldFilteredSubscribers = (FilteredList<Subscriber>) mwc.getIdentificationWindowController().tableView.getItems();
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(oldFilteredSubscribers.getSource());
         subscribers.add(subscriber);
-        mwc.getAuthenticationWindowController().addToTableView(subscribers);
+        mwc.getIdentificationWindowController().addToTableView(subscribers);
     }
 
     private void updateWorkIdes(String newWorkId) {
@@ -465,21 +440,6 @@ public class RegistrationWindowController implements Controllable {
         mainWindowController.lock(true);
     }
 
-    public void onFingerprintBtnClicked(ActionEvent actionEvent) {
-        if (!FingerprintManager.isDeviceOpen()) {
-            FingerprintManager.openDevice(FingerprintDeviceType.HAMSTER_DX).addOnSucceeded(event -> {
-                try {
-                    Pair<Hand, Hand> handHandPair = FingerprintManager.device().captureHands();
-                    rightHand = handHandPair.getKey();
-                    leftHand = handHandPair.getValue();
-                } catch (Exception ex) {
-                    fingerprintDeviceError(ex);
-                }
-            }).addOnFailed(event -> {
-                fingerprintDeviceError(event.getSource().getException());
-            }).start();
-        }
-    }
     private void updateLoadingView(boolean loading){
         StackPane rootStack = getMainController().rootStack;
         rootStack.setDisable(loading);
@@ -493,39 +453,10 @@ public class RegistrationWindowController implements Controllable {
 
     private void fingerprintDeviceError(Throwable throwable) {
 
-        if (throwable instanceof FingerprintDeviceNotOpenedException ||
-                throwable instanceof IOException) {
+        Optional<AlertAction> result = Windows.showFingerprintDeviceError(throwable);
 
-            Optional<AlertAction> alertAction = Alerts.errorAlert(
-                    Windows.MAIN_WINDOW,
-                    Utils.getI18nString("ERROR"),
-                    Utils.getI18nString("DEVICE_NOT_OPENED_ERROR_BODY"),
-                    throwable,
-                    AlertAction.CANCEL, AlertAction.TRY_AGAIN);
-
-            if (alertAction.isPresent() && alertAction.get().equals(AlertAction.TRY_AGAIN)) {
+        if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN) {
                 fingerprintButtonAction(null);
-            }
-        } else
-        if (throwable instanceof UnsatisfiedLinkError) {
-            Optional<AlertAction> alertAction = Alerts.errorAlert(
-                    Windows.MAIN_WINDOW,
-                    Utils.getI18nString("ERROR"),
-                    Utils.getI18nString("LIBRARY_NOT_EXIST"),
-                    throwable,
-                    AlertAction.CANCEL, AlertAction.TRY_AGAIN);
-
-            if (alertAction.isPresent() && alertAction.get().equals(AlertAction.TRY_AGAIN)) {
-                fingerprintButtonAction(null);
-            }
-        } else
-            if (throwable instanceof IOException) {
-            Alerts.errorAlert(
-                    Windows.MAIN_WINDOW,
-                    Utils.getI18nString("ERROR"),
-                    throwable.getLocalizedMessage(),
-                    throwable,
-                    AlertAction.CANCEL);
         }
     }
 

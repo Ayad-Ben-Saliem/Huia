@@ -32,6 +32,21 @@ public class FingerprintManager {
         return device.get();
     }
 
+    public static Task<Boolean> openDeviceIfNotOpen(@NotNull FingerprintDeviceType deviceType){
+
+        Task<Boolean> task = new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+                return true;
+            }
+        };
+
+        if (! isDeviceOpen())
+            task = openDevice(deviceType);
+
+        return task;
+    }
+
     public static Task<Boolean> openDevice(@NotNull FingerprintDeviceType deviceType){
         return openDevice(deviceType, DEFAULT_TIMOUT, DEFAULT_SECURITY_LEVEL);
     }

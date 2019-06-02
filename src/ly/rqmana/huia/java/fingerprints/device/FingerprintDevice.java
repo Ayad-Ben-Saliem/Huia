@@ -5,11 +5,13 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.util.Pair;
+import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.device.impl.HamsterDX;
 import ly.rqmana.huia.java.fingerprints.hand.Finger;
 import ly.rqmana.huia.java.fingerprints.hand.FingerID;
 import ly.rqmana.huia.java.fingerprints.SecurityLevel;
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
+import ly.rqmana.huia.java.util.Triplet;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -39,7 +41,7 @@ public abstract class FingerprintDevice implements Closeable {
 
     public abstract Finger captureFinger(FingerID fingerID);
 
-    public abstract Pair<Hand, Hand> captureHands();
+    public abstract FingerprintCaptureResult captureHands();
 
     /**
      * captures a new finger using the device and then matches it with the supplied {@code target}
@@ -54,7 +56,6 @@ public abstract class FingerprintDevice implements Closeable {
     }
 
     public abstract boolean matchFingerprintCode(String source, String target);
-
 
     public abstract void open() throws IOException;
 
