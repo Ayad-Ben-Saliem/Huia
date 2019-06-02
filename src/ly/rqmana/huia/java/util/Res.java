@@ -35,14 +35,14 @@ public final class Res {
         AUTHENTICATION          ("AuthenticationWindow.fxml"),
 
         ADD_CONTACTS_METHOD_WINDOW("AddContactMethodDialog.fxml"),
-
-        INSTALLATION_WINDOW     (INSTALLATION + "InstallationWindow.fxml"),
-        LICENSE_TERMS_PAGE      (INSTALLATION + "License&TermsPage.fxml"),
-        INSTALLATION_DIR_PAGE   (INSTALLATION + "InstallationDirectoryPage.fxml"),
-        HEALTH_CENTER_INFO_PAGE (INSTALLATION + "HealthCenterInfoPage.fxml"),
-        INFO_DIALOG             ("AlertDialog.fxml"),
-        ERROR_DIALOG            ("AlertDialog.fxml"),
-        WARNING_DIALOG          ("AlertDialog.fxml"),
+        PERSONAL_IMAGE_WINDOW("PersonalImageLoader.fxml"),
+        INSTALLATION_WINDOW(INSTALLATION + "InstallationWindow.fxml"),
+        LICENSE_TERMS_PAGE(INSTALLATION + "License&TermsPage.fxml"),
+        INSTALLATION_DIR_PAGE(INSTALLATION + "InstallationDirectoryPage.fxml"),
+        HEALTH_CENTER_INFO_PAGE(INSTALLATION + "HealthCenterInfoPage.fxml"),
+        INFO_DIALOG("AlertDialog.fxml"),
+        ERROR_DIALOG("AlertDialog.fxml"),
+        WARNING_DIALOG("AlertDialog.fxml"),
 
         CUSTOM_ALERT_LAYOUT     (ALERTS + "CustomAlertLayout.fxml"),
         INFO_ALERT_DETAILS_LAYOUT(ALERTS + "InfoAlertDetailsLayout.fxml"),

@@ -3,11 +3,11 @@
        and for some buttons background color....
        it's the main ui color besides the background color
      */
-    -rq-accent-focus: blue;
-    -rq-accent-unfocus: #29a7b4;
+    -rq-accent-focus: #258485;
+    -rq-accent-unfocus: #3acdce;
 
-    -rq-accent-dark: blue;
-    -rq-accent-light: #29a7b4;
+    -rq-accent-dark: #258485;
+    -rq-accent-light: #3acdce;
 
     -rq-background: #303030;
     -rq-background-alt: white;

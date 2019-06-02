@@ -11,9 +11,11 @@ import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.Cursor;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.util.Pair;
 import ly.rqmana.huia.java.concurrent.Task;
@@ -61,7 +63,6 @@ public class RegistrationWindowController implements Controllable {
     @FXML public JFXTextField nationalIdTextField;
     @FXML public CustomComboBox<Gender> genderComboBox;
     @FXML public CustomComboBox<Relationship> relationshipComboBox;
-
     private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
 
     private Hand rightHand;
@@ -249,7 +250,7 @@ public class RegistrationWindowController implements Controllable {
 
     public void onEnterBtnClicked() {
         if (validate()) {
-            upload();
+            saveToDB();
         }
     }
 
@@ -296,21 +297,20 @@ public class RegistrationWindowController implements Controllable {
         validate &= contactsContainer.getChildren().stream().map(node -> (ContactField) node).map(ContactField::validate).reduce(true, (a, b) -> a && b);
 
         if (rightHand == null && leftHand == null) {
-//            TODO: print validation message
+            Alerts.warningAlert(Windows.MAIN_WINDOW, "WARNING", "Please enter a fingerprint", AlertAction.OK);
             validate = false;
         }
 
         return validate;
     }
 
-    private void upload() {
+    private void saveToDB() {
 
         Task<Subscriber> saveTask = new Task<Subscriber>() {
             @Override
             protected Subscriber call() throws Exception {
 
                 Subscriber newSubscriber = constructSubscriber();
-
                 final String INSERT_QUERY =
                         "INSERT INTO NewRegistrations ("
                                 + "firstName,"
@@ -465,6 +465,21 @@ public class RegistrationWindowController implements Controllable {
         mainWindowController.lock(true);
     }
 
+    public void onFingerprintBtnClicked(ActionEvent actionEvent) {
+        if (!FingerprintManager.isDeviceOpen()) {
+            FingerprintManager.openDevice(FingerprintDeviceType.HAMSTER_DX).addOnSucceeded(event -> {
+                try {
+                    Pair<Hand, Hand> handHandPair = FingerprintManager.device().captureHands();
+                    rightHand = handHandPair.getKey();
+                    leftHand = handHandPair.getValue();
+                } catch (Exception ex) {
+                    fingerprintDeviceError(ex);
+                }
+            }).addOnFailed(event -> {
+                fingerprintDeviceError(event.getSource().getException());
+            }).start();
+        }
+    }
     private void updateLoadingView(boolean loading){
         StackPane rootStack = getMainController().rootStack;
         rootStack.setDisable(loading);
@@ -503,7 +518,26 @@ public class RegistrationWindowController implements Controllable {
             if (alertAction.isPresent() && alertAction.get().equals(AlertAction.TRY_AGAIN)) {
                 fingerprintButtonAction(null);
             }
+        } else
+            if (throwable instanceof IOException) {
+            Alerts.errorAlert(
+                    Windows.MAIN_WINDOW,
+                    Utils.getI18nString("ERROR"),
+                    throwable.getLocalizedMessage(),
+                    throwable,
+                    AlertAction.CANCEL);
         }
+    }
+
+    public void onPersonalImageViewClicked(MouseEvent mouseEvent) {
+        try {
+            Region content = FXMLLoader.load(Res.Fxml.PERSONAL_IMAGE_WINDOW.getUrl(), Utils.getBundle());
+            JFXDialog dialog = new JFXDialog(getMainController().getRootStack(), content, JFXDialog.DialogTransition.CENTER);
+            dialog.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

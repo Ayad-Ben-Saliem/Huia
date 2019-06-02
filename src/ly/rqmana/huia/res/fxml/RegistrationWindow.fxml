@@ -49,7 +49,7 @@
     </HBox>
     <ScrollPane fitToHeight="true" fitToWidth="true" style="-fx-background-color: white;" VBox.vgrow="ALWAYS">
         <VBox alignment="TOP_CENTER" spacing="25.0" style="-fx-background-color: white;">
-            <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
+            <ImageView fitHeight="100.0" fitWidth="100.0" onMouseClicked="#onPersonalImageViewClicked" pickOnBounds="true" preserveRatio="true">
                 <Image url="@../images/person.png" />
                 <VBox.margin>
                     <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />

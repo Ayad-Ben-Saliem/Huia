@@ -11,6 +11,8 @@ import ly.rqmana.huia.java.util.OSValidator;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -81,6 +83,9 @@ public class DataStorage {
         if (workId == null || workId.isEmpty())
             throw new RuntimeException("Invalid work id");
 
+        String dirName = fullName + " (" + workId + ")";
+        return getNewRegDir() + institute + File.separator + dirName;
+    }
         Path mainEmployeeDir = getNewRegistrationsDir().resolve(instituteId).resolve(workId);
 
         // the first time the employee is being added.
@@ -109,6 +114,7 @@ public class DataStorage {
 
         return subscriberDir;
     }
+
     private static void saveFingerprintImages(Path imageDir, Finger finger) throws IOException {
 
         if (finger == null)
