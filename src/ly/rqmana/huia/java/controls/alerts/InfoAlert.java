@@ -67,8 +67,6 @@ public class InfoAlert extends CustomAlert<InfoAlert.InfoAlertLayout>{
             this.detailsPane.setVisible(false);
             this.detailsPane.setManaged(false);
             this.detailsPane.setExpanded(false);
-
-            detailsButton.getStyleClass().add("common-button");
         }
     }
 
@@ -150,6 +148,7 @@ public class InfoAlert extends CustomAlert<InfoAlert.InfoAlertLayout>{
     public String getDetailsText(){
         if (! isUseDetails())
             throw new IllegalStateException("InfoAlert is not set to use details");
+
         return this.myCustomLayout.detailsArea.getText();
     }
 

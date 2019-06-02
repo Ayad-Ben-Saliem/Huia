@@ -46,7 +46,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 public class RegistrationWindowController implements Controllable {

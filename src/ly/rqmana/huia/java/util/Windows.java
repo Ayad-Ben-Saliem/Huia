@@ -16,7 +16,12 @@ public class Windows {
         MAIN_WINDOW.setMinHeight(700);
 
         MAIN_WINDOW.addOnShown(event -> {
-            NETWORK_ERROR_ALERT = Alerts.getErrorAlert(Windows.MAIN_WINDOW, Utils.getI18nString("NETWORK_ERROR"), Utils.getI18nString("NO_INTERNET"), new Exception(), AlertAction.OK);
+
+            NETWORK_ERROR_ALERT = Alerts.createErrorAlert(Windows.MAIN_WINDOW,
+                                                        Utils.getI18nString("NETWORK_ERROR"),
+                                                        Utils.getI18nString("NO_INTERNET"),
+                                                        null,
+                                                        AlertAction.OK);
         });
     }
 }

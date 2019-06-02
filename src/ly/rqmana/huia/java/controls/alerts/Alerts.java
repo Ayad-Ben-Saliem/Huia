@@ -4,13 +4,18 @@ import com.sun.istack.internal.Nullable;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-
 import java.awt.*;
 import java.util.Optional;
 
 public abstract class Alerts {
 
     private Alerts(){
+    }
+
+    public static Optional<AlertAction> confirmAlert(@Nullable Stage stage, String heading, String body, AlertAction... actions){
+        InfoAlert alert = prepAlert(stage, InfoAlertType.CONFIRM, heading, body, actions);
+        Toolkit.getDefaultToolkit().beep();
+        return alert.showAndWait();
     }
 
     public static Optional<AlertAction> infoAlert(@Nullable Stage stage, String heading, String body, AlertAction... actions){
@@ -24,21 +29,21 @@ public abstract class Alerts {
         return alert.showAndWait();
     }
 
-    public static InfoAlert  getErrorAlert(@Nullable Stage stage, String heading, String body,@Nullable Throwable throwable, AlertAction... actions){
+    public static Optional<AlertAction> errorAlert(@Nullable Stage stage, String heading, String body,@Nullable Throwable throwable, AlertAction... actions){
+
+
+        Toolkit.getDefaultToolkit().beep();
+        return createErrorAlert(stage, heading, body, throwable, actions).showAndWait();
+    }
+
+    public static InfoAlert createErrorAlert(@Nullable Stage stage, String heading, String body,@Nullable Throwable throwable, AlertAction... actions){
         InfoAlert alert = prepAlert(stage, InfoAlertType.ERROR, heading, body, actions);
 
         if (throwable != null){
             alert.setUseDetails(true);
             alert.visualizeStackTrace(throwable);
         }
-        alert.setOnShowing(event -> {
-            Toolkit.getDefaultToolkit().beep();
-        });
         return alert;
-    }
-
-    public static Optional<AlertAction>  errorAlert(@Nullable Stage stage, String heading, String body,@Nullable Throwable throwable, AlertAction... actions){
-        return getErrorAlert(stage, heading, body, throwable, actions).showAndWait();
     }
 
     private static InfoAlert prepAlert(@Nullable Stage stage, InfoAlertType type, String heading, String body, AlertAction... actions){
@@ -51,12 +56,12 @@ public abstract class Alerts {
             alert.initStyle(StageStyle.TRANSPARENT);
 
             alert.getLayout().heightProperty().addListener((observable, oldValue, newValue) -> {
-                // FIXME: causes too much load on cpu,
+                // causes too much load on cpu,
                 // but may not be that problem used only once or twice..
                 alert.setHeight(newValue.doubleValue());
 
-                // bad look, very recourse consumer..
-                // alert.getLayout().getScene().getWindow().sizeToScene();
+                // dont use the following way, bad look, very recourse consumer..
+                //      alert.getLayout().getScene().getWindow().sizeToScene();
             });
         }
 
