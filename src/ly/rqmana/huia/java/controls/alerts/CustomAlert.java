@@ -10,6 +10,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.geometry.NodeOrientation;
 import javafx.scene.Node;
 import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
@@ -83,6 +84,10 @@ public class CustomAlert<T extends AlertLayout> extends JFXAlert<AlertAction> {
                     layout().actionsFlow.getChildren().removeAll(toRemove);
                 }
             }
+        });
+
+        this.setOnCloseRequest(event -> {
+            setResult(null);
         });
     }
 
@@ -162,5 +167,15 @@ public class CustomAlert<T extends AlertLayout> extends JFXAlert<AlertAction> {
         return layout().graphicView.getGlyphSize();
     }
 
+    public void setNodeOrientation(NodeOrientation orientation) {
+        getLayout().setNodeOrientation(orientation);
+    }
 
+    public NodeOrientation getNodeOrientation() {
+        return getLayout().getNodeOrientation();
+    }
+
+    public ObjectProperty<NodeOrientation> nodeOrientationProperty() {
+        return getLayout().nodeOrientationProperty();
+    }
 }

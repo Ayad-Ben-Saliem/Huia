@@ -77,3 +77,63 @@
 .font64 .text {
     -fx-font-size: 64pt;
 }
+
+
+
+/*********** info alert {type: CustomAlert} ***********/
+/*
+    structure:
+    - info-alert-pane                 (DialogPane)
+        -jfx-alert-content-CONTAINER  (StackPane)
+            - info-alert-layout     (VBox)
+*/
+
+
+/*********** info alert layout  {type: AlertLayout} ***********/
+/*
+    structure:
+      - info-alert-layout           (AlertLayout)
+        - ...
+        - footer                    (VBox)
+            - ...
+            - details-pane          (TitledPane)
+                - details-CONTAINER (VBox)
+                - details-area      (JFXTextArea)
+
+*/
+
+.info-alert-layout .footer .details-pane .title{
+    -fx-padding: 0;
+    -fx-min-height: 0;
+    visibility: false;
+}
+
+.info-alert-layout .footer .details-pane .content{
+    -fx-border-width: 0;
+    -fx-background-insets: 0;
+    -fx-background-color: transparent;
+}
+
+/*********** loading alert {type: CustomAlert} ***********/
+/*
+    structure:
+    - loading-alert-pane                 (DialogPane)
+        -jfx-alert-content-CONTAINER     (StackPane)
+            - loading-alert-layout        (VBox)
+*/
+
+
+/*********** loading alert layout  {type: AlertLayout} ***********/
+/*
+    structure:
+      - loading-alert-layout           (AlertLayout)
+*/
+
+.loading-alert-layout:bar .body{
+    /* remove the bottom padding in bar style it looks ugly*/
+    -fx-padding: 0 24 0 24;
+}
+
+.loading-alert-layout:bar .body .percentage{
+    -fx-font-size: 10pt;
+}
