@@ -4,6 +4,7 @@ import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.validation.base.ValidatorBase;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -11,18 +12,24 @@ import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.Cursor;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Circle;
+import javafx.stage.Screen;
+import javafx.stage.StageStyle;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.controls.alerts.Alerts;
+import ly.rqmana.huia.java.controls.alerts.LoadingAlert;
 import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
@@ -41,9 +48,12 @@ import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 public class RegistrationWindowController implements Controllable {
 
@@ -52,6 +62,9 @@ public class RegistrationWindowController implements Controllable {
     @FXML public JFXTextField fatherNameTextField;
     @FXML public JFXTextField grandfatherNameTextField;
     @FXML public JFXTextField familyNameTextField;
+    @FXML public JFXTextField passportTextField;
+    @FXML public JFXTextField familyIdTextField;
+    @FXML public JFXTextField residenceTextField;
     @FXML public JFXTextField newEmployeeWorkIdTextField;
     @FXML public CustomComboBox<String> employeesWorkIdComboBox;
     @FXML public CustomComboBox<Institute> instituteComboBox;
@@ -60,9 +73,12 @@ public class RegistrationWindowController implements Controllable {
     @FXML public JFXTextField nationalIdTextField;
     @FXML public CustomComboBox<Gender> genderComboBox;
     @FXML public CustomComboBox<Relationship> relationshipComboBox;
-    private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
 
+    @FXML public ImageView personalPictureIV;
+
+    private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
     private FingerprintCaptureResult fingerprintCaptureResult;
+    private Map<Integer, Image> personalPictures;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -81,6 +97,8 @@ public class RegistrationWindowController implements Controllable {
 
         genderComboBox.setItems(FXCollections.observableArrayList(Gender.values()));
         genderComboBox.getSelectionModel().select(0);
+
+        personalPictureIV.setClip(new Circle(50, 50, 50));
 
         Utils.setFieldRequired(firstNameTextField);
         Utils.setFieldRequired(fatherNameTextField);
@@ -106,7 +124,52 @@ public class RegistrationWindowController implements Controllable {
             }
         });
 
-        setupInputFields();
+        clearInput();
+    }
+
+    @FXML
+    private void onPersonalImageViewClicked(MouseEvent mouseEvent) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(Res.Fxml.PERSONAL_IMAGE_WINDOW.getUrl(), Utils.getBundle());
+            Region content = fxmlLoader.load();
+
+            Windows.LOAD_PERSONAL_PICTURE_DIALOG.setDialogContainer(getMainController().getRootStack());
+            Windows.LOAD_PERSONAL_PICTURE_DIALOG.setContent(content);
+            Windows.LOAD_PERSONAL_PICTURE_DIALOG.setTransitionType(JFXDialog.DialogTransition.CENTER);
+
+            Windows.LOAD_PERSONAL_PICTURE_DIALOG.setOnDialogClosed(event -> {
+
+                PersonalImageLoaderController personalChooser = fxmlLoader.getController();
+                personalPictures = personalChooser.getResult();
+                Image personalPicture = personalPictures.get(0);
+
+                personalPictureIV.setImage(personalPicture);
+            });
+
+            Windows.LOAD_PERSONAL_PICTURE_DIALOG.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void onDeviceRefreshButtonClicked(ActionEvent actionEvent){
+
+        Task<Boolean> openDeviceTask = FingerprintManager.openDevice(FingerprintDeviceType.HAMSTER_DX);
+
+        openDeviceTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
+        openDeviceTask.addOnSucceeded(event -> {
+            Alerts.infoAlert(Windows.MAIN_WINDOW,
+                    Utils.getI18nString("FINGERPRINT_DEVICE_OPENED_HEADING"),
+                    Utils.getI18nString("FINGERPRINT_DEVICE_OPENED_BODY"),
+                    AlertAction.OK);
+        });
+
+        openDeviceTask.addOnFailed(event -> {
+            fingerprintDeviceError(event.getSource().getException(), () -> onDeviceRefreshButtonClicked(actionEvent));
+        });
+
+        Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
     }
 
     private void loadDatabase() {
@@ -210,29 +273,15 @@ public class RegistrationWindowController implements Controllable {
             contactField.addCancelBtnEventFilter(ActionEvent.ANY, event -> contactsContainer.getChildren().remove(contactField));
     }
 
-    public void fingerprintButtonAction(ActionEvent actionEvent) {
-
-        Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
-        openDeviceTask.addOnSucceeded(event -> {
-            fingerprintCaptureResult = FingerprintManager.device().captureHands();
-
-        })
-            .addOnFailed(event -> {
-                fingerprintDeviceError(event.getSource().getException());
-        });
-
-        Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
-    }
-
     public void onEnterBtnClicked() {
         if (validate()) {
             saveToDB();
         }
     }
 
-    private void setupInputFields() {
+    private void clearInput() {
 
-        firstNameTextField.setText("");
+        firstNameTextField.clear();
         fatherNameTextField.setText("");
         grandfatherNameTextField.setText("");
         familyNameTextField.setText("");
@@ -302,9 +351,11 @@ public class RegistrationWindowController implements Controllable {
                                 + "birthday,"
                                 + "gender,"
                                 + "instituteId,"
+                                + "familyId,"
+                                + "residence,"
+                                + "passport,"
                                 + "workId,"
                                 + "relationship,"
-                                + "allFingerprintTemplates,"
                                 + "rightThumbFingerprint,"
                                 + "rightIndexFingerprint,"
                                 + "rightMiddleFingerprint,"
@@ -315,12 +366,11 @@ public class RegistrationWindowController implements Controllable {
                                 + "leftMiddleFingerprint,"
                                 + "leftRingFingerprint,"
                                 + "leftLittleFingerprint,"
-                                + "fingerprintImagesDir,"
-                                + "user,"
-                                + "dateAdded"
-                                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                                + "allFingerprintTemplates,"
+                                + "user"
+                                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-                PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(INSERT_QUERY);
+                PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
 
                 pStatement.setString(1, firstNameTextField.getText());
                 pStatement.setString(2, fatherNameTextField.getText());
@@ -328,48 +378,56 @@ public class RegistrationWindowController implements Controllable {
                 pStatement.setString(4, familyNameTextField.getText());
                 pStatement.setString(5, nationalityTextField.getText());
                 pStatement.setString(6, nationalIdTextField.getText());
-                pStatement.setString(7, birthdayDatePicker.getValue().toString());
-                pStatement.setString(8, genderComboBox.getValue().toString());
+                pStatement.setLong(7, SQLUtils.dateToTimestamp(birthdayDatePicker.getValue()));
+                pStatement.setString(8, genderComboBox.getValue().name());
                 pStatement.setInt(9, instituteComboBox.getValue().getId());
 
+                pStatement.setString(10, familyIdTextField.getText());
+                pStatement.setString(11, residenceTextField.getText());
+                pStatement.setString(12, passportTextField.getText());
+
                 String workId = relationshipComboBox.getValue().equals(Relationship.EMPLOYEE) ? newEmployeeWorkIdTextField.getText() : employeesWorkIdComboBox.getValue();
-                pStatement.setString(10, workId);
-                pStatement.setString(11, relationshipComboBox.getValue().toString());
+                pStatement.setString(13, workId);
+                pStatement.setString(14, relationshipComboBox.getValue().toString());
 
                 if (fingerprintCaptureResult != null) {
 
-                    String fingerprintsCode = fingerprintCaptureResult.getFingerprintsCode();
-                    pStatement.setString(12, fingerprintsCode);
+                    String fingerprintsCode = fingerprintCaptureResult.getFingerprintsTemplate();
+                    pStatement.setString(15, fingerprintsCode);
 
                     Hand rightHand = fingerprintCaptureResult.getRightHand();
                     if (rightHand != null) {
-                        pStatement.setString(13, rightHand.getThumb().getFingerprintTemplate());
-                        pStatement.setString(14, rightHand.getIndex().getFingerprintTemplate());
-                        pStatement.setString(15, rightHand.getMiddle().getFingerprintTemplate());
-                        pStatement.setString(16, rightHand.getRing().getFingerprintTemplate());
-                        pStatement.setString(17, rightHand.getLittle().getFingerprintTemplate());
+                        pStatement.setString(16, rightHand.getThumb().getFingerprintTemplate());
+                        pStatement.setString(17, rightHand.getIndex().getFingerprintTemplate());
+                        pStatement.setString(18, rightHand.getMiddle().getFingerprintTemplate());
+                        pStatement.setString(19, rightHand.getRing().getFingerprintTemplate());
+                        pStatement.setString(20, rightHand.getLittle().getFingerprintTemplate());
                     }
 
                     Hand leftHand = fingerprintCaptureResult.getLeftHand();
                     if (leftHand != null) {
-                        pStatement.setString(18, leftHand.getThumb().getFingerprintTemplate());
-                        pStatement.setString(19, leftHand.getIndex().getFingerprintTemplate());
-                        pStatement.setString(20, leftHand.getMiddle().getFingerprintTemplate());
-                        pStatement.setString(21, leftHand.getRing().getFingerprintTemplate());
-                        pStatement.setString(22, leftHand.getLittle().getFingerprintTemplate());
+                        pStatement.setString(21, leftHand.getThumb().getFingerprintTemplate());
+                        pStatement.setString(22, leftHand.getIndex().getFingerprintTemplate());
+                        pStatement.setString(23, leftHand.getMiddle().getFingerprintTemplate());
+                        pStatement.setString(24, leftHand.getRing().getFingerprintTemplate());
+                        pStatement.setString(25, leftHand.getLittle().getFingerprintTemplate());
                     }
                 }
-                String imagesDir = DataStorage.saveSubscriberFingerprintImages(newSubscriber).toString();
-
-                pStatement.setString(23, imagesDir);
-
-                pStatement.setString(24, Auth.getCurrentUser().getUsername());
-                pStatement.setString(25, LocalDate.now().toString());
-
+                pStatement.setString(26, Auth.getCurrentUser().getUsername());
                 pStatement.executeUpdate();
 
-                setupInputFields();
+                ResultSet generatedKeys = pStatement.getGeneratedKeys();
 
+                long subscriberId = generatedKeys.getLong(1);
+                newSubscriber.setId(subscriberId);
+
+                String imagesDir = DataStorage.saveSubscriberData(newSubscriber).toString();
+
+                pStatement = DAO.DB_CONNECTION.prepareStatement("UPDATE NewRegistrations SET fingerprintImagesDir= ? WHERE id= ?");
+                pStatement.setString(1, imagesDir);
+                pStatement.setLong(2, subscriberId);
+
+                pStatement.executeUpdate();
                 return newSubscriber;
             }
         };
@@ -378,14 +436,26 @@ public class RegistrationWindowController implements Controllable {
 
             Subscriber newSubscriber = saveTask.getValue();
             updateWorkIdes(newSubscriber.getWorkId());
-            updateAuthTable(newSubscriber);
+
+            MainWindowController mwc = Windows.MAIN_WINDOW.getController();
+            mwc.getIdentificationWindowController().addToTableView(newSubscriber);
+
+            String heading = Utils.getI18nString("SUBSCRIBER_ADDED_SUCCESSFULLY_HEADING");
+            String body = Utils.getI18nString("SUBSCRIBER_ADDED_SUCCESSFULLY_BODY").replace("{0}", newSubscriber.getFullName());
+
+            clearInput();
+
+            Alerts.infoAlert(Windows.MAIN_WINDOW,
+                            heading,
+                            body,
+                            AlertAction.OK);
         });
 
         saveTask.addOnFailed(event -> {
             event.getSource().getException().printStackTrace();
             Alerts.errorAlert(Windows.MAIN_WINDOW,
-                        "Couldn't Enter",
-                          "An error occurred while entering a new subscriber",
+                                Utils.getI18nString("SUBSCRIBER_ADD_ERROR_HEADING"),
+                                Utils.getI18nString("SUBSCRIBER_ADD_ERROR_BODY"),
                                 event.getSource().getException(),
                                 AlertAction.OK);
         });
@@ -414,7 +484,7 @@ public class RegistrationWindowController implements Controllable {
 
         subscriber.setRightHand(fingerprintCaptureResult.getRightHand());
         subscriber.setLeftHand(fingerprintCaptureResult.getLeftHand());
-        subscriber.setAllFingerprintsTemplate(fingerprintCaptureResult.getFingerprintsCode());
+        subscriber.setAllFingerprintsTemplate(fingerprintCaptureResult.getFingerprintsTemplate());
 
         subscriber.setInstitute(instituteComboBox.getValue());
 
@@ -440,35 +510,47 @@ public class RegistrationWindowController implements Controllable {
         mainWindowController.lock(true);
     }
 
-    private void updateLoadingView(boolean loading){
-        StackPane rootStack = getMainController().rootStack;
-        rootStack.setDisable(loading);
+    public void fingerprintButtonAction(ActionEvent actionEvent) {
 
-        if (loading)
-            rootStack.setCursor(Cursor.WAIT);
-        else
-            rootStack.setCursor(Cursor.DEFAULT);
+        Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
+        openDeviceTask.addOnSucceeded(event -> {
+            fingerprintCaptureResult = FingerprintManager.device().captureHands();
+
+        });
+
+        openDeviceTask.addOnFailed(event -> {
+            fingerprintDeviceError(event.getSource().getException(), ()-> fingerprintButtonAction(actionEvent));
+        });
+
+        Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
     }
 
+    private final LoadingAlert loadingAlert = new LoadingAlert(null, LoadingAlert.LoadingStyle.SPINNER);
+    {
+        loadingAlert.setHeadingText(Utils.getI18nString("LOADING_CONNECTING"));
+        loadingAlert.setBodyText(Utils.getI18nString("LOADING_WAIT_TEXT"));
+        loadingAlert.initStyle(StageStyle.TRANSPARENT);
 
-    private void fingerprintDeviceError(Throwable throwable) {
+    }
+    private void updateLoadingView(boolean loading){
+
+        if (loading)
+            loadingAlert.show();
+        else
+            loadingAlert.close();
+
+        double width = loadingAlert.getNativeAlert().getWidth();
+        double height = loadingAlert.getNativeAlert().getHeight();
+        Windows.centerDialog(loadingAlert.getNativeAlert(), width, height);
+    }
+
+    private void fingerprintDeviceError(Throwable throwable, Runnable tryAgainBlock) {
 
         Optional<AlertAction> result = Windows.showFingerprintDeviceError(throwable);
 
         if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN) {
-                fingerprintButtonAction(null);
+            tryAgainBlock.run();
         }
-    }
-
-    public void onPersonalImageViewClicked(MouseEvent mouseEvent) {
-        try {
-            Region content = FXMLLoader.load(Res.Fxml.PERSONAL_IMAGE_WINDOW.getUrl(), Utils.getBundle());
-            JFXDialog dialog = new JFXDialog(getMainController().getRootStack(), content, JFXDialog.DialogTransition.CENTER);
-            dialog.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
     }
 
 }

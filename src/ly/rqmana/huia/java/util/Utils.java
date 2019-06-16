@@ -23,14 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Utils {
 
-    public final static String _id = "_id";
-    public final static String $push = "$push";
-    public final static String $set = "$set";
-    public final static String $gt = "$gt";
-    public final static String $gte = "$gte";
-    public final static String $lt = "$lt";
-    public final static String $lte = "$lte";
-    public final static String $regex = "$regex";
+    public static final String APP_NAME = "Huia Health Care";
 
     public static ResourceBundle getBundle() {
         return ResourceBundle.getBundle(Res.LANGUAGE_PATH, new Locale("ar", "SA"));

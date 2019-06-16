@@ -29,6 +29,7 @@ import ly.rqmana.huia.java.models.Person;
 import ly.rqmana.huia.java.models.Relationship;
 import ly.rqmana.huia.java.models.Subscriber;
 import ly.rqmana.huia.java.util.Controllable;
+import ly.rqmana.huia.java.util.SQLUtils;
 import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
 
@@ -147,7 +148,6 @@ public class IdentificationWindowController implements Controllable {
 
         String query;
         try {
-
             try (Connection connection = DriverManager.getConnection(DAO.getDataDBUrl())) {
                 query = "SELECT " +
                         "first_name," +
@@ -191,9 +191,11 @@ public class IdentificationWindowController implements Controllable {
                     "familyName," +
                     "birthday," +
                     "nationalId," +
+                    "familyId," +
                     "gender," +
                     "workId," +
                     "relationship," +
+                    "isActive," +
                     "allFingerprintTemplates," +
                     "rightThumbFingerprint," +
                     "rightIndexFingerprint," +
@@ -205,7 +207,7 @@ public class IdentificationWindowController implements Controllable {
                     "leftMiddleFingerprint," +
                     "leftRingFingerprint," +
                     "leftLittleFingerprint" +
-                    " FROM NewRegistrations";
+                    " FROM People";
 
             try (Statement statement = DAO.DB_CONNECTION.createStatement()) {
                 ResultSet resultSet = statement.executeQuery(query);
@@ -218,14 +220,16 @@ public class IdentificationWindowController implements Controllable {
                     subscriber.setGrandfatherName(resultSet.getString("grandfatherName"));
                     subscriber.setFamilyName(resultSet.getString("familyName"));
 
-                    subscriber.setBirthday(LocalDate.parse(resultSet.getString("birthday")));
+                    subscriber.setBirthday(SQLUtils.timestampToDate(resultSet.getLong("birthday")));
                     subscriber.setNationalId(resultSet.getString("nationalId"));
-                    subscriber.setGender("M".equals(resultSet.getString("gender")) ? Gender.MALE : Gender.FEMALE);
+                    subscriber.setGender(Gender.valueOf(resultSet.getString("gender")));
 
                     subscriber.setWorkId(resultSet.getString("workId"));
                     subscriber.setRelationship(resultSet.getString("relationship"));
 
-                    subscriber.setAllFingerprintsTemplate(resultSet.getString("fingerprintsCode"));
+                    subscriber.setActive(resultSet.getBoolean("isActive"));
+
+                    subscriber.setAllFingerprintsTemplate(resultSet.getString("allFingerprintTemplates"));
                     subscriber.setRightThumbFingerprint(resultSet.getString("rightThumbFingerprint"));
                     subscriber.setRightIndexFingerprint(resultSet.getString("rightIndexFingerprint"));
                     subscriber.setRightMiddleFingerprint(resultSet.getString("rightMiddleFingerprint"));
@@ -247,6 +251,12 @@ public class IdentificationWindowController implements Controllable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void addToTableView(Subscriber subscriber){
+        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(filteredList);
+        subscribers.add(subscriber);
+        addToTableView(subscribers);
     }
 
     public void addToTableView(ObservableList<Subscriber> subscribers) {

@@ -60,7 +60,7 @@ public class Name {
                     throw new RuntimeException("Set firstName first");
                 }
                 if (fatherName == null || fatherName.isEmpty()) {
-                    throw new RuntimeException("Set familyName first");
+                    //throw new RuntimeException("Set fatherName first");
                 }
                 if (familyName == null || familyName.isEmpty()) {
                     throw new RuntimeException("Set familyName first");

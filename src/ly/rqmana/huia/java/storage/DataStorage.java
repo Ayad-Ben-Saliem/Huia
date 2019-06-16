@@ -1,39 +1,45 @@
 package ly.rqmana.huia.java.storage;
 
+import com.sun.istack.internal.NotNull;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.image.Image;
 import ly.rqmana.huia.java.fingerprints.hand.Finger;
 import ly.rqmana.huia.java.fingerprints.hand.FingerID;
+import ly.rqmana.huia.java.models.Institute;
 import ly.rqmana.huia.java.models.Subscriber;
+import ly.rqmana.huia.java.util.OS;
 import ly.rqmana.huia.java.util.OSValidator;
+import ly.rqmana.huia.java.util.Utils;
+import org.apache.commons.io.FileUtils;
+import org.zeroturnaround.zip.ZipUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import javax.imageio.ImageIO;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 public class DataStorage {
 
-    private static final String HUIA_DIRECTORY_NAME = "Huia Health";
+    private static final String HUIA_DIRECTORY_NAME = "Huia Health Care";
 
     public static final String WINDOWS_DATA_DIR = "C:\\ProgramData\\";
     public static final String UNIX_DATA_DIR = System.getProperty("user.home");
     public static final String MAC_DATA_DIR = System.getProperty("user.home");
 
-    public static final String FINGERPRINTS_DIR_NAME = "Fingerprints";
+    public static final String SUBSCRIBERS_DIR_NAME = "Subscribers";
     public static final String NEW_REG_DIR_NAME = "New Registrations";
-//    public static final String TEMP_FINGERPRINT_IMAGES = getNewRegistrationsDir() + "Temp/";
+    public static final String PERSONAL_PICTURES_DIR_NAME = "Personal Pictures";
+    public static final String FINGERPRINT_IMAGES_DIR_NAME = "Fingerprint Images";
+    public static final String FINGERPRINT_TEMPLATES_DIR_NAME = "Fingerprint Templates";
 
     private static final Path DATA_DIRECTORY;
 
     static {
-
         String osDataDirectory;
         if (OSValidator.isWindows()) {
             osDataDirectory = WINDOWS_DATA_DIR;
@@ -49,78 +55,148 @@ public class DataStorage {
 
     }
 
-    public static Path getDataDirectory(){
-        return DATA_DIRECTORY;
-    }
-
-    public static Path getFingerprintsDir() {
-        return DATA_DIRECTORY.resolve(FINGERPRINTS_DIR_NAME);
+    public static Path getSubscribersDir() {
+        return DATA_DIRECTORY.resolve(SUBSCRIBERS_DIR_NAME);
     }
 
     public static Path getNewRegistrationsDir() {
-        return getFingerprintsDir().resolve(NEW_REG_DIR_NAME);
+        return DATA_DIRECTORY.resolve(NEW_REG_DIR_NAME);
     }
 
-    public static Path saveSubscriberFingerprintImages(Subscriber subscriber) throws IOException {
+    public static Path saveSubscriberData(Subscriber subscriber) throws IOException {
+        Path subscriberDir = createNewSubscriberDir(subscriber);
 
-        // the store hatchery is as follows:
-        //
-        // NEW_REG_DIR
-        //  - {INSTITUTE_ID}
-        //      - {WORK_ID}
-        //          - {SUBSCRIBER_NAME}
-        //              - FINGER_{FINGER_INDEX}_{IMAGE_ID}.jpg
-        //              - ...
+        saveSubscriberFingerprintImages(subscriber);
+        saveSubscriberPersonalPictures(subscriber);
 
-        String instituteId = String.valueOf(subscriber.getInstitute().getId());
-        String subscriberName = subscriber.getFullName();
-        String workId = subscriber.getWorkId();
-
-        if (instituteId == null || instituteId.isEmpty())
-            throw new RuntimeException("Invalid institute id");
-        if (subscriberName == null || subscriberName.isEmpty())
-            throw new RuntimeException("Invalid name");
-        if (workId == null || workId.isEmpty())
-            throw new RuntimeException("Invalid work id");
-
-//        String dirName = fullName + " (" + workId + ")";
-//        return getNewRegDir() + institute + File.separator + dirName;
-
-
-
-
-
-        Path mainEmployeeDir = getNewRegistrationsDir().resolve(instituteId).resolve(workId);
-
-        // the first time the employee is being added.
-        if (! Files.exists(mainEmployeeDir)){
-            // try to create it
-            Files.createDirectories(mainEmployeeDir);
+        String subDirString = subscriberDir.toString();
+        if (subDirString.endsWith(File.separator)){
+            subDirString = subDirString.substring(0, subDirString.length()-1);
         }
 
-        Path subscriberDir = mainEmployeeDir.resolve(subscriberName);
+        Path zipPath = Paths.get(subDirString + ".zip");
+        ZipUtil.pack(subscriberDir.toFile(), zipPath.toFile());
 
-        // the subscriber dir is not found
-        if (! Files.exists(subscriberDir)){
-            // try to create it
-            Files.createDirectories(subscriberDir);
+        FileUtils.deleteDirectory(subscriberDir.toFile());
+
+        return zipPath;
+    }
+
+    public static Subscriber loadSubscriberData(Subscriber subscriber) throws IOException {
+        Path zipSubscriberDir = getSubscriberDir(subscriber);
+        String _unzipDir = zipSubscriberDir.toString();
+        if (_unzipDir.toLowerCase().endsWith(".zip"))
+            _unzipDir = _unzipDir.substring(0, _unzipDir.length() - 4);
+        Path unzipDir = Paths.get(_unzipDir);
+        ZipUtil.unpack(zipSubscriberDir.toFile(), unzipDir.toFile());
+
+        Path fingerprintTemplatesDir = unzipDir.resolveSibling(FINGERPRINT_TEMPLATES_DIR_NAME);
+        if (Files.exists(fingerprintTemplatesDir)) {
+
         }
 
-        // ok time to store the images
+        Path fingerprintImagesDir = unzipDir.resolveSibling(FINGERPRINT_IMAGES_DIR_NAME);
+        if (Files.exists(fingerprintImagesDir)) {
+
+        }
+
+        Path personalPicturesDir = unzipDir.resolveSibling(PERSONAL_PICTURES_DIR_NAME);
+        if (Files.exists(personalPicturesDir)) {
+
+        }
+
+        return subscriber;
+    }
+
+    public static void saveSubscriberPersonalPictures(Subscriber subscriber) throws IOException {
+        Path subscriberDir = createNewSubscriberDir(subscriber);
+
+        Path personalPicturesDir = subscriberDir.resolve(PERSONAL_PICTURES_DIR_NAME);
+
+        if (! Files.exists(personalPicturesDir))
+            Files.createDirectories(personalPicturesDir);
+
+        savePersonalPictures(personalPicturesDir, subscriber.getPersonalPictures());
+    }
+
+    public static void saveSubscriberFingerprintImages(Subscriber subscriber) throws IOException {
+
+        Path subscriberDir = createNewSubscriberDir(subscriber);
+        Path fingerprintImagesDir = subscriberDir.resolve(FINGERPRINT_IMAGES_DIR_NAME);
+
+        if (! Files.exists(fingerprintImagesDir))
+            Files.createDirectories(fingerprintImagesDir);
+
+        // Save the images
         ObservableList<Finger> fingersList = FXCollections.observableArrayList();
 
         fingersList.addAll(subscriber.getRightHand().getFingersUnmodifiable());
         fingersList.addAll(subscriber.getLeftHand().getFingersUnmodifiable());
 
         for (Finger finger : fingersList) {
-            saveFingerprintImages(subscriberDir, finger);
+            saveFingerprintImages(fingerprintImagesDir, finger);
+        }
+    }
+
+    private static Path createNewSubscriberDir(Subscriber subscriber) throws IOException {
+
+        Path subscriberDir = getNewSubscriberDir(subscriber);
+
+        // the first time the sub is being added.
+        if (! Files.exists(subscriberDir)){
+            // try to create it
+            Files.createDirectories(subscriberDir);
         }
 
         return subscriberDir;
+    }
 
+    private static Path getSubscriberDir(Subscriber subscriber) throws IOException {
+        // Storage hierarchy is as follows:
+        //
+        // SUBSCRIBERS_DIR
+        //  - {INSTITUTE_ID}
+        //      - {SUBSCRIBER_ID}
+        //              Subscribers data files.
+        //              - ...
+        //              - ...
+
+        Institute institute = subscriber.getInstitute();
+        String subscriberId = String.valueOf(subscriber.getId());
+
+        if (institute == null )
+            throw new RuntimeException("Invalid institute");
+
+        return getSubscribersDir().resolve(String.valueOf(institute.getId())).resolve(subscriberId);
+    }
+
+    private static Path getNewSubscriberDir(Subscriber subscriber) {
+        // Storage hierarchy is as follows:
+        //
+        // NEW_REG_DIR
+        //  - {INSTITUTE_ID}
+        //      - {SUBSCRIBER_ID}
+        //              Subscribers data files.
+        //              - ...
+        //              - ...
+
+        Institute institute = subscriber.getInstitute();
+        if (institute == null )
+            throw new RuntimeException("Invalid institute");
+
+        String subscriberId = String.valueOf(subscriber.getId());
+
+        return getNewRegistrationsDir().resolve(String.valueOf(institute.getId())).resolve(subscriberId);
     }
 
     private static void saveFingerprintImages(Path imageDir, Finger finger) throws IOException {
+        // Save fingerprintImages in format
+        //
+        // ...
+        //    - {SUBSCRIBER_ID}
+        //          - FINGER_{FINGER_INDEX}_{IMAGE_ID}.jpg
+        //          - ...
+        //
 
         if (finger == null)
             return;
@@ -134,89 +210,140 @@ public class DataStorage {
             FingerID fingerId = finger.getId();
 
             String fileName = String.format("finger_%d_%d%s", fingerId.index(), imageIndex, fileExtension);
-            File imageFile = Paths.get(imageDir.toString(), fileName).toFile();
+            File imageFile = imageDir.resolve(fileName).toFile();
 
             ImageIO.write(fingerprintImage, "JPEG", imageFile);
         }
     }
 
-    public static void writeBitmap(byte[] imageBuf, int nWidth, int nHeight, String path) throws IOException {
-        java.io.FileOutputStream fos = new java.io.FileOutputStream(path);
-        java.io.DataOutputStream dos = new java.io.DataOutputStream(fos);
+    private static void savePersonalPictures(Path imageDir, Map<Integer, Image> personalPictures) throws IOException {
+        // Save fingerprintImages in format
+        //
+        // ...
+        //    - {SUBSCRIBER_ID}
+        //          - rightPicture.jpg
+        //          - frontPicture.jpg
+        //          - leftPicture.jpg
+        //          - picture3.jpg
+        //          - picture4.jpg
+        //          - picture5.jpg
+        //          - ...
+        //
 
-        int w = (((nWidth+3)/4)*4);
-        int bfType = 0x424d; // 位图文件类型（0—1字节）
-        int bfSize = 54 + 1024 + w * nHeight;// bmp文件的大小（2—5字节）
-        int bfReserved1 = 0;// 位图文件保留字，必须为0（6-7字节）
-        int bfReserved2 = 0;// 位图文件保留字，必须为0（8-9字节）
-        int bfOffBits = 54 + 1024;// 文件头开始到位图实际数据之间的字节的偏移量（10-13字节）
+        if (personalPictures == null)
+            return;
 
-        dos.writeShort(bfType); // 输入位图文件类型'BM'
-        dos.write(changeByte(bfSize), 0, 4); // 输入位图文件大小
-        dos.write(changeByte(bfReserved1), 0, 2);// 输入位图文件保留字
-        dos.write(changeByte(bfReserved2), 0, 2);// 输入位图文件保留字
-        dos.write(changeByte(bfOffBits), 0, 4);// 输入位图文件偏移量
+        String fileExtension = ".jpg";
 
-        int biSize = 40;// 信息头所需的字节数（14-17字节）
-        int biWidth = nWidth;// 位图的宽（18-21字节）
-        int biHeight = nHeight;// 位图的高（22-25字节）
-        int biPlanes = 1; // 目标设备的级别，必须是1（26-27字节）
-        int biBitcount = 8;// 每个像素所需的位数（28-29字节），必须是1位（双色）、4位（16色）、8位（256色）或者24位（真彩色）之一。
-        int biCompression = 0;// 位图压缩类型，必须是0（不压缩）（30-33字节）、1（BI_RLEB压缩类型）或2（BI_RLE4压缩类型）之一。
-        int biSizeImage = w * nHeight;// 实际位图图像的大小，即整个实际绘制的图像大小（34-37字节）
-        int biXPelsPerMeter = 0;// 位图水平分辨率，每米像素数（38-41字节）这个数是系统默认值
-        int biYPelsPerMeter = 0;// 位图垂直分辨率，每米像素数（42-45字节）这个数是系统默认值
-        int biClrUsed = 0;// 位图实际使用的颜色表中的颜色数（46-49字节），如果为0的话，说明全部使用了
-        int biClrImportant = 0;// 位图显示过程中重要的颜色数(50-53字节)，如果为0的话，说明全部重要
+        for (Map.Entry<Integer, Image> entry : personalPictures.entrySet()) {
+            Integer imageIndex = entry.getKey();
+            Image image = entry.getValue();
 
-        dos.write(changeByte(biSize), 0, 4);// 输入信息头数据的总字节数
-        dos.write(changeByte(biWidth), 0, 4);// 输入位图的宽
-        dos.write(changeByte(biHeight), 0, 4);// 输入位图的高
-        dos.write(changeByte(biPlanes), 0, 2);// 输入位图的目标设备级别
-        dos.write(changeByte(biBitcount), 0, 2);// 输入每个像素占据的字节数
-        dos.write(changeByte(biCompression), 0, 4);// 输入位图的压缩类型
-        dos.write(changeByte(biSizeImage), 0, 4);// 输入位图的实际大小
-        dos.write(changeByte(biXPelsPerMeter), 0, 4);// 输入位图的水平分辨率
-        dos.write(changeByte(biYPelsPerMeter), 0, 4);// 输入位图的垂直分辨率
-        dos.write(changeByte(biClrUsed), 0, 4);// 输入位图使用的总颜色数
-        dos.write(changeByte(biClrImportant), 0, 4);// 输入位图使用过程中重要的颜色数
+            String imageFileName = String.format("picture_%s%s", imageIndex, fileExtension);
 
-        for (int i = 0; i < 256; i++) {
-            dos.writeByte(i);
-            dos.writeByte(i);
-            dos.writeByte(i);
-            dos.writeByte(0);
+            BufferedImage personalPicture = SwingFXUtils.fromFXImage(image, null);
+
+            File imageFile = imageDir.resolve(imageFileName).toFile();
+
+
+            ImageIO.write(personalPicture, "JPEG", imageFile);
         }
-
-        byte[] filter = null;
-        if (w > nWidth)
-        {
-            filter = new byte[w-nWidth];
-        }
-
-        for(int i=0;i<nHeight;i++)
-        {
-            dos.write(imageBuf, (nHeight-1-i)*nWidth, nWidth);
-            if (w > nWidth)
-                dos.write(filter, 0, w-nWidth);
-        }
-        dos.flush();
-        dos.close();
-        fos.close();
     }
 
-    public static byte[] changeByte(int data) {
-        return intToByteArray(data);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @NotNull
+    public static OS getOSArch() {
+        if (System.getProperty("os.name").contains("Windows")) {
+            if (System.getenv("ProgramFiles(x86)") != null)
+                return OS.WINDOWS7_x64;
+            else
+                return OS.WINDOWS7_x86;
+        } else {
+            if (System.getProperty("os.arch").contains("64"))
+                return OS.Mac_x64;
+            else
+                return OS.Mac_x86;
+        }
     }
 
-    public static byte[] intToByteArray (final int number) {
-        byte[] abyte = new byte[4];
-        // "&" 与（AND），对两个整型操作数中对应位执行布尔代数，两个位都为1时输出1，否则0。
-        abyte[0] = (byte) (0xff & number);
-        // ">>"右移位，若为正数则高位补0，若为负数则高位补1
-        abyte[1] = (byte) ((0xff00 & number) >> 8);
-        abyte[2] = (byte) ((0xff0000 & number) >> 16);
-        abyte[3] = (byte) ((0xff000000 & number) >> 24);
-        return abyte;
+    public static Path getInstallationPath() {
+        switch (getOSArch()) {
+            case Mac_x64:
+            case Mac_x86:
+                return Paths.get("/Applications/" + Utils.APP_NAME);
+            case Linux_x64:
+            case Linux_x86:
+                return Paths.get("/opt/" + Utils.APP_NAME);
+            case WINDOWS7_x86:
+            case WINDOWS7_x64:
+            case WINDOWS8_x86:
+            case WINDOWS8_x64:
+            case WINDOWS8_1_x86:
+            case WINDOWS8_1_x64:
+            case WINDOWS10_x86:
+            case WINDOWS10_x64:
+            default:
+                return Paths.get("C:\\Program Files\\" + Utils.APP_NAME);
+        }
+    }
+
+    public static Path getDataPath(){
+        return DATA_DIRECTORY;
+    }
+
+    private static Path getHomePath() {
+        return Paths.get(System.getProperty("user.home"));
+    }
+
+    private static String getUsername() {
+        return System.getProperty("user.name");
+    }
+
+    public static Path desktop() {
+        return Paths.get(getHomePath() + "/Desktop");
     }
 }

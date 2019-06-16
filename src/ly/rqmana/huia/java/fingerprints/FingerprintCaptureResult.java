@@ -6,13 +6,13 @@ public class FingerprintCaptureResult {
 
     private final Hand rightHand;
     private final Hand leftHand;
-    private final String fingerprintsCode;
+    private final String fingerprintsTemplate;
 
-    public FingerprintCaptureResult(Hand rightHand, Hand leftHand, String fingerprintsCode){
+    public FingerprintCaptureResult(Hand rightHand, Hand leftHand, String fingerprintsTemplate){
 
         this.rightHand = rightHand;
         this.leftHand = leftHand;
-        this.fingerprintsCode = fingerprintsCode;
+        this.fingerprintsTemplate = fingerprintsTemplate;
     }
 
     public Hand getRightHand() {
@@ -23,7 +23,7 @@ public class FingerprintCaptureResult {
         return leftHand;
     }
 
-    public String getFingerprintsCode() {
-        return fingerprintsCode;
+    public String getFingerprintsTemplate() {
+        return fingerprintsTemplate;
     }
 }

@@ -1,68 +1,68 @@
 package ly.rqmana.huia.java.models;
 
+import javafx.scene.image.Image;
+
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Person {
 
-    private String firstName;
-    private String fatherName;
-    private String grandfatherName;
-    private String familyName;
+    private long id;
 
+    private final Name name = new Name();
     private Gender gender;
-
     private LocalDate birthday;
-
     private String nationality;
     private String nationalId;
+    private Passport passport;
+    private String familyId;
+    private String residence;
+
+    private Map<Integer, Image> personalPictures = new HashMap<>();
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
 
     public String getFirstName() {
-        return firstName;
+        return name.getFirstName();
     }
 
     public void setFirstName(String firstName) {
-        this.firstName = firstName;
+        name.setFirstName(firstName);
     }
 
     public String getFatherName() {
-        return fatherName;
+        return name.getFatherName();
     }
 
     public void setFatherName(String fatherName) {
-        this.fatherName = fatherName;
+        name.setFatherName(fatherName);
     }
 
     public String getGrandfatherName() {
-        return grandfatherName;
+        return name.getGrandfatherName();
     }
 
     public void setGrandfatherName(String grandfatherName) {
-        this.grandfatherName = grandfatherName;
+        name.setGrandfatherName(grandfatherName);
     }
 
     public String getFamilyName() {
-        return familyName;
+        return name.getFamilyName();
     }
 
     public void setFamilyName(String familyName) {
-        this.familyName = familyName;
+        name.setFamilyName(familyName);
     }
 
     public String getFullName() {
-        StringBuilder result = new StringBuilder(firstName);
-        if (fatherName != null) {
-            result.append(" ");
-            result.append(fatherName);
-            if (grandfatherName != null) {
-                result.append(" ");
-                result.append(grandfatherName);
-            }
-        }
-        if (familyName != null) {
-            result.append(" ");
-            result.append(familyName);
-        }
-        return result.toString();
+        return name.getFormattedName(Name.NameFormat.FULL_NAME);
     }
 
     public Gender getGender() {
@@ -95,5 +95,37 @@ public class Person {
 
     public void setNationalId(String nationalId) {
         this.nationalId = nationalId;
+    }
+
+    public Name getName() {
+        return name;
+    }
+
+    public Passport getPassport() {
+        return passport;
+    }
+
+    public void setPassport(Passport passport) {
+        this.passport = passport;
+    }
+
+    public String getFamilyId() {
+        return familyId;
+    }
+
+    public void setFamilyId(String familyId) {
+        this.familyId = familyId;
+    }
+
+    public String getResidence() {
+        return residence;
+    }
+
+    public void setResidence(String residence) {
+        this.residence = residence;
+    }
+
+    public Map<Integer, Image> getPersonalPictures() {
+        return personalPictures;
     }
 }

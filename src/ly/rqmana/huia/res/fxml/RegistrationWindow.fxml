@@ -2,13 +2,11 @@
 
 <?import com.jfoenix.controls.JFXButton?>
 <?import com.jfoenix.controls.JFXDatePicker?>
+<?import com.jfoenix.controls.JFXTextArea?>
 <?import com.jfoenix.controls.JFXTextField?>
 <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -25,31 +23,29 @@
         <URL value="@../css/templates.css" />
     </stylesheets>
     <HBox alignment="CENTER" styleClass="menu-bar-button">
-        <MenuBar HBox.hgrow="ALWAYS">
-            <Menu mnemonicParsing="false" text="File">
-                <MenuItem mnemonicParsing="false" text="Close" />
-            </Menu>
-            <Menu mnemonicParsing="false" text="Edit">
-                <MenuItem mnemonicParsing="false" text="Delete" />
-            </Menu>
-            <Menu mnemonicParsing="false" text="Help">
-                <MenuItem mnemonicParsing="false" text="About" />
-            </Menu>
-        </MenuBar>
-        <JFXButton contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onLogoutBtnClicked" styleClass="menu-bar-button" text="LOGOUT">
+      <HBox HBox.hgrow="ALWAYS">
+         <children>
+            <JFXButton text="%REFRESH_FINGERPRINT_DEVICE" contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onDeviceRefreshButtonClicked" styleClass="menu-bar-button">
+               <graphic>
+                  <FontAwesomeIconView glyphName="REFRESH" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon" />
+               </graphic>
+            </JFXButton>
+         </children>
+      </HBox>
+        <JFXButton contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onLogoutBtnClicked" styleClass="menu-bar-button" text="%LOGOUT">
             <graphic>
                 <FontAwesomeIconView glyphName="SIGN_OUT" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon" />
             </graphic>
         </JFXButton>
-        <JFXButton contentDisplay="RIGHT" layoutX="161.0" layoutY="10.0" mnemonicParsing="false" styleClass="menu-bar-button" text="SETTINGS">
+        <JFXButton contentDisplay="RIGHT" layoutX="161.0" layoutY="10.0" mnemonicParsing="false" styleClass="menu-bar-button" text="%SETTINGS">
             <graphic>
                 <FontAwesomeIconView glyphName="COG" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon" />
             </graphic>
         </JFXButton>
     </HBox>
-    <ScrollPane fitToHeight="true" fitToWidth="true" style="-fx-background-color: white;" VBox.vgrow="ALWAYS">
-        <VBox alignment="TOP_CENTER" spacing="25.0" style="-fx-background-color: white;">
-            <ImageView fitHeight="100.0" fitWidth="100.0" onMouseClicked="#onPersonalImageViewClicked" pickOnBounds="true" preserveRatio="true">
+    <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
+        <VBox alignment="TOP_CENTER" spacing="32.0">
+            <ImageView fx:id="personalPictureIV" fitHeight="100.0" fitWidth="100.0" onMouseClicked="#onPersonalImageViewClicked" pickOnBounds="true" preserveRatio="true">
                 <Image url="@../images/person.png" />
                 <VBox.margin>
                     <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
@@ -70,6 +66,10 @@
                 <CustomComboBox fx:id="instituteComboBox" labelFloat="true" prefWidth="217.0" promptText="%INSTITUTE" />
                 <JFXTextField fx:id="nationalityTextField" labelFloat="true" promptText="%NATIONALITY" />
                 <JFXTextField fx:id="nationalIdTextField" labelFloat="true" promptText="%NATIONAL_ID" />
+                <JFXTextField fx:id="familyIdTextField" labelFloat="true" promptText="%NO_FAMILY_BOOKLET" />
+                <JFXTextField fx:id="passportTextField" labelFloat="true" promptText="%PASSPORT" />
+                <JFXTextField fx:id="residenceTextField" labelFloat="true" promptText="%RESIDENCE_CITY" />
+
                 <JFXTextField fx:id="newEmployeeWorkIdTextField" labelFloat="true" maxWidth="-Infinity" minWidth="-Infinity" promptText="%WORK_ID" />
                 <CustomComboBox fx:id="employeesWorkIdComboBox" labelFloat="true" managed="false" prefWidth="217.0" promptText="%WORK_ID" visible="false" />
                 <CustomComboBox fx:id="relationshipComboBox" labelFloat="true" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="217.0" promptText="%EMPLOYEE_RELATIONSHIP" />
@@ -90,6 +90,7 @@
                     <FontAwesomeIconView glyphName="PLUS" size="20" style="-fx-fill: -rq-background-alt;" textAlignment="CENTER" />
                 </graphic>
             </JFXButton>
+         <JFXTextArea labelFloat="true" maxHeight="200.0" maxWidth="1000.0" minHeight="200.0" promptText="%NOTES" style="-fx-background-color: white;" />
          <JFXButton id="fingerprintBtn" buttonType="RAISED" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#fingerprintButtonAction" style="-fx-background-radius: 64;">
             <graphic>
                 <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
@@ -98,9 +99,9 @@
             </graphic>
          </JFXButton>
 
-            <JFXButton buttonType="RAISED" mnemonicParsing="false" onAction="#onEnterBtnClicked" prefWidth="100.0" styleClass="common-button" text="ENTER" />
+            <JFXButton buttonType="RAISED" mnemonicParsing="false" onAction="#onEnterBtnClicked" prefWidth="100.0" styleClass="common-button" text="%ENTER" />
             <padding>
-              <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+              <Insets bottom="32.0" left="32.0" right="32.0" top="32.0" />
             </padding>
         </VBox>
     </ScrollPane>

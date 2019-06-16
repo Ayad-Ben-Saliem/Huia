@@ -88,7 +88,7 @@ public final class Res {
 
     public enum Image {
 
-        PERSON_IMAGE         (IMAGES + "person.png"),
+        PERSON               (IMAGES + "person.png"),
         HOME_ADDRESS         (IMAGES + "address.png"),
         VIBER                (IMAGES + "viber.png"),
         CONTACTS             (IMAGES + "contacts.png"),
@@ -124,7 +124,13 @@ public final class Res {
         TWITTER_ICON         (ICONS + "twitter_icon.png"),
         ADDRESS_ICON         (ICONS + "address_icon.png"),
 
+        GREEN_PERSON         (IMAGES + "green person.png"),
+
+        HUIA_LOGO             (IMAGES + "huia_logo.png"),
+
         CRESTYANO            (IMAGES + "players_photos/Crestyano.jpg");
+
+
 
         final String url;
         Image(String url){

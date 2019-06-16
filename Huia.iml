@@ -15,5 +15,7 @@
     <orderEntry type="library" name="NBioBSPJNI" level="project" />
     <orderEntry type="library" name="javax.media:jmf:2.1.1e" level="project" />
     <orderEntry type="library" name="com.github.sarxos:webcam-capture:0.3.12" level="project" />
+    <orderEntry type="library" name="commons-io:commons-io:2.6" level="project" />
+    <orderEntry type="library" name="org.zeroturnaround:zt-zip:1.13" level="project" />
   </component>
 </module>

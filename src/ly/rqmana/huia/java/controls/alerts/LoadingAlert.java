@@ -15,6 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 import java.util.Optional;
 
@@ -209,5 +210,37 @@ public class LoadingAlert{
 
     public Modality getModality() {
         return mainAlert.getModality();
+    }
+
+    public void initStyle(StageStyle style) {
+        mainAlert.initStyle(style);
+    }
+
+    public double getX() {
+        return mainAlert.getX();
+    }
+
+    public void setX(double x) {
+        mainAlert.setX(x);
+    }
+
+    public ReadOnlyDoubleProperty xProperty() {
+        return mainAlert.xProperty();
+    }
+
+    public double getY() {
+        return mainAlert.getY();
+    }
+
+    public void setY(double y) {
+        mainAlert.setY(y);
+    }
+
+    public ReadOnlyDoubleProperty yProperty() {
+        return mainAlert.yProperty();
+    }
+
+    public CustomAlert<AlertLayout> getNativeAlert() {
+        return mainAlert;
     }
 }
