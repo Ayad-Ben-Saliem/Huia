@@ -5,7 +5,16 @@
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:/ProgramData/Huia/Huia.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:C:/ProgramData/Huia Health/Huia.db</jdbc-url>
+      <driver-properties>
+        <property name="enable_load_extension" value="true" />
+      </driver-properties>
+    </data-source>
+    <data-source source="LOCAL" name="FingerprintData.db" uuid="9e94aebf-d6d3-41be-a73e-ffd7f792a6e0">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:C:/ProgramData/Huia Health/FingerprintData.db</jdbc-url>
       <driver-properties>
         <property name="enable_load_extension" value="true" />
       </driver-properties>

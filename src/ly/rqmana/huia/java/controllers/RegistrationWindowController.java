@@ -304,7 +304,7 @@ public class RegistrationWindowController implements Controllable {
                                 + "instituteId,"
                                 + "workId,"
                                 + "relationship,"
-                                + "fingerprintsCode,"
+                                + "allFingerprintTemplates,"
                                 + "rightThumbFingerprint,"
                                 + "rightIndexFingerprint,"
                                 + "rightMiddleFingerprint,"

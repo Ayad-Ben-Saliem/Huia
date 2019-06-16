@@ -158,7 +158,7 @@ public class IdentificationWindowController implements Controllable {
                     "gender," +
                     "workId," +
                     "relationship," +
-                    "fingerprintsCode," +
+                    "allFingerprintTemplates," +
                     "rightThumbFingerprint," +
                     "rightIndexFingerprint," +
                     "rightMiddleFingerprint," +
