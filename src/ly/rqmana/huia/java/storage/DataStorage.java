@@ -72,7 +72,7 @@ public class DataStorage {
         //              - FINGER_{FINGER_INDEX}_{IMAGE_ID}.jpg
         //              - ...
 
-        String instituteId = subscriber.getInstituteId();
+        String instituteId = String.valueOf(subscriber.getInstitute().getId());
         String subscriberName = subscriber.getFullName();
         String workId = subscriber.getWorkId();
 

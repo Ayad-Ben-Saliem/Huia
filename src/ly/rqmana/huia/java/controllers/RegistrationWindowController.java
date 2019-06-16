@@ -414,9 +414,9 @@ public class RegistrationWindowController implements Controllable {
 
         subscriber.setRightHand(fingerprintCaptureResult.getRightHand());
         subscriber.setLeftHand(fingerprintCaptureResult.getLeftHand());
-        subscriber.setFingerprintsCode(fingerprintCaptureResult.getFingerprintsCode());
+        subscriber.setAllFingerprintsTemplate(fingerprintCaptureResult.getFingerprintsCode());
 
-        subscriber.setInstuteId(String.valueOf(instituteComboBox.getValue().getId()));
+        subscriber.setInstitute(instituteComboBox.getValue());
 
         return subscriber;
     }

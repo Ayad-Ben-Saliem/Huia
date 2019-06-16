@@ -33,6 +33,8 @@ import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
 
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.LocalDate;
@@ -146,6 +148,40 @@ public class IdentificationWindowController implements Controllable {
         String query;
         try {
 
+            try (Connection connection = DriverManager.getConnection(DAO.getDataDBUrl())) {
+                query = "SELECT " +
+                        "first_name," +
+                        "father_name," +
+                        "last_name," +
+                        "birthday," +
+                        "national_id," +
+                        "sex," +
+                        "fingerprint_template," +
+                        "work_id," +
+                        "relationship," +
+                        "is_active FROM Fingerprint";
+                try (Statement statement = connection.createStatement()) {
+                    ResultSet resultSet = statement.executeQuery(query);
+
+                    while (resultSet.next()) {
+                        Subscriber subscriber = new Subscriber();
+                        subscriber.setFirstName(resultSet.getString(1));
+                        subscriber.setFatherName(resultSet.getString(2));
+                        subscriber.setFamilyName(resultSet.getString(3));
+
+                        subscriber.setBirthday(LocalDate.parse(resultSet.getString(4)));
+                        subscriber.setNationalId(resultSet.getString(5));
+                        subscriber.setGender("M".equals(resultSet.getString(6)) ? Gender.MALE : Gender.FEMALE);
+                        subscriber.setAllFingerprintsTemplate(resultSet.getString(7));
+                        subscriber.setWorkId(resultSet.getString(8));
+                        subscriber.setRelationship(resultSet.getString(9));
+                        subscriber.setActive(resultSet.getString(10).equals("True"));
+
+                        subscribers.add(subscriber);
+                    }
+                }
+            }
+
             //todo: change this to load from People table not NewRegeneration
 
             query = "SELECT " +
@@ -189,7 +225,7 @@ public class IdentificationWindowController implements Controllable {
                     subscriber.setWorkId(resultSet.getString("workId"));
                     subscriber.setRelationship(resultSet.getString("relationship"));
 
-                    subscriber.setFingerprintsCode(resultSet.getString("fingerprintsCode"));
+                    subscriber.setAllFingerprintsTemplate(resultSet.getString("fingerprintsCode"));
                     subscriber.setRightThumbFingerprint(resultSet.getString("rightThumbFingerprint"));
                     subscriber.setRightIndexFingerprint(resultSet.getString("rightIndexFingerprint"));
                     subscriber.setRightMiddleFingerprint(resultSet.getString("rightMiddleFingerprint"));
@@ -245,9 +281,9 @@ public class IdentificationWindowController implements Controllable {
                     return true;
                 }
                 if (newValue.equals("Filled")) {
-                    return !person.getFingerprintsCode().isEmpty();
+                    return !person.getAllFingerprintsTemplate().isEmpty();
                 } else {
-                    return person.getFingerprintsCode().isEmpty();
+                    return person.getAllFingerprintsTemplate().isEmpty();
                 }
             });
         });
@@ -275,7 +311,7 @@ public class IdentificationWindowController implements Controllable {
 
             for (Subscriber subscriber : searchSubs) {
 
-                String subscriberFingerprint = subscriber.getFingerprintsCode();
+                String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
                 if (subscriberFingerprint != null && ! subscriberFingerprint.isEmpty()){
 
                     String scannedFingerprint = scannedFinger.getFingerprintTemplate();

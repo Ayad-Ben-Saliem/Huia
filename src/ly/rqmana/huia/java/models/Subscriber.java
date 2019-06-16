@@ -8,7 +8,7 @@ public class Subscriber extends Person {
 
     private Hand rightHand;
     private Hand leftHand;
-    private String fingerprintsCode;
+    private String allFingerprintsTemplate;
 
     private String rightThumbFingerprint;
     private String rightIndexFingerprint;
@@ -25,17 +25,20 @@ public class Subscriber extends Person {
     private String workId;
     private Relationship relationship;
     private String beneficiaryName;
-    private String companyId;
+    private Institute institute;
     private LocalDate startDate;
     private LocalDate endDate;
     private Boolean isActive;
+    private Passport passport;
+    private String familyId;
+    private String residence;
 
-    public String getFingerprintsCode() {
-        return fingerprintsCode;
+    public String getAllFingerprintsTemplate() {
+        return allFingerprintsTemplate;
     }
 
-    public void setFingerprintsCode(String fingerprintsCode) {
-        this.fingerprintsCode = fingerprintsCode;
+    public void setAllFingerprintsTemplate(String allFingerprintsTemplate) {
+        this.allFingerprintsTemplate = allFingerprintsTemplate;
     }
 
     public String getWorkId() {
@@ -86,12 +89,12 @@ public class Subscriber extends Person {
         this.beneficiaryName = beneficiaryName;
     }
 
-    public String getInstituteId() {
-        return companyId;
+    public Institute getInstitute() {
+        return institute;
     }
 
-    public void setInstuteId(String companyId) {
-        this.companyId = companyId;
+    public void setInstitute(Institute institute) {
+        this.institute = institute;
     }
 
     public LocalDate getStartDate() {
