@@ -1,6 +1,7 @@
 package ly.rqmana.huia.java;
 
 import javafx.application.Application;
+import javafx.scene.control.Alert;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import ly.rqmana.huia.java.concurrent.Task;

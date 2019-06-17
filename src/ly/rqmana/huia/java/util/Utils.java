@@ -7,6 +7,7 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.geometry.NodeOrientation;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import ly.rqmana.huia.java.controls.ContactField;
@@ -31,6 +32,18 @@ public class Utils {
 
     public static String getI18nString(String key) {
         return getBundle().getString(key);
+    }
+
+    public static NodeOrientation getNodeOrientation(){
+
+        ResourceBundle bundle = getBundle();
+        String orientation = bundle.getString("NODE_ORIENTATION");
+        if (orientation.equals("LTR"))
+            return NodeOrientation.LEFT_TO_RIGHT;
+        else if (orientation.equals("RTL"))
+            return NodeOrientation.RIGHT_TO_LEFT;
+        else
+            return NodeOrientation.INHERIT;
     }
 
     public static void setTextFieldNumeric(TextField field) {
