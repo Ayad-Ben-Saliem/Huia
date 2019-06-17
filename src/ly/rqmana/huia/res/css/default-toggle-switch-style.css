@@ -4,12 +4,12 @@
     -fx-arc-width: 27;
     -fx-arc-height: 27;
     -fx-fill: -rq-background-alt;
-    -fx-stroke: -rq-accent-light;
+    -fx-stroke: -rq-accent-unfocus;
     -fx-pref-height: 10;
 }
 
 .toggle-switch .trigger {
-    -fx-fill: -rq-accent-light;
+    -fx-fill: -rq-accent-unfocus;
     -fx-stroke: -rq-background-alt2;
     /*-fx-stroke-width: 0;*/
 

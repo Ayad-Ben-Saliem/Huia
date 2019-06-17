@@ -4,7 +4,6 @@ import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.validation.base.ValidatorBase;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -12,16 +11,13 @@ import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Cursor;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Circle;
-import javafx.stage.Screen;
 import javafx.stage.StageStyle;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
@@ -49,11 +45,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
 
 public class RegistrationWindowController implements Controllable {
 
@@ -496,7 +490,7 @@ public class RegistrationWindowController implements Controllable {
         FilteredList<Subscriber> oldFilteredSubscribers = (FilteredList<Subscriber>) mwc.getIdentificationWindowController().tableView.getItems();
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(oldFilteredSubscribers.getSource());
         subscribers.add(subscriber);
-        mwc.getIdentificationWindowController().addToTableView(subscribers);
+        mwc.getIdentificationWindowController().setToTableView(subscribers);
     }
 
     private void updateWorkIdes(String newWorkId) {

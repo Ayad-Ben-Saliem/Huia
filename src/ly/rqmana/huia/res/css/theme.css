@@ -3,11 +3,8 @@
        and for some buttons background color....
        it's the main ui color besides the background color
      */
-    -rq-accent-focus: #258485;
-    -rq-accent-unfocus: #3acdce;
-
-    -rq-accent-dark: #258485;
-    -rq-accent-light: #3acdce;
+    -rq-accent-focus: #ff0000;
+    -rq-accent-unfocus: #ff8888;
 
     -rq-background: #303030;
     -rq-background-alt: white;
@@ -73,7 +70,7 @@
 
 .menu-bar > .container > .menu:hover,
 .menu-bar > .container > .menu:focused {
-    -fx-background-color: -rq-accent-light;
+    -fx-background-color: -rq-accent-unfocus;
 }
 
 .separator {
@@ -90,7 +87,7 @@
 
 .context-menu .menu-item:hover,
 .context-menu .menu-item:focused {
-    -fx-background-color: -rq-accent-light;
+    -fx-background-color: -rq-accent-unfocus;
     -fx-text-fill: white;
 }
 
@@ -109,5 +106,5 @@
 }
 
 .progress-indicator {
-    -fx-progress-color: -rq-accent-light;
+    -fx-progress-color: -rq-accent-unfocus;
 }

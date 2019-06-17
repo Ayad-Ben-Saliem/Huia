@@ -16,7 +16,6 @@ public class DAO {
 
     static {
         try {
-            System.out.println(getDBUrl());
             DB_CONNECTION = DriverManager.getConnection(getDBUrl());
 //            initializeDB();
         } catch (SQLException e) {

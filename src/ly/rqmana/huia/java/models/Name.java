@@ -33,37 +33,37 @@ public class Name {
         switch (nameFormat) {
             case FAMILY_FIRST:
                 if (firstName == null || firstName.isEmpty()) {
-                    throw new RuntimeException("Set firstName first");
+//                    throw new RuntimeException("Set firstName first");
                 }
                 if (familyName == null || familyName.isEmpty()) {
-                    throw new RuntimeException("Set familyName first");
+//                    throw new RuntimeException("Set familyName first");
                 }
                 return getFamilyName() + " " + getFirstName();
             case FIRST_FATHER:
                 if (firstName == null || firstName.isEmpty()) {
-                    throw new RuntimeException("Set firstName first");
+//                    throw new RuntimeException("Set firstName first");
                 }
                 if (fatherName == null || fatherName.isEmpty()) {
-                    throw new RuntimeException("Set fatherName first");
+//                    throw new RuntimeException("Set fatherName first");
                 }
                 return getFirstName() + " " + getFatherName();
             case FIRST_FAMILY:
                 if (firstName == null || firstName.isEmpty()) {
-                    throw new RuntimeException("Set firstName first");
+//                    throw new RuntimeException("Set firstName first");
                 }
                 if (familyName == null || familyName.isEmpty()) {
-                    throw new RuntimeException("Set familyName first");
+//                    throw new RuntimeException("Set familyName first");
                 }
                 return getFirstName() + " " + getFamilyName();
             case FULL_NAME:
                 if (firstName == null || firstName.isEmpty()) {
-                    throw new RuntimeException("Set firstName first");
+//                    throw new RuntimeException("Set firstName first");
                 }
                 if (fatherName == null || fatherName.isEmpty()) {
                     //throw new RuntimeException("Set fatherName first");
                 }
                 if (familyName == null || familyName.isEmpty()) {
-                    throw new RuntimeException("Set familyName first");
+//                    throw new RuntimeException("Set familyName first");
                 }
                 String result = firstName + " " + fatherName;
                 if (grandfatherName != null && !grandfatherName.isEmpty()) {

@@ -1,8 +1,8 @@
 package ly.rqmana.huia.java.controllers;
 
 import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
-import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXTextField;
 import com.sun.istack.internal.Nullable;
 import javafx.beans.property.ObjectProperty;
@@ -14,9 +14,9 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
-import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.db.DAO;
@@ -42,6 +42,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.function.Predicate;
 
 public class IdentificationWindowController implements Controllable {
 
@@ -58,18 +59,20 @@ public class IdentificationWindowController implements Controllable {
     @FXML public TableColumn relationshipColumn;
     @FXML public TableColumn isActiveColumn;
 
+    @FXML public VBox searchFieldsContainer;
     @FXML public JFXTextField nameFilterTF;
     @FXML public JFXTextField workIdTF;
     @FXML public JFXDatePicker fromDateFilterDatePicker;
     @FXML public JFXDatePicker toDateFilterDatePicker;
-    @FXML public CustomComboBox<String> genderFilterComboBox;
-    @FXML public CustomComboBox<String> fingerprintFilterComboBox;
-    @FXML public CustomComboBox<Relationship> relationshipFilterComboBox;
-    @FXML public CustomComboBox<String> isActiveFilterComboBox;
+    @FXML public JFXComboBox<String> genderFilterComboBox;
+    @FXML public JFXComboBox<String> fingerprintFilterComboBox;
+    @FXML public JFXComboBox<Relationship> relationshipFilterComboBox;
+    @FXML public JFXComboBox<String> isActiveFilterComboBox;
 
     private ObjectProperty<Person> lastSelectedPerson = new SimpleObjectProperty<>();
 
     private FilteredList<Subscriber> filteredList;
+    private Predicate<Subscriber> subscriberPredicate;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -82,25 +85,7 @@ public class IdentificationWindowController implements Controllable {
         birthdayColumn.setCellValueFactory(new PropertyValueFactory<>("birthday"));
         fingerprintColumn.setCellValueFactory(new PropertyValueFactory<>("fingerprint"));
 
-        nameColumn.widthProperty().addListener((observable, oldValue, newValue) -> nameFilterTF.setPrefWidth(newValue.doubleValue()));
-        workIdColumn.widthProperty().addListener((observable, oldValue, newValue) -> workIdTF.setPrefWidth(newValue.doubleValue()));
-        birthdayColumn.widthProperty().addListener((observable, oldValue, newValue) -> {
-            fromDateFilterDatePicker.setPrefWidth(newValue.doubleValue()/2);
-            toDateFilterDatePicker.setPrefWidth(newValue.doubleValue()/2);
-        });
-        genderColumn.widthProperty().addListener((observable, oldValue, newValue) -> genderFilterComboBox.setPrefWidth(newValue.doubleValue()));
-        relationshipColumn.widthProperty().addListener((observable, oldValue, newValue) -> relationshipFilterComboBox.setPrefWidth(newValue.doubleValue()));
-        fingerprintColumn.widthProperty().addListener((observable, oldValue, newValue) -> fingerprintFilterComboBox.setPrefWidth(newValue.doubleValue()));
-        isActiveColumn.widthProperty().addListener((observable, oldValue, newValue) -> isActiveFilterComboBox.setPrefWidth(newValue.doubleValue()));
-
-        nameFilterTF.setPrefWidth(nameColumn.getPrefWidth());
-        workIdTF.setPrefWidth(workIdColumn.getPrefWidth());
-        fromDateFilterDatePicker.setPrefWidth(birthdayColumn.getPrefWidth()/2);
-        toDateFilterDatePicker.setPrefWidth(birthdayColumn.getPrefWidth()/2);
-        genderFilterComboBox.setPrefWidth(genderColumn.getPrefWidth());
-        relationshipFilterComboBox.setPrefWidth(relationshipFilterComboBox.getPrefWidth());
-        fingerprintFilterComboBox.setPrefWidth(fingerprintColumn.getPrefWidth());
-        isActiveFilterComboBox.setPrefWidth(isActiveFilterComboBox.getPrefWidth());
+        searchFieldsContainer.minWidthProperty().bind(tableView.widthProperty());
 
         genderFilterComboBox.getItems().addAll(Utils.getI18nString("BOTH"), Utils.getI18nString("MALE"), Utils.getI18nString("FEMALE"));
         relationshipFilterComboBox.getItems().addAll(Arrays.asList(Relationship.values()));
@@ -116,31 +101,6 @@ public class IdentificationWindowController implements Controllable {
                 nameLabel.setText(newValue.getFullName());
             }
         });
-
-//        ExecutorService executorService = Executors.newWorkStealingPool(tableView.getItems().size());
-//        for (Subscriber subscriber : tableView.getItems()) {
-//            executorService.submit(() -> {
-//
-//                int rt = FingerprintManager.MatchFP(subscriber.getRightThumbFingerprint(), template);
-//                int ri = FingerprintManager.MatchFP(subscriber.getRightIndexFingerprint(), template);
-//                int rm = FingerprintManager.MatchFP(subscriber.getRightMiddleFingerprint(), template);
-//                int rr = FingerprintManager.MatchFP(subscriber.getRightRingFingerprint(), template);
-//                int rl = FingerprintManager.MatchFP(subscriber.getRightLittleFingerprint(), template);
-//
-//                int lt = FingerprintManager.MatchFP(subscriber.getLeftThumbFingerprint(), template);
-//                int li = FingerprintManager.MatchFP(subscriber.getLeftIndexFingerprint(), template);
-//                int lm = FingerprintManager.MatchFP(subscriber.getLeftMiddleFingerprint(), template);
-//                int lr = FingerprintManager.MatchFP(subscriber.getLeftRingFingerprint(), template);
-//                int ll = FingerprintManager.MatchFP(subscriber.getRightLittleFingerprint(), template);
-//
-//                int matchResult = Math.max(rt, Math.max(ri, Math.max(rm, Math.max(rr, Math.max(rl, Math.max(lt, Math.max(li, Math.max(lm, Math.max(ll, lr)))))))));
-//                System.out.println("matchResult = " + matchResult);
-//
-//                if (matchResult > 50) {
-//                    Platform.runLater(() -> Alerts.infoAlert(Windows.MAIN_WINDOW, "Recognition", subscriber.getFullName(), AlertAction.OK));
-//                }
-//            });
-//        }
     }
 
     private void loadDataFromDatabase() {
@@ -246,59 +206,61 @@ public class IdentificationWindowController implements Controllable {
                 }
             }
 
-            addToTableView(subscribers);
+            setToTableView(subscribers);
 
+            subscriberPredicate = subscriber -> {
+                String name = nameFilterTF.getText();
+                String workId = workIdTF.getText();
+                LocalDate fromBirthday = fromDateFilterDatePicker.getValue();
+                LocalDate toBirthday = toDateFilterDatePicker.getValue();
+//            Gender gender = genderFilterComboBox.getValue();
+
+                if (!name.isEmpty()) {
+                    for (String namePart : name.split(" ")) {
+                        if (subscriber.getFullName().contains(namePart)) {
+                            return true;
+                        }
+                    }
+                }
+                if (!workId.isEmpty() && subscriber.getWorkId().contains(workId))
+                    return true;
+                if (fromBirthday != null && toBirthday != null) {
+                    if (subscriber.getBirthday().isAfter(fromBirthday) && subscriber.getBirthday().isBefore(toBirthday))
+                        return true;
+                }
+                System.out.println("here");
+                return name.isEmpty() && workId.isEmpty() && fromBirthday == null && toBirthday == null;
+            };
+
+            filteredList.setPredicate(subscriberPredicate);
+
+            nameFilterTF.textProperty().addListener(observable -> refreshTable());
+            workIdTF.textProperty().addListener(observable -> refreshTable());
+            fromDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
+            toDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
+            genderFilterComboBox.valueProperty().addListener(observable -> refreshTable());
+            fingerprintFilterComboBox.valueProperty().addListener(observable -> refreshTable());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public void addToTableView(Subscriber subscriber){
-        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(filteredList);
+        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(filteredList.getSource());
         subscribers.add(subscriber);
-        addToTableView(subscribers);
+        setToTableView(subscribers);
     }
 
-    public void addToTableView(ObservableList<Subscriber> subscribers) {
-        filteredList = new FilteredList<>(subscribers, subscriber -> true);
-
-        nameFilterTF.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == null) return;
-            if (newValue.isEmpty()) filteredList.setPredicate(subscriber -> true);
-            filteredList.setPredicate(person -> {
-                for (String newWord : newValue.toLowerCase().split(" ")) {
-                    if (person.getFullName().toLowerCase().contains(newWord)) return true;
-                }
-                return false;
-            });
-        });
-
-        fromDateFilterDatePicker.valueProperty().addListener((observable, oldValue, newValue) ->
-                filteredList.setPredicate(person -> person.getBirthday() == null || newValue == null || person.getBirthday().isAfter(newValue)));
-
-        toDateFilterDatePicker.valueProperty().addListener((observable, oldValue, newValue) ->
-                filteredList.setPredicate(person -> person.getBirthday() == null || newValue == null || person.getBirthday().isBefore(newValue)));
-
-        genderFilterComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == null || newValue.isEmpty()) return;
-            filteredList.setPredicate(person -> person.getGender() == null || person.getGender().toString().equalsIgnoreCase(newValue));
-        });
-
-        fingerprintFilterComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == null || newValue.isEmpty()) return;
-            filteredList.setPredicate(person -> {
-                if (newValue.equals("Both")) {
-                    return true;
-                }
-                if (newValue.equals("Filled")) {
-                    return !person.getAllFingerprintsTemplate().isEmpty();
-                } else {
-                    return person.getAllFingerprintsTemplate().isEmpty();
-                }
-            });
-        });
+    void setToTableView(ObservableList<Subscriber> subscribers) {
+        filteredList = new FilteredList<>(subscribers, subscriberPredicate);
 
         tableView.setItems(filteredList);
+    }
+
+    private void refreshTable() {
+        System.out.println("refreshTable");
+        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(filteredList.getSource());
+        setToTableView(subscribers);
     }
 
     @FXML
