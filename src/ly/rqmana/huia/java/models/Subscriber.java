@@ -4,10 +4,8 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
 
-import javax.swing.text.html.ImageView;
 import java.time.LocalDate;
 
 public class Subscriber extends Person {
@@ -34,10 +32,9 @@ public class Subscriber extends Person {
     private Institute institute;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Boolean isActive;
-    private Passport passport;
-    private String familyId;
-    private String residence;
+    private Boolean active;
+
+    private String dataPath;
 
     public String getAllFingerprintsTemplate() {
         return allFingerprintsTemplate;
@@ -120,11 +117,11 @@ public class Subscriber extends Person {
     }
 
     public Boolean isActive() {
-        return isActive;
+        return active;
     }
 
     public void setActive(boolean active) {
-        isActive = active;
+        this.active = active;
     }
 
     // This method used for TableView
@@ -281,5 +278,17 @@ public class Subscriber extends Person {
 
     public boolean hasFingerprint() {
         return getAllFingerprintsTemplate() != null && !getAllFingerprintsTemplate().isEmpty();
+    }
+
+    public void setDataPath(String dataPath) {
+        this.dataPath = dataPath;
+    }
+
+    public String getDataPath() {
+        return dataPath;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 }

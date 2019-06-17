@@ -333,96 +333,17 @@ public class RegistrationWindowController implements Controllable {
             @Override
             protected Subscriber call() throws Exception {
 
-                Subscriber newSubscriber = constructSubscriber();
-                final String INSERT_QUERY =
-                        "INSERT INTO NewRegistrations ("
-                                + "firstName,"
-                                + "fatherName,"
-                                + "grandfatherName,"
-                                + "familyName,"
-                                + "nationality,"
-                                + "nationalId,"
-                                + "birthday,"
-                                + "gender,"
-                                + "instituteId,"
-                                + "familyId,"
-                                + "residence,"
-                                + "passport,"
-                                + "workId,"
-                                + "relationship,"
-                                + "rightThumbFingerprint,"
-                                + "rightIndexFingerprint,"
-                                + "rightMiddleFingerprint,"
-                                + "rightRingFingerprint,"
-                                + "rightLittleFingerprint,"
-                                + "leftThumbFingerprint,"
-                                + "leftIndexFingerprint,"
-                                + "leftMiddleFingerprint,"
-                                + "leftRingFingerprint,"
-                                + "leftLittleFingerprint,"
-                                + "allFingerprintTemplates,"
-                                + "user"
-                                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                Subscriber subscriber = constructSubscriber();
 
-                PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
+                long subscriberId = DAO.insertNewSubscriber(subscriber);
 
-                pStatement.setString(1, firstNameTextField.getText());
-                pStatement.setString(2, fatherNameTextField.getText());
-                pStatement.setString(3, grandfatherNameTextField.getText());
-                pStatement.setString(4, familyNameTextField.getText());
-                pStatement.setString(5, nationalityTextField.getText());
-                pStatement.setString(6, nationalIdTextField.getText());
-                pStatement.setLong(7, SQLUtils.dateToTimestamp(birthdayDatePicker.getValue()));
-                pStatement.setString(8, genderComboBox.getValue().name());
-                pStatement.setInt(9, instituteComboBox.getValue().getId());
+                subscriber.setId(subscriberId);
 
-                pStatement.setString(10, familyIdTextField.getText());
-                pStatement.setString(11, residenceTextField.getText());
-                pStatement.setString(12, passportTextField.getText());
+                String dataPath = DataStorage.saveSubscriberData(subscriber).toString();
+                subscriber.setDataPath(dataPath);
 
-                String workId = relationshipComboBox.getValue().equals(Relationship.EMPLOYEE) ? newEmployeeWorkIdTextField.getText() : employeesWorkIdComboBox.getValue();
-                pStatement.setString(13, workId);
-                pStatement.setString(14, relationshipComboBox.getValue().toString());
-
-                if (fingerprintCaptureResult != null) {
-
-                    String fingerprintsCode = fingerprintCaptureResult.getFingerprintsTemplate();
-                    pStatement.setString(15, fingerprintsCode);
-
-                    Hand rightHand = fingerprintCaptureResult.getRightHand();
-                    if (rightHand != null) {
-                        pStatement.setString(16, rightHand.getThumb().getFingerprintTemplate());
-                        pStatement.setString(17, rightHand.getIndex().getFingerprintTemplate());
-                        pStatement.setString(18, rightHand.getMiddle().getFingerprintTemplate());
-                        pStatement.setString(19, rightHand.getRing().getFingerprintTemplate());
-                        pStatement.setString(20, rightHand.getLittle().getFingerprintTemplate());
-                    }
-
-                    Hand leftHand = fingerprintCaptureResult.getLeftHand();
-                    if (leftHand != null) {
-                        pStatement.setString(21, leftHand.getThumb().getFingerprintTemplate());
-                        pStatement.setString(22, leftHand.getIndex().getFingerprintTemplate());
-                        pStatement.setString(23, leftHand.getMiddle().getFingerprintTemplate());
-                        pStatement.setString(24, leftHand.getRing().getFingerprintTemplate());
-                        pStatement.setString(25, leftHand.getLittle().getFingerprintTemplate());
-                    }
-                }
-                pStatement.setString(26, Auth.getCurrentUser().getUsername());
-                pStatement.executeUpdate();
-
-                ResultSet generatedKeys = pStatement.getGeneratedKeys();
-
-                long subscriberId = generatedKeys.getLong(1);
-                newSubscriber.setId(subscriberId);
-
-                String imagesDir = DataStorage.saveSubscriberData(newSubscriber).toString();
-
-                pStatement = DAO.DB_CONNECTION.prepareStatement("UPDATE NewRegistrations SET fingerprintImagesDir= ? WHERE id= ?");
-                pStatement.setString(1, imagesDir);
-                pStatement.setLong(2, subscriberId);
-
-                pStatement.executeUpdate();
-                return newSubscriber;
+                DAO.updateSubscriberDataPath(subscriber);
+                return subscriber;
             }
         };
 
