@@ -108,3 +108,7 @@
 .progress-indicator {
     -fx-progress-color: -rq-accent-unfocus;
 }
+
+.table-row-cell:selected {
+    -fx-background-color: -rq-accent-unfocus;
+}

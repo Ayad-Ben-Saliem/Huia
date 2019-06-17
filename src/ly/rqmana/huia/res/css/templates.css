@@ -20,6 +20,7 @@
 /*}*/
 
 .text,
+.jfx-text-area,
 .jfx-text-field,
 .jfx-password-field {
     -fx-font-family: Cairo;

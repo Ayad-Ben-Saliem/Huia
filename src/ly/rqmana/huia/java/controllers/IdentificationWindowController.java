@@ -7,6 +7,7 @@ import com.jfoenix.controls.JFXTextField;
 import com.sun.istack.internal.Nullable;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -14,7 +15,9 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
@@ -51,13 +54,13 @@ public class IdentificationWindowController implements Controllable {
     @FXML public JFXButton fingerprintBtn;
 
     @FXML public TableView<Subscriber> tableView;
-    @FXML public TableColumn<String, Person> nameColumn;
-    @FXML public TableColumn<String, Person> workIdColumn;
-    @FXML public TableColumn<Gender, Person> genderColumn;
-    @FXML public TableColumn<LocalDate, Person> birthdayColumn;
-    @FXML public TableColumn<String, Person> fingerprintColumn;
-    @FXML public TableColumn relationshipColumn;
-    @FXML public TableColumn isActiveColumn;
+    @FXML public TableColumn<String, Subscriber> nameColumn;
+    @FXML public TableColumn<String, Subscriber> workIdColumn;
+    @FXML public TableColumn<Gender, Subscriber> genderColumn;
+    @FXML public TableColumn<LocalDate, Subscriber> birthdayColumn;
+    @FXML public TableColumn<String, Subscriber> fingerprintColumn;
+    @FXML public TableColumn<String, Subscriber> relationshipColumn;
+    @FXML public TableColumn<ImageView, Subscriber> isActiveColumn;
 
     @FXML public VBox searchFieldsContainer;
     @FXML public JFXTextField nameFilterTF;
@@ -69,7 +72,7 @@ public class IdentificationWindowController implements Controllable {
     @FXML public JFXComboBox<Relationship> relationshipFilterComboBox;
     @FXML public JFXComboBox<String> isActiveFilterComboBox;
 
-    private ObjectProperty<Person> lastSelectedPerson = new SimpleObjectProperty<>();
+    private ObjectProperty<Subscriber> selectedSubscriber = new SimpleObjectProperty<>();
 
     private FilteredList<Subscriber> filteredList;
     private Predicate<Subscriber> subscriberPredicate;
@@ -83,21 +86,24 @@ public class IdentificationWindowController implements Controllable {
         workIdColumn.setCellValueFactory(new PropertyValueFactory<>("workId"));
         genderColumn.setCellValueFactory(new PropertyValueFactory<>("gender"));
         birthdayColumn.setCellValueFactory(new PropertyValueFactory<>("birthday"));
-        fingerprintColumn.setCellValueFactory(new PropertyValueFactory<>("fingerprint"));
+        relationshipColumn.setCellValueFactory(new PropertyValueFactory<>("relationship"));
+        fingerprintColumn.setCellValueFactory(new PropertyValueFactory<>("fingerprintsNodes"));
+        isActiveColumn.setCellValueFactory(new PropertyValueFactory<>("activeNode"));
 
         searchFieldsContainer.minWidthProperty().bind(tableView.widthProperty());
 
         genderFilterComboBox.getItems().addAll(Utils.getI18nString("BOTH"), Utils.getI18nString("MALE"), Utils.getI18nString("FEMALE"));
         relationshipFilterComboBox.getItems().addAll(Arrays.asList(Relationship.values()));
         fingerprintFilterComboBox.getItems().addAll(Utils.getI18nString("BOTH"), Utils.getI18nString("FILLED"), Utils.getI18nString("UNFILLED"));
-        isActiveFilterComboBox.getItems().addAll(Utils.getI18nString("ACTIVE"), Utils.getI18nString("NOT_ACTIVE"));
+        isActiveFilterComboBox.getItems().addAll(Utils.getI18nString("BOTH"), Utils.getI18nString("ACTIVE"), Utils.getI18nString("NOT_ACTIVE"));
 
-        genderFilterComboBox.setValue("Both");
-        fingerprintFilterComboBox.setValue("Both");
+        genderFilterComboBox.setValue(Utils.getI18nString("BOTH"));
+        fingerprintFilterComboBox.setValue(Utils.getI18nString("BOTH"));
+        isActiveFilterComboBox.setValue(Utils.getI18nString("BOTH"));
 
         tableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (nameLabel != null) {
-                lastSelectedPerson.setValue(newValue);
+                selectedSubscriber.setValue(newValue);
                 nameLabel.setText(newValue.getFullName());
             }
         });
@@ -213,7 +219,9 @@ public class IdentificationWindowController implements Controllable {
                 String workId = workIdTF.getText();
                 LocalDate fromBirthday = fromDateFilterDatePicker.getValue();
                 LocalDate toBirthday = toDateFilterDatePicker.getValue();
-//            Gender gender = genderFilterComboBox.getValue();
+                String gender = genderFilterComboBox.getValue();
+                String isActive = isActiveFilterComboBox.getValue();
+                String hasFingerprint = fingerprintFilterComboBox.getValue();
 
                 if (!name.isEmpty()) {
                     for (String namePart : name.split(" ")) {
@@ -228,8 +236,23 @@ public class IdentificationWindowController implements Controllable {
                     if (subscriber.getBirthday().isAfter(fromBirthday) && subscriber.getBirthday().isBefore(toBirthday))
                         return true;
                 }
-                System.out.println("here");
-                return name.isEmpty() && workId.isEmpty() && fromBirthday == null && toBirthday == null;
+                if (gender != null) {
+                    if (gender.equals("BOTH") || gender.equals(subscriber.getGender().toString()))
+                        return true;
+                }
+
+                if (hasFingerprint != null) {
+                    if ((subscriber.hasFingerprint() && hasFingerprint.equals(Utils.getI18nString("UNFILLED"))) ||
+                       (!subscriber.hasFingerprint() && hasFingerprint.equals(Utils.getI18nString("FILLED"))))
+                        return false;
+                }
+
+                if (isActive != null) {
+                    if ((subscriber.isActive() && isActive.equals(Utils.getI18nString("NOT_ACTIVE"))) ||
+                       (!subscriber.isActive() && isActive.equals(Utils.getI18nString("ACTIVE"))))
+                        return false;
+                }
+                return name.isEmpty() && workId.isEmpty();
             };
 
             filteredList.setPredicate(subscriberPredicate);
@@ -240,6 +263,7 @@ public class IdentificationWindowController implements Controllable {
             toDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
             genderFilterComboBox.valueProperty().addListener(observable -> refreshTable());
             fingerprintFilterComboBox.valueProperty().addListener(observable -> refreshTable());
+            isActiveFilterComboBox.valueProperty().addListener(observable -> refreshTable());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -258,47 +282,64 @@ public class IdentificationWindowController implements Controllable {
     }
 
     private void refreshTable() {
-        System.out.println("refreshTable");
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(filteredList.getSource());
         setToTableView(subscribers);
     }
 
     @FXML
-    public void fingerprintButtonAction(ActionEvent actionEvent) {
-
-        ObservableList<Subscriber> searchSubs = tableView.getItems();
-
+    public void onFingerprintBtnClicked(ActionEvent actionEvent) {
         Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
 
         openDeviceTask.addOnSucceeded(event -> {
 
-            Finger scannedFinger = FingerprintManager.device().captureFinger(FingerID.UNKNOWN);
-
-            // if the user cancels capturing
-            // an empty finger is returned
-            if (scannedFinger.isEmpty())
+            Subscriber subscriber = selectedSubscriber.get();
+            if (subscriber == null) {
+                Alerts.errorAlert(
+                        Windows.MAIN_WINDOW,
+                        Utils.getI18nString("ERROR"),
+                        Utils.getI18nString("SELECT_SUBSCRIBER_FIRST"),
+                        null,
+                        AlertAction.OK
+                );
                 return;
-
-            boolean foundMatch = false;
-
-            for (Subscriber subscriber : searchSubs) {
-
-                String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
-                if (subscriberFingerprint != null && ! subscriberFingerprint.isEmpty()){
-
-                    String scannedFingerprint = scannedFinger.getFingerprintTemplate();
-                    boolean match = FingerprintManager.device().matchFingerprintCode(scannedFingerprint, subscriberFingerprint);
-
-                    if (match) {
-                        foundMatch = true;
-                        showIdentificationStateError(true, subscriber);
-                        break;
-                    }
-                }
             }
 
-            if (! foundMatch) {
-                showIdentificationStateError(false, null);
+            Finger scannedFinger = FingerprintManager.device().captureFinger(FingerID.UNKNOWN);
+            // if the user cancels capturing null finger is returned
+            if (scannedFinger == null || scannedFinger.isEmpty())
+                return;
+
+            if (!subscriber.isActive()) {
+                Alerts.warningAlert(
+                        Windows.MAIN_WINDOW,
+                        Utils.getI18nString("NOT_ACTIVE_SUBSCRIBER_WARRING_HEADING"),
+                        Utils.getI18nString("NOT_ACTIVE_SUBSCRIBER_WARRING_BODY"),
+                        AlertAction.OK
+                );
+                return;
+            }
+
+            String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
+            if (subscriberFingerprint != null && !subscriberFingerprint.isEmpty()){
+
+                String scannedFingerprint = scannedFinger.getFingerprintTemplate();
+                boolean match = FingerprintManager.device().matchFingerprintCode(scannedFingerprint, subscriberFingerprint);
+
+                showIdentificationStateError(match, subscriber);
+            } else {
+                Optional<AlertAction> alertAction = Alerts.infoAlert(
+                        Windows.MAIN_WINDOW,
+                        Utils.getI18nString("ADD_NEW_SUBSCRIBER_HEADING"),
+                        Utils.getI18nString("ADD_NEW_SUBSCRIBER_BODY"),
+                        AlertAction.NO, AlertAction.YES
+                );
+                // TODO: alertAction is empty
+                if (alertAction.isPresent()) {
+                    if (alertAction.get().equals(AlertAction.YES)){
+                        // TODO: Add new subscriber depend on current data
+                        System.out.println("Yes");
+                    }
+                }
             }
         });
 
@@ -306,7 +347,7 @@ public class IdentificationWindowController implements Controllable {
 
             Optional<AlertAction> result = Windows.showFingerprintDeviceError(event.getSource().getException());
             if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN){
-                fingerprintButtonAction(null);
+                onFingerprintBtnClicked(null);
             }
 
         });

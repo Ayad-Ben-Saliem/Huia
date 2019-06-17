@@ -25,7 +25,7 @@
     <HBox alignment="CENTER" styleClass="menu-bar-button">
       <HBox HBox.hgrow="ALWAYS">
          <children>
-            <JFXButton text="%REFRESH_FINGERPRINT_DEVICE" contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onDeviceRefreshButtonClicked" styleClass="menu-bar-button">
+            <JFXButton contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onDeviceRefreshButtonClicked" styleClass="menu-bar-button" text="%REFRESH_FINGERPRINT_DEVICE">
                <graphic>
                   <FontAwesomeIconView glyphName="REFRESH" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon" />
                </graphic>

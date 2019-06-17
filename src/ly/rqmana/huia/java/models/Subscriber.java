@@ -1,7 +1,13 @@
 package ly.rqmana.huia.java.models;
 
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import javafx.scene.Node;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
 
+import javax.swing.text.html.ImageView;
 import java.time.LocalDate;
 
 public class Subscriber extends Person {
@@ -121,6 +127,17 @@ public class Subscriber extends Person {
         isActive = active;
     }
 
+    // This method used for TableView
+    public Node getActiveNode() {
+        FontAwesomeIconView fontAwesomeIconView;
+        if (isActive()) {
+            fontAwesomeIconView = new FontAwesomeIconView(FontAwesomeIcon.CHECK_CIRCLE);
+        } else {
+            fontAwesomeIconView = new FontAwesomeIconView(FontAwesomeIcon.TIMES_CIRCLE);
+        }
+        fontAwesomeIconView.setSize("25");
+        return fontAwesomeIconView;
+    }
 
     public Hand getRightHand() {
         return rightHand;
@@ -216,5 +233,53 @@ public class Subscriber extends Person {
 
     public void setLeftLittleFingerprint(String leftLittleFingerprint) {
         this.leftLittleFingerprint = leftLittleFingerprint;
+    }
+
+    // This method is used for TableView
+    public Node getFingerprintsNodes() {
+        HBox result = new HBox();
+
+        result.getChildren().add(getFingerprintNode(getRightThumbFingerprint()));
+        result.getChildren().add(getFingerprintNode(getRightIndexFingerprint()));
+        result.getChildren().add(getFingerprintNode(getRightMiddleFingerprint()));
+        result.getChildren().add(getFingerprintNode(getRightRingFingerprint()));
+        result.getChildren().add(getFingerprintNode(getRightLittleFingerprint()));
+
+        result.getChildren().add(getFingerprintNode(getLeftThumbFingerprint()));
+        result.getChildren().add(getFingerprintNode(getLeftIndexFingerprint()));
+        result.getChildren().add(getFingerprintNode(getLeftMiddleFingerprint()));
+        result.getChildren().add(getFingerprintNode(getLeftRingFingerprint()));
+        result.getChildren().add(getFingerprintNode(getLeftLittleFingerprint()));
+
+        boolean isThereFP = false;
+        for (Node child : result.getChildren()) {
+            FontAwesomeIconView fontAwesomeIconView = (FontAwesomeIconView) child;
+            if (FontAwesomeIcon.CHECK_CIRCLE.name().equals(fontAwesomeIconView.getDefaultGlyph().name())) {
+                isThereFP = true;
+                break;
+            }
+        }
+        if (!isThereFP) {
+            if (getAllFingerprintsTemplate() != null && !getAllFingerprintsTemplate().isEmpty()) {
+                FontAwesomeIconView fontAwesomeIconView = (FontAwesomeIconView) result.getChildren().get(0);
+                fontAwesomeIconView.setIcon(FontAwesomeIcon.CHECK_CIRCLE);
+            }
+        }
+
+        return result;
+    }
+
+    private Node getFingerprintNode(String fingerprint) {
+        FontAwesomeIconView fontAwesomeIconView;
+        if (fingerprint != null && !fingerprint.isEmpty())
+            fontAwesomeIconView = new FontAwesomeIconView(FontAwesomeIcon.CHECK_CIRCLE);
+        else
+            fontAwesomeIconView = new FontAwesomeIconView(FontAwesomeIcon.CIRCLE_ALT);
+        fontAwesomeIconView.setSize("25");
+        return fontAwesomeIconView;
+    }
+
+    public boolean hasFingerprint() {
+        return getAllFingerprintsTemplate() != null && !getAllFingerprintsTemplate().isEmpty();
     }
 }
