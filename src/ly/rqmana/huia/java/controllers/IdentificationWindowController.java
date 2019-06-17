@@ -110,107 +110,16 @@ public class IdentificationWindowController implements Controllable {
     }
 
     private void loadDataFromDatabase() {
-        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
 
-        String query;
         try {
-            try (Connection connection = DriverManager.getConnection(DAO.getDataDBUrl())) {
-                query = "SELECT " +
-                        "first_name," +
-                        "father_name," +
-                        "last_name," +
-                        "birthday," +
-                        "national_id," +
-                        "sex," +
-                        "fingerprint_template," +
-                        "work_id," +
-                        "relationship," +
-                        "is_active FROM Fingerprint";
-                try (Statement statement = connection.createStatement()) {
-                    ResultSet resultSet = statement.executeQuery(query);
 
-                    while (resultSet.next()) {
-                        Subscriber subscriber = new Subscriber();
-                        subscriber.setFirstName(resultSet.getString(1));
-                        subscriber.setFatherName(resultSet.getString(2));
-                        subscriber.setFamilyName(resultSet.getString(3));
+            ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
 
-                        subscriber.setBirthday(LocalDate.parse(resultSet.getString(4)));
-                        subscriber.setNationalId(resultSet.getString(5));
-                        subscriber.setGender("M".equals(resultSet.getString(6)) ? Gender.MALE : Gender.FEMALE);
-                        subscriber.setAllFingerprintsTemplate(resultSet.getString(7));
-                        subscriber.setWorkId(resultSet.getString(8));
-                        subscriber.setRelationship(resultSet.getString(9));
-                        subscriber.setActive(resultSet.getString(10).equals("True"));
+            subscribers.addAll(DAO.getOldSubscribers());
 
-                        subscribers.add(subscriber);
-                    }
-                }
-            }
+            subscribers.addAll(DAO.getSubscribers());
 
-            //todo: change this to load from People table not NewRegeneration
-
-            query = "SELECT " +
-                    "firstName," +
-                    "fatherName," +
-                    "grandfatherName," +
-                    "familyName," +
-                    "birthday," +
-                    "nationalId," +
-                    "familyId," +
-                    "gender," +
-                    "workId," +
-                    "relationship," +
-                    "isActive," +
-                    "allFingerprintTemplates," +
-                    "rightThumbFingerprint," +
-                    "rightIndexFingerprint," +
-                    "rightMiddleFingerprint," +
-                    "rightRingFingerprint," +
-                    "rightLittleFingerprint," +
-                    "leftThumbFingerprint," +
-                    "leftIndexFingerprint," +
-                    "leftMiddleFingerprint," +
-                    "leftRingFingerprint," +
-                    "leftLittleFingerprint" +
-                    " FROM People";
-
-            try (Statement statement = DAO.DB_CONNECTION.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
-
-                while (resultSet.next()) {
-                    Subscriber subscriber = new Subscriber();
-
-                    subscriber.setFirstName(resultSet.getString("firstName"));
-                    subscriber.setFatherName(resultSet.getString("fatherName"));
-                    subscriber.setGrandfatherName(resultSet.getString("grandfatherName"));
-                    subscriber.setFamilyName(resultSet.getString("familyName"));
-
-                    subscriber.setBirthday(SQLUtils.timestampToDate(resultSet.getLong("birthday")));
-                    subscriber.setNationalId(resultSet.getString("nationalId"));
-                    subscriber.setGender(Gender.valueOf(resultSet.getString("gender")));
-
-                    subscriber.setWorkId(resultSet.getString("workId"));
-                    subscriber.setRelationship(resultSet.getString("relationship"));
-
-                    subscriber.setActive(resultSet.getBoolean("isActive"));
-
-                    subscriber.setAllFingerprintsTemplate(resultSet.getString("allFingerprintTemplates"));
-                    subscriber.setRightThumbFingerprint(resultSet.getString("rightThumbFingerprint"));
-                    subscriber.setRightIndexFingerprint(resultSet.getString("rightIndexFingerprint"));
-                    subscriber.setRightMiddleFingerprint(resultSet.getString("rightMiddleFingerprint"));
-                    subscriber.setRightRingFingerprint(resultSet.getString("rightRingFingerprint"));
-                    subscriber.setRightLittleFingerprint(resultSet.getString("rightLittleFingerprint"));
-
-                    subscriber.setLeftThumbFingerprint(resultSet.getString("leftThumbFingerprint"));
-                    subscriber.setLeftIndexFingerprint(resultSet.getString("leftIndexFingerprint"));
-                    subscriber.setLeftMiddleFingerprint(resultSet.getString("leftMiddleFingerprint"));
-                    subscriber.setLeftRingFingerprint(resultSet.getString("leftRingFingerprint"));
-                    subscriber.setLeftLittleFingerprint(resultSet.getString("leftLittleFingerprint"));
-
-                    subscribers.add(subscriber);
-                }
-            }
+            subscribers.addAll(DAO.getNewSubscribers());
 
             setToTableView(subscribers);
 
