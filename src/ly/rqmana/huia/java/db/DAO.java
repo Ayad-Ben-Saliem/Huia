@@ -314,8 +314,11 @@ public class DAO {
 
             if (tableName.equals("People"))
                 subscriber.setActive(resultSet.getBoolean("isActive"));
+            else
+                subscriber.setActive(true);
 
             subscriber.setAllFingerprintsTemplate(resultSet.getString("allFingerprintTemplates"));
+
             subscriber.setRightThumbFingerprint(resultSet.getString("rightThumbFingerprint"));
             subscriber.setRightIndexFingerprint(resultSet.getString("rightIndexFingerprint"));
             subscriber.setRightMiddleFingerprint(resultSet.getString("rightMiddleFingerprint"));

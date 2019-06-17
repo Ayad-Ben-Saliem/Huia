@@ -28,9 +28,9 @@ public class Finger {
     }
 
     public void fill(Finger other){
-        if (other.getId() != id)
-            return;
-
+        if (other.getId() != id) {
+            throw new IllegalStateException("Cannot fill finger from id:" + other.getId() + " required id: " + id);
+        }
         this.fingerprintTemplate = other.fingerprintTemplate;
         this.fingerprintImages.setAll(other.fingerprintImages);
     }

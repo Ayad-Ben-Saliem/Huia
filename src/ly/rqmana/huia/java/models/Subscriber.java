@@ -5,26 +5,15 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
+import ly.rqmana.huia.java.fingerprints.hand.HandType;
 
 import java.time.LocalDate;
 
 public class Subscriber extends Person {
 
-    private Hand rightHand;
-    private Hand leftHand;
+    private final Hand rightHand = new Hand(HandType.RIHGT);
+    private final Hand leftHand = new Hand(HandType.LEFT);
     private String allFingerprintsTemplate;
-
-    private String rightThumbFingerprint;
-    private String rightIndexFingerprint;
-    private String rightMiddleFingerprint;
-    private String rightRingFingerprint;
-    private String rightLittleFingerprint;
-
-    private String leftThumbFingerprint;
-    private String leftIndexFingerprint;
-    private String leftMiddleFingerprint;
-    private String leftRingFingerprint;
-    private String leftLittleFingerprint;
 
     private String workId;
     private Relationship relationship;
@@ -120,10 +109,6 @@ public class Subscriber extends Person {
         return active;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
     // This method used for TableView
     public Node getActiveNode() {
         FontAwesomeIconView fontAwesomeIconView;
@@ -140,96 +125,100 @@ public class Subscriber extends Person {
         return rightHand;
     }
 
-    public void setRightHand(Hand rightHand) {
-        this.rightHand = rightHand;
+    public void fillRightHand(Hand hand) {
+        if (hand.getType() != HandType.RIHGT)
+            throw new IllegalStateException("Hand type must be right, got HandType: " + hand.getType());
+
+        this.rightHand.updateFingers(hand.getFingersUnmodifiable());
     }
 
     public Hand getLeftHand() {
         return leftHand;
     }
 
-    public void setLeftHand(Hand leftHand) {
-        this.leftHand = leftHand;
+    public void fillLeftHand(Hand hand) {
+        if (hand.getType() != HandType.LEFT)
+            throw new IllegalStateException("Hand type must be left got HandType: " + hand.getType());
+
+        this.leftHand.updateFingers(hand.getFingersUnmodifiable());
     }
 
     public String getRightThumbFingerprint() {
-        return rightThumbFingerprint;
+        return rightHand.getThumb().getFingerprintTemplate();
     }
 
-    public void setRightThumbFingerprint(String rightThumbFingerprint) {
-        this.rightThumbFingerprint = rightThumbFingerprint;
+    public void setRightThumbFingerprint(String template) {
+        rightHand.getThumb().setFingerprintTemplate(template);
     }
 
     public String getRightIndexFingerprint() {
-        return rightIndexFingerprint;
+        return rightHand.getIndex().getFingerprintTemplate();
     }
 
-    public void setRightIndexFingerprint(String rightIndexFingerprint) {
-        this.rightIndexFingerprint = rightIndexFingerprint;
+    public void setRightIndexFingerprint(String template) {
+        rightHand.getIndex().setFingerprintTemplate(template);
     }
 
     public String getRightMiddleFingerprint() {
-        return rightMiddleFingerprint;
+        return rightHand.getMiddle().getFingerprintTemplate();
     }
 
-    public void setRightMiddleFingerprint(String rightMiddleFingerprint) {
-        this.rightMiddleFingerprint = rightMiddleFingerprint;
+    public void setRightMiddleFingerprint(String template) {
+        rightHand.getMiddle().setFingerprintTemplate(template);
     }
 
     public String getRightRingFingerprint() {
-        return rightRingFingerprint;
+        return rightHand.getRing().getFingerprintTemplate();
     }
 
-    public void setRightRingFingerprint(String rightRingFingerprint) {
-        this.rightRingFingerprint = rightRingFingerprint;
+    public void setRightRingFingerprint(String template) {
+        rightHand.getRing().setFingerprintTemplate(template);
     }
 
     public String getRightLittleFingerprint() {
-        return rightLittleFingerprint;
+        return rightHand.getLittle().getFingerprintTemplate();
     }
 
-    public void setRightLittleFingerprint(String rightLittleFingerprint) {
-        this.rightLittleFingerprint = rightLittleFingerprint;
+    public void setRightLittleFingerprint(String template) {
+        rightHand.getLittle().setFingerprintTemplate(template);
     }
 
     public String getLeftThumbFingerprint() {
-        return leftThumbFingerprint;
+        return leftHand.getThumb().getFingerprintTemplate();
     }
 
-    public void setLeftThumbFingerprint(String leftThumbFingerprint) {
-        this.leftThumbFingerprint = leftThumbFingerprint;
+    public void setLeftThumbFingerprint(String template) {
+        leftHand.getThumb().setFingerprintTemplate(template);
     }
 
     public String getLeftIndexFingerprint() {
-        return leftIndexFingerprint;
+        return leftHand.getIndex().getFingerprintTemplate();
     }
 
-    public void setLeftIndexFingerprint(String leftIndexFingerprint) {
-        this.leftIndexFingerprint = leftIndexFingerprint;
+    public void setLeftIndexFingerprint(String template) {
+        leftHand.getIndex().setFingerprintTemplate(template);
     }
 
     public String getLeftMiddleFingerprint() {
-        return leftMiddleFingerprint;
+        return leftHand.getMiddle().getFingerprintTemplate();
     }
 
-    public void setLeftMiddleFingerprint(String leftMiddleFingerprint) {
-        this.leftMiddleFingerprint = leftMiddleFingerprint;
+    public void setLeftMiddleFingerprint(String template) {
+        leftHand.getMiddle().setFingerprintTemplate(template);
     }
 
-    public String getLeftRingFingerprint() {
-        return leftRingFingerprint;
-    }
+    public String getLeftRingFingerprint() { return leftHand.getRing().getFingerprintTemplate();}
 
-    public void setLeftRingFingerprint(String leftRingFingerprint) {
-        this.leftRingFingerprint = leftRingFingerprint;
+    public void setLeftRingFingerprint(String template) {
+        leftHand.getRing().setFingerprintTemplate(template);
     }
 
     public String getLeftLittleFingerprint() {
-        return leftLittleFingerprint;
+        return leftHand.getLittle().getFingerprintTemplate();
     }
 
-    public void setLeftLittleFingerprint(String leftLittleFingerprint) {
-        this.leftLittleFingerprint = leftLittleFingerprint;
+    public void setLeftLittleFingerprint(String template) {
+        leftHand.getLittle().setFingerprintTemplate(template);
     }
 
     // This method is used for TableView

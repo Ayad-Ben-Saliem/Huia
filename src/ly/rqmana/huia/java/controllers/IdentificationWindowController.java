@@ -272,9 +272,15 @@ public class IdentificationWindowController implements Controllable {
             String heading = Utils.getI18nString("IDENTIFICATION_FOUND_HEADING");
             String body = Utils.getI18nString("IDENTIFICATION_FOUND_BODY").replace("{0}", subscriber.getFullName());
 
+            //fixme: fix the weird exception
             Alert alert= new Alert(Alert.AlertType.INFORMATION, body, ButtonType.OK);
             alert.setTitle(heading);
             alert.show();
+
+//            Alerts.infoAlert(Windows.MAIN_WINDOW,
+//                    heading,
+//                    body,
+//                    AlertAction.OK);
         }
         else {
 

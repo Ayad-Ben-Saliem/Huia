@@ -1,17 +1,18 @@
 package ly.rqmana.huia.java.fingerprints;
 
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
+import ly.rqmana.huia.java.fingerprints.hand.HandType;
 
 public class FingerprintCaptureResult {
 
-    private final Hand rightHand;
-    private final Hand leftHand;
+    private final Hand rightHand = new Hand(HandType.RIHGT);
+    private final Hand leftHand = new Hand(HandType.LEFT);
     private final String fingerprintsTemplate;
 
     public FingerprintCaptureResult(Hand rightHand, Hand leftHand, String fingerprintsTemplate){
 
-        this.rightHand = rightHand;
-        this.leftHand = leftHand;
+        this.rightHand.updateFingers(rightHand.getFingersUnmodifiable());
+        this.leftHand.updateFingers(leftHand.getFingersUnmodifiable());
         this.fingerprintsTemplate = fingerprintsTemplate;
     }
 
@@ -25,5 +26,9 @@ public class FingerprintCaptureResult {
 
     public String getFingerprintsTemplate() {
         return fingerprintsTemplate;
+    }
+
+    public boolean isEmpty(){
+        return rightHand.isEmpty() && leftHand.isEmpty() && (fingerprintsTemplate == null || fingerprintsTemplate.isEmpty());
     }
 }

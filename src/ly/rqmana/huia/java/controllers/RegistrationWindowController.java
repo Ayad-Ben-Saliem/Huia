@@ -31,12 +31,10 @@ import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
-import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Institute;
 import ly.rqmana.huia.java.models.Relationship;
 import ly.rqmana.huia.java.models.Subscriber;
-import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.storage.DataStorage;
 import ly.rqmana.huia.java.util.*;
 
@@ -45,7 +43,6 @@ import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -335,8 +332,11 @@ public class RegistrationWindowController implements Controllable {
 
         validate &= contactsContainer.getChildren().stream().map(node -> (ContactField) node).map(ContactField::validate).reduce(true, (a, b) -> a && b);
 
-        if (fingerprintCaptureResult == null) {
-            Alerts.warningAlert(Windows.MAIN_WINDOW, "WARNING", "Please enter a fingerprint", AlertAction.OK);
+        if (fingerprintCaptureResult == null || fingerprintCaptureResult.isEmpty()) {
+            Alerts.warningAlert(Windows.MAIN_WINDOW,
+                                Utils.getI18nString("WARNING"),
+                                Utils.getI18nString("SCAN_FINGERPRINT_WARNING"),
+                                AlertAction.OK);
             validate = false;
         }
 
@@ -350,6 +350,7 @@ public class RegistrationWindowController implements Controllable {
             protected Subscriber call() throws Exception {
 
                 Subscriber subscriber = constructSubscriber();
+                subscriber.setActive(true);
 
                 long subscriberId = DAO.insertNewSubscriber(subscriber);
 
@@ -404,17 +405,22 @@ public class RegistrationWindowController implements Controllable {
         subscriber.setFamilyName(familyNameTextField.getText());
         subscriber.setNationality(nationalityTextField.getText());
         subscriber.setNationalId(nationalIdTextField.getText());
+        subscriber.setFamilyId(familyIdTextField.getText());
         subscriber.setBirthday(birthdayDatePicker.getValue());
         subscriber.setGender(genderComboBox.getValue());
 
-        subscriber.setFirstName(firstNameTextField.getText());
+        String passport = passportTextField.getText().isEmpty()? null : passportTextField.getText();
+        subscriber.getPassport().setNumber(passport);
+        subscriber.setResidence(residenceTextField.getText());
 
         String workId = relationshipComboBox.getValue().equals(Relationship.EMPLOYEE)? newEmployeeWorkIdTextField.getText() : employeesWorkIdComboBox.getValue();
         subscriber.setWorkId(workId);
         subscriber.setRelationship(relationshipComboBox.getValue());
 
-        subscriber.setRightHand(fingerprintCaptureResult.getRightHand());
-        subscriber.setLeftHand(fingerprintCaptureResult.getLeftHand());
+        subscriber.fillRightHand(fingerprintCaptureResult.getRightHand());
+
+        subscriber.fillLeftHand(fingerprintCaptureResult.getLeftHand());
+
         subscriber.setAllFingerprintsTemplate(fingerprintCaptureResult.getFingerprintsTemplate());
 
         subscriber.setInstitute(instituteComboBox.getValue());
@@ -446,7 +452,6 @@ public class RegistrationWindowController implements Controllable {
         Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
         openDeviceTask.addOnSucceeded(event -> {
             fingerprintCaptureResult = FingerprintManager.device().captureHands();
-
         });
 
         openDeviceTask.addOnFailed(event -> {
