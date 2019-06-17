@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
@@ -116,6 +117,21 @@ public class RegistrationWindowController implements Controllable {
             protected void eval() {
                 hasErrors.set(employeesWorkIdComboBox.getItems().contains(newEmployeeWorkIdTextField.getText()));
             }
+        });
+
+        fatherNameTextField.setOnKeyPressed(event -> {
+            if (fatherNameTextField.getText().isEmpty() && event.getCode().equals(KeyCode.BACK_SPACE))
+                firstNameTextField.requestFocus();
+        });
+
+        grandfatherNameTextField.setOnKeyPressed(event -> {
+            if (grandfatherNameTextField.getText().isEmpty() && event.getCode().equals(KeyCode.BACK_SPACE))
+                fatherNameTextField.requestFocus();
+        });
+
+        familyNameTextField.setOnKeyPressed(event -> {
+            if (familyNameTextField.getText().isEmpty() && event.getCode().equals(KeyCode.BACK_SPACE))
+                grandfatherNameTextField.requestFocus();
         });
 
         clearInput();

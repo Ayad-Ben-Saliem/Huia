@@ -15,7 +15,7 @@ public class Person {
     private LocalDate birthday;
     private String nationality;
     private String nationalId;
-    private Passport passport;
+    private final Passport passport = new Passport();
     private String familyId;
     private String residence;
 
@@ -105,8 +105,8 @@ public class Person {
         return passport;
     }
 
-    public void setPassport(Passport passport) {
-        this.passport = passport;
+    public String getPassportNumber() {
+        return getPassport().getNumber();
     }
 
     public String getFamilyId() {
