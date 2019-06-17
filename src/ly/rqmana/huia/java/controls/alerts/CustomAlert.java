@@ -12,6 +12,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.NodeOrientation;
 import javafx.scene.Node;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
 import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
@@ -36,6 +37,13 @@ public class CustomAlert<T extends AlertLayout> extends JFXAlert<AlertAction> {
 
     public CustomAlert(@Nullable Stage stage, AlertAction... actions){
         super(stage);
+
+        setResultConverter(rawButton -> {
+            if (rawButton == ButtonType.CANCEL)
+                return AlertAction.CANCEL;
+
+            return AlertAction.CANCEL;
+        });
 
         setLayout((T) new AlertLayout());
         this.setContent(getLayout());
@@ -84,13 +92,6 @@ public class CustomAlert<T extends AlertLayout> extends JFXAlert<AlertAction> {
 
                     layout().actionsFlow.getChildren().removeAll(toRemove);
                 }
-            }
-        });
-
-        this.setOnCloseRequest(event -> {
-
-            if (getResult() != null) {
-                setResult(null);
             }
         });
     }
