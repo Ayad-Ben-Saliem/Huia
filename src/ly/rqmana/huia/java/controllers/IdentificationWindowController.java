@@ -7,7 +7,6 @@ import com.jfoenix.controls.JFXTextField;
 import com.sun.istack.internal.Nullable;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -17,7 +16,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
@@ -28,19 +26,13 @@ import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
 import ly.rqmana.huia.java.fingerprints.hand.Finger;
 import ly.rqmana.huia.java.fingerprints.hand.FingerID;
 import ly.rqmana.huia.java.models.Gender;
-import ly.rqmana.huia.java.models.Person;
 import ly.rqmana.huia.java.models.Relationship;
 import ly.rqmana.huia.java.models.Subscriber;
 import ly.rqmana.huia.java.util.Controllable;
-import ly.rqmana.huia.java.util.SQLUtils;
 import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
 
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Optional;
@@ -238,8 +230,8 @@ public class IdentificationWindowController implements Controllable {
             } else {
                 Optional<AlertAction> alertAction = Alerts.infoAlert(
                         Windows.MAIN_WINDOW,
-                        Utils.getI18nString("ADD_NEW_SUBSCRIBER_HEADING"),
-                        Utils.getI18nString("ADD_NEW_SUBSCRIBER_BODY"),
+                        Utils.getI18nString("ADD_MISSING_FINGERPRITNS_HEADING"),
+                        Utils.getI18nString("ADD_MISSING_FINGERPRINTS_BODY"),
                         AlertAction.NO, AlertAction.YES
                 );
                 // TODO: alertAction is empty
