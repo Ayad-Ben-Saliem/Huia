@@ -3,6 +3,7 @@
 <?import com.jfoenix.controls.JFXButton?>
 <?import com.jfoenix.controls.JFXDatePicker?>
 <?import com.jfoenix.controls.JFXTextField?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
@@ -15,15 +16,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-
-<VBox alignment="TOP_CENTER"
-      prefHeight="640.0"
-      prefWidth="1256.0"
-      style="-fx-background-color: -rq-background;"
-      stylesheets="@../css/theme.css"
-      xmlns="http://javafx.com/javafx/11.0.1"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="ly.rqmana.huia.java.controllers.IdentificationsWindowController">
+<VBox alignment="TOP_CENTER" prefHeight="640.0" prefWidth="1256.0" style="-fx-background-color: -rq-background;" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.IdentificationHistoryWindowController">
    <GridPane>
      <columnConstraints>
        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -83,11 +76,12 @@
                     <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                 </columnResizePolicy>
             </TableView>
-         <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="10.0">
-            <children>
-               <Label text="Label" />
-            </children>
-         </HBox>
         </VBox>
     </ScrollPane>
+   <HBox alignment="CENTER_LEFT" spacing="10.0">
+      <children>
+         <Label text="Label" />
+         <FontAwesomeIconView strokeType="OUTSIDE" strokeWidth="0.0" text="Text" />
+      </children>
+   </HBox>
 </VBox>

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import com.jfoenix.controls.JFXButton?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 
-<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <StackPane fx:id="rootStack" nodeOrientation="RIGHT_TO_LEFT" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.MainWindowController">
     <stylesheets>
         <URL value="@../css/theme.css" />
@@ -27,6 +27,10 @@
                <HBox.margin>
                   <Insets bottom="1.0" top="1.0" />
                </HBox.margin></JFXButton>
+            <JFXButton fx:id="identificationHistoryBtn" layoutX="356.0" layoutY="11.0" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%IDENTIFICATION_HISTORY_PAGE" HBox.hgrow="ALWAYS">
+               <HBox.margin>
+                  <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+               </HBox.margin></JFXButton>
             </HBox>
         </bottom>
         <top>
@@ -34,7 +38,7 @@
                 <HBox HBox.hgrow="ALWAYS">
                     <JFXButton contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onDeviceRefreshButtonClicked" styleClass="menu-bar-button" text="%REFRESH_FINGERPRINT_DEVICE">
                         <graphic>
-                            <FontAwesomeIconView glyphName="REFRESH" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon"/>
+                            <FontAwesomeIconView glyphName="REFRESH" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon" />
                         </graphic>
                     </JFXButton>
                 </HBox>

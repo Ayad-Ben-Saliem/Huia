@@ -35,12 +35,19 @@ public class SubscriberIdentification {
         isIdentified = identified;
     }
 
-    public long getSubscriberId() {
-        return this.subscriber.getId();
+    // required for table view
+    // ***** don't remove this method ****
+    public boolean getStatus(){
+        return isIdentified;
     }
 
-    public String getSubscriberWorkId(){
-        return this.subscriber.getWorkId();
+
+    public void setSubscriber(Subscriber subscriber){
+        this.subscriber = subscriber;
+    }
+
+    public Subscriber getSubscriber(){
+        return this.subscriber;
     }
 
     public User getUser() {
@@ -51,7 +58,27 @@ public class SubscriberIdentification {
         this.user = user;
     }
 
-    public boolean getStatus(){
-        return isIdentified;
+
+
+    public String getSubscriberName(){
+        if (subscriber != null)
+            return this.subscriber.getFullName();
+        else
+            return "";
     }
+
+    public String getSubscriberWorkId(){
+        if (subscriber != null)
+            return this.subscriber.getWorkId();
+        else
+            return "";
+    }
+
+    public String getProvidingUserName(){
+        if (user != null)
+            return this.user.getFullName();
+        else
+            return "";
+    }
+
 }

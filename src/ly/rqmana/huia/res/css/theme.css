@@ -55,6 +55,11 @@
     -fx-background-color: derive(-rq-background, 50%);
 }
 
+.main-button:selected{
+    -fx-background-color: -rq-background-alt;
+    -fx-text-fill: -rq-text-background-alt;
+}
+
 .jfx-combo-box,
 .jfx-text-field,
 .jfx-date-picker,

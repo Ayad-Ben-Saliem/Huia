@@ -39,9 +39,12 @@ public final class SQLUtils {
     }
 
     public static LocalDate timestampToDate(long timestamp){
+        return timestampToDateTime(timestamp).toLocalDate();
+    }
 
+    public static LocalDateTime timestampToDateTime(long timestamp){
         long epochMillis = TimeUnit.MILLISECONDS.convert(timestamp, TimeUnit.SECONDS);
-        return new Timestamp(epochMillis).toLocalDateTime().toLocalDate();
+        return new Timestamp(epochMillis).toLocalDateTime();
     }
 
 }

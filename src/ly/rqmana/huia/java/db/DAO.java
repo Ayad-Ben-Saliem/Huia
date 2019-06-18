@@ -6,6 +6,7 @@ import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Relationship;
 import ly.rqmana.huia.java.models.Subscriber;
+import ly.rqmana.huia.java.models.SubscriberIdentification;
 import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.security.Hasher;
 import ly.rqmana.huia.java.storage.DataStorage;
@@ -493,4 +494,31 @@ public class DAO {
         return pStatement.execute();
     }
 
+    public static ObservableList<SubscriberIdentification> getSubscriberIdentification() throws SQLException {
+        ObservableList<SubscriberIdentification> identifications = FXCollections.observableArrayList();
+
+        String query = "SELECT "
+                        + "id,"
+                        + "subscriberId,"
+                        + "datetime,"
+                        + "isIdentified,"
+                        + "username,"
+                        + "notes"
+                        + " FROM Identifications";
+
+        Statement statement = DB_CONNECTION.createStatement();
+        ResultSet resultSet = statement.executeQuery(query);
+
+        while (resultSet.next()) {
+
+            SubscriberIdentification identification = new SubscriberIdentification();
+
+            identification.setId(resultSet.getLong("id"));
+            identification.setDateTime(SQLUtils.timestampToDateTime(resultSet.getLong("datetime")));
+            identification.setIdentified(SQLUtils.getBoolean(resultSet.getInt("isIdentified")));
+
+
+        }
+        return identifications;
+    }
 }

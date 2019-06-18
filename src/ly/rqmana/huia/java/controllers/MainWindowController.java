@@ -5,6 +5,9 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -16,7 +19,6 @@ import javafx.stage.WindowEvent;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
-import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
 import ly.rqmana.huia.java.util.Controllable;
@@ -36,12 +38,13 @@ public class MainWindowController implements Controllable {
     public BorderPane mainContainer;
     public JFXButton registrationBtn;
     public JFXButton identificationBtn;
+    public JFXButton identificationHistoryBtn;
 
     private BooleanProperty locked = new SimpleBooleanProperty(true);
 
     private Node homeWindow;
-    private Node registrationWindow;
-    private Node authenticationWindow;
+
+    private final ObservableMap<MainPage, Node> pageNodeMap = FXCollections.observableHashMap();
 
     private HomeWindowController homeWindowController;
     private RegistrationWindowController registrationWindowController;
@@ -73,7 +76,6 @@ public class MainWindowController implements Controllable {
         lock(true);
     }
 
-
     void updateLoadingView(boolean loading){
         if (loading)
             Windows.showLoadingAlert();
@@ -90,45 +92,68 @@ public class MainWindowController implements Controllable {
         }
     }
 
-
     public void onLogoutBtnClicked(ActionEvent actionEvent) {
 
     }
 
-    enum SelectedPage {
-        REGISTRATION,
-        AUTHENTICATION
+
+    enum MainPage {
+
+        REGISTRATION(Res.Fxml.REGISTRATION_WINDOW.getUrl()),
+        IDENTIFICATION(Res.Fxml.IDENTIFICATION.getUrl()),
+        IDENTIFICATION_HISTORY(Res.Fxml.IDENTIFICATION_HISTORY.getUrl()),
+        ;
+
+        private final URL fxmlUrl;
+        MainPage(URL fxmlUrl){
+            this.fxmlUrl = fxmlUrl;
+        }
+
+        public URL fxmlUrl(){
+            return fxmlUrl;
+        }
     }
 
-    final ObjectProperty<SelectedPage> selectedPageProperty = new SimpleObjectProperty<>();
+    final ObjectProperty<MainPage> selectedPageProperty = new SimpleObjectProperty<>();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
         rootStack.getChildren().addAll(getHomeWindow());
-        centralStack.getChildren().addAll(getRegistrationWindow(), getAuthenticationWindow());
 
         selectedPageProperty.addListener((observable, oldValue, newValue) -> {
-            switch (newValue) {
-                case REGISTRATION:
-                    registrationBtn.setStyle("-fx-background-color: -rq-background-alt;" +
-                                             "-fx-text-fill: -rq-text-background-alt;");
-                    identificationBtn.setStyle("-fx-background-color: -rq-background;" +
-                                               "-fx-text-fill: -rq-text-background;");
-                    getRegistrationWindow().toFront();
-                    break;
-                case AUTHENTICATION:
-                    registrationBtn.setStyle("-fx-background-color: -rq-background;" +
-                                             "-fx-text-fill: -rq-text-background;");
-                    identificationBtn.setStyle("-fx-background-color: -rq-background-alt;" +
-                                               "-fx-text-fill: -rq-text-background-alt;");
-                    getAuthenticationWindow().toFront();
-                    break;
+
+            boolean isRegister = newValue == MainPage.REGISTRATION;
+            boolean isIdentification = newValue == MainPage.IDENTIFICATION;
+            boolean isHistory = newValue == MainPage.IDENTIFICATION_HISTORY;
+
+            registrationBtn.pseudoClassStateChanged(PseudoClass.getPseudoClass("selected"), isRegister);
+            identificationBtn.pseudoClassStateChanged(PseudoClass.getPseudoClass("selected"), isIdentification);
+            identificationHistoryBtn.pseudoClassStateChanged(PseudoClass.getPseudoClass("selected"), isHistory);
+
+            Node pageNode = pageNodeMap.get(newValue);
+            if (pageNode == null){
+                FXMLLoader loader = new FXMLLoader(newValue.fxmlUrl(), Utils.getBundle());
+                try {
+                    pageNode = loader.load();
+                    // a loaded node means that it's not previously added.
+                    centralStack.getChildren().addAll(pageNode);
+
+                    pageNodeMap.put(newValue, pageNode);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
+
+            if (pageNode == null)
+                throw new IllegalStateException("An error occurred while loading MainPage:" + newValue.name());
+
+            pageNode.toFront();
         });
 
-        registrationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.REGISTRATION));
-        identificationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.AUTHENTICATION));
+        registrationBtn.setOnAction(event -> selectedPageProperty.set(MainPage.REGISTRATION));
+        identificationBtn.setOnAction(event -> selectedPageProperty.set(MainPage.IDENTIFICATION));
+        identificationHistoryBtn.setOnAction(event -> selectedPageProperty.set(MainPage.IDENTIFICATION_HISTORY));
 
         registrationBtn.fire();
 
@@ -162,32 +187,6 @@ public class MainWindowController implements Controllable {
             }
         }
         return homeWindow;
-    }
-
-    private Node getRegistrationWindow() {
-        if (registrationWindow == null) {
-            try {
-                FXMLLoader loader = new FXMLLoader(Res.Fxml.REGISTRATION_WINDOW.getUrl(), Utils.getBundle());
-                registrationWindow = loader.load();
-                registrationWindowController = loader.getController();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return registrationWindow;
-    }
-
-    private Node getAuthenticationWindow() {
-        if (authenticationWindow == null) {
-            try {
-                FXMLLoader loader = new FXMLLoader(Res.Fxml.AUTHENTICATION.getUrl(), Utils.getBundle());
-                authenticationWindow = loader.load();
-                identificationWindowController = loader.getController();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return authenticationWindow;
     }
 
     public HomeWindowController getHomeWindowController() {
