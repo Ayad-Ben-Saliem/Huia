@@ -9,42 +9,30 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<fx:root spacing="10.0"
+<fx:root xmlns:fx="http://javafx.com/fxml/1"
+         xmlns="http://javafx.com/javafx/8.0.172-ea"
+         spacing="10.0"
          styleClass="custom-alert-layout"
-         type="VBox"
-         xmlns:fx="http://javafx.com/fxml/1"
-         xmlns="http://javafx.com/javafx/8.0.172-ea">
+         type="VBox">
 
-    <children>
-        <HBox fx:id="headingPane" spacing="15.0" styleClass="heading">
-            <children>
-                <Label fx:id="headingLabel" maxWidth="1.7976931348623157E308" text="Alert Title" wrapText="true" HBox.hgrow="ALWAYS" />
-                <FontAwesomeIconView fx:id="graphicView" glyphName="QUESTION_CIRCLE" size="32" />
-            </children>
-        </HBox>
-        <StackPane fx:id="bodyPane" styleClass="body">
-            <children>
-                <Label fx:id="bodyLabel" text="Label" />
-            </children></StackPane>
-        <VBox fx:id="footerPane" styleClass="footer">
-            <children>
-                <HBox fx:id="buttonsBar" spacing="10.0" styleClass="buttons-bar">
-                    <children>
-                        <FlowPane fx:id="actionsFlow" alignment="CENTER_RIGHT" hgap="8.0" maxWidth="1.7976931348623157E308" styleClass="flow-pane" HBox.hgrow="ALWAYS" />
-                    </children>
-                    <VBox.margin>
-                        <Insets bottom="5.0" />
-                    </VBox.margin>
-                </HBox>
-            </children>
-            <VBox.margin>
-                <Insets />
-            </VBox.margin>
-        </VBox>
-    </children>
     <stylesheets>
-        <URL value="@../../css/default-custom-alert-style.css" />
-        <URL value="@../../css/templates.css" />
-        <URL value="@../../css/theme.css" />
+        <URL value="@../../css/default-custom-alert-style.css"/>
+        <URL value="@../../css/templates.css"/>
+        <URL value="@../../css/theme.css"/>
     </stylesheets>
+    <HBox fx:id="headingPane" spacing="15.0" styleClass="heading">
+        <Label fx:id="headingLabel" maxWidth="1.7976931348623157E308" text="Alert Title" wrapText="true" HBox.hgrow="ALWAYS"/>
+        <FontAwesomeIconView fx:id="graphicView" glyphName="QUESTION_CIRCLE" size="32"/>
+    </HBox>
+    <StackPane fx:id="bodyPane" styleClass="body">
+        <Label fx:id="bodyLabel" text="Label"/>
+    </StackPane>
+    <VBox fx:id="footerPane" styleClass="footer">
+        <HBox fx:id="buttonsBar" spacing="10.0" styleClass="buttons-bar">
+            <VBox.margin>
+                <Insets bottom="5.0"/>
+            </VBox.margin>
+            <FlowPane fx:id="actionsFlow" alignment="CENTER_RIGHT" hgap="8.0" maxWidth="1.7976931348623157E308" styleClass="flow-pane" HBox.hgrow="ALWAYS"/>
+        </HBox>
+    </VBox>
 </fx:root>

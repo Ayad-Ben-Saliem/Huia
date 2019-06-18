@@ -75,6 +75,7 @@ public class CustomAlert<T extends AlertLayout> extends JFXAlert<AlertAction> {
 
                         actionButton.setOnAction(event -> {
                             this.setResult(action);
+                            this.close();
                         });
 
                         layout().actionsFlow.getChildren().add(actionButton);

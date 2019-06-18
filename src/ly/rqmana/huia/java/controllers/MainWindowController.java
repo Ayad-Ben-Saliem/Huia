@@ -5,18 +5,28 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.WindowEvent;
+import ly.rqmana.huia.java.concurrent.Task;
+import ly.rqmana.huia.java.concurrent.Threading;
+import ly.rqmana.huia.java.controls.alerts.AlertAction;
+import ly.rqmana.huia.java.controls.alerts.Alerts;
+import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
+import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Res;
 import ly.rqmana.huia.java.util.Utils;
+import ly.rqmana.huia.java.util.Windows;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class MainWindowController implements Controllable {
@@ -38,6 +48,52 @@ public class MainWindowController implements Controllable {
     private IdentificationWindowController identificationWindowController;
 
     private EventHandler<WindowEvent> windowEventHandler;
+
+    @FXML
+    private void onDeviceRefreshButtonClicked(ActionEvent actionEvent){
+
+        Task<Boolean> openDeviceTask = FingerprintManager.openDevice(FingerprintDeviceType.HAMSTER_DX);
+
+        openDeviceTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
+        openDeviceTask.addOnSucceeded(event -> {
+            Windows.infoAlert(
+                    Utils.getI18nString("FINGERPRINT_DEVICE_OPENED_HEADING"),
+                    Utils.getI18nString("FINGERPRINT_DEVICE_OPENED_BODY"),
+                    AlertAction.OK);
+        });
+
+        openDeviceTask.addOnFailed(event -> {
+            fingerprintDeviceError(event.getSource().getException(), () -> onDeviceRefreshButtonClicked(actionEvent));
+        });
+
+        Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
+    }
+
+    public void onLogoutBtnClicked() {
+        lock(true);
+    }
+
+
+    void updateLoadingView(boolean loading){
+        if (loading)
+            Windows.showLoadingAlert();
+        else
+            Windows.closeLoadingAlert();
+    }
+
+    void fingerprintDeviceError(Throwable throwable, Runnable tryAgainBlock) {
+
+        Optional<AlertAction> result = Windows.showFingerprintDeviceError(throwable);
+
+        if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN) {
+            tryAgainBlock.run();
+        }
+    }
+
+
+    public void onLogoutBtnClicked(ActionEvent actionEvent) {
+
+    }
 
     enum SelectedPage {
         REGISTRATION,

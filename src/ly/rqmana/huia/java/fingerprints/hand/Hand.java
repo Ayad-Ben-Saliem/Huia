@@ -39,7 +39,7 @@ public class Hand {
         updateFingers(fingers);
     }
 
-    private void updateFingers(List<Finger> fingers){
+    public void updateFingers(List<Finger> fingers){
 
         for (Finger finger : fingers) {
 
@@ -73,6 +73,14 @@ public class Hand {
         boolean con2 = ! finger.getId().isRightFinger() && getType() == HandType.LEFT;
 
         return con1 || con2;
+    }
+
+    public boolean isEmpty(){
+        for (Finger finger : getFingersUnmodifiable()) {
+            if (! finger.isEmpty())
+                return false;
+        }
+        return true;
     }
 
     public HandType getType() {

@@ -19,24 +19,20 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Circle;
-import javafx.stage.StageStyle;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.controls.alerts.Alerts;
-import ly.rqmana.huia.java.controls.alerts.LoadingAlert;
 import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
-import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Institute;
 import ly.rqmana.huia.java.models.Relationship;
 import ly.rqmana.huia.java.models.Subscriber;
-import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.storage.DataStorage;
 import ly.rqmana.huia.java.util.*;
 
@@ -45,9 +41,7 @@ import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Map;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class RegistrationWindowController implements Controllable {
@@ -160,26 +154,6 @@ public class RegistrationWindowController implements Controllable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @FXML
-    private void onDeviceRefreshButtonClicked(ActionEvent actionEvent){
-
-        Task<Boolean> openDeviceTask = FingerprintManager.openDevice(FingerprintDeviceType.HAMSTER_DX);
-
-        openDeviceTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
-        openDeviceTask.addOnSucceeded(event -> {
-            Alerts.infoAlert(Windows.MAIN_WINDOW,
-                    Utils.getI18nString("FINGERPRINT_DEVICE_OPENED_HEADING"),
-                    Utils.getI18nString("FINGERPRINT_DEVICE_OPENED_BODY"),
-                    AlertAction.OK);
-        });
-
-        openDeviceTask.addOnFailed(event -> {
-            fingerprintDeviceError(event.getSource().getException(), () -> onDeviceRefreshButtonClicked(actionEvent));
-        });
-
-        Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
     }
 
     private void loadDatabase() {
@@ -335,8 +309,11 @@ public class RegistrationWindowController implements Controllable {
 
         validate &= contactsContainer.getChildren().stream().map(node -> (ContactField) node).map(ContactField::validate).reduce(true, (a, b) -> a && b);
 
-        if (fingerprintCaptureResult == null) {
-            Alerts.warningAlert(Windows.MAIN_WINDOW, "WARNING", "Please enter a fingerprint", AlertAction.OK);
+        if (fingerprintCaptureResult == null || fingerprintCaptureResult.isEmpty()) {
+            Windows.warningAlert(
+                                Utils.getI18nString("WARNING"),
+                                Utils.getI18nString("SCAN_FINGERPRINT_WARNING"),
+                                AlertAction.OK);
             validate = false;
         }
 
@@ -350,6 +327,7 @@ public class RegistrationWindowController implements Controllable {
             protected Subscriber call() throws Exception {
 
                 Subscriber subscriber = constructSubscriber();
+                subscriber.setActive(true);
 
                 long subscriberId = DAO.insertNewSubscriber(subscriber);
 
@@ -368,15 +346,14 @@ public class RegistrationWindowController implements Controllable {
             Subscriber newSubscriber = saveTask.getValue();
             updateWorkIdes(newSubscriber.getWorkId());
 
-            MainWindowController mwc = Windows.MAIN_WINDOW.getController();
-            mwc.getIdentificationWindowController().addToTableView(newSubscriber);
+            getMainController().getIdentificationWindowController().addToTableView(newSubscriber);
 
             String heading = Utils.getI18nString("SUBSCRIBER_ADDED_SUCCESSFULLY_HEADING");
             String body = Utils.getI18nString("SUBSCRIBER_ADDED_SUCCESSFULLY_BODY").replace("{0}", newSubscriber.getFullName());
 
             clearInput();
 
-            Alerts.infoAlert(Windows.MAIN_WINDOW,
+            Windows.infoAlert(
                             heading,
                             body,
                             AlertAction.OK);
@@ -384,14 +361,15 @@ public class RegistrationWindowController implements Controllable {
 
         saveTask.addOnFailed(event -> {
             event.getSource().getException().printStackTrace();
-            Alerts.errorAlert(Windows.MAIN_WINDOW,
-                                Utils.getI18nString("SUBSCRIBER_ADD_ERROR_HEADING"),
-                                Utils.getI18nString("SUBSCRIBER_ADD_ERROR_BODY"),
-                                event.getSource().getException(),
-                                AlertAction.OK);
+            Windows.errorAlert(
+                    Utils.getI18nString("SUBSCRIBER_ADD_ERROR_HEADING"),
+                    Utils.getI18nString("SUBSCRIBER_ADD_ERROR_BODY"),
+                    event.getSource().getException(),
+                    AlertAction.OK
+            );
         });
 
-        saveTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
+        saveTask.runningProperty().addListener((observable, oldValue, newValue) -> getMainController().updateLoadingView(newValue));
         Threading.MAIN_EXECUTOR_SERVICE.submit(saveTask);
     }
 
@@ -404,30 +382,27 @@ public class RegistrationWindowController implements Controllable {
         subscriber.setFamilyName(familyNameTextField.getText());
         subscriber.setNationality(nationalityTextField.getText());
         subscriber.setNationalId(nationalIdTextField.getText());
+        subscriber.setFamilyId(familyIdTextField.getText());
         subscriber.setBirthday(birthdayDatePicker.getValue());
         subscriber.setGender(genderComboBox.getValue());
 
-        subscriber.setFirstName(firstNameTextField.getText());
+        String passport = passportTextField.getText().isEmpty()? null : passportTextField.getText();
+        subscriber.getPassport().setNumber(passport);
+        subscriber.setResidence(residenceTextField.getText());
 
         String workId = relationshipComboBox.getValue().equals(Relationship.EMPLOYEE)? newEmployeeWorkIdTextField.getText() : employeesWorkIdComboBox.getValue();
         subscriber.setWorkId(workId);
         subscriber.setRelationship(relationshipComboBox.getValue());
 
-        subscriber.setRightHand(fingerprintCaptureResult.getRightHand());
-        subscriber.setLeftHand(fingerprintCaptureResult.getLeftHand());
+        subscriber.fillRightHand(fingerprintCaptureResult.getRightHand());
+
+        subscriber.fillLeftHand(fingerprintCaptureResult.getLeftHand());
+
         subscriber.setAllFingerprintsTemplate(fingerprintCaptureResult.getFingerprintsTemplate());
 
         subscriber.setInstitute(instituteComboBox.getValue());
 
         return subscriber;
-    }
-
-    private void updateAuthTable(Subscriber subscriber) {
-        MainWindowController mwc = Windows.MAIN_WINDOW.getController();
-        FilteredList<Subscriber> oldFilteredSubscribers = (FilteredList<Subscriber>) mwc.getIdentificationWindowController().tableView.getItems();
-        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(oldFilteredSubscribers.getSource());
-        subscribers.add(subscriber);
-        mwc.getIdentificationWindowController().setToTableView(subscribers);
     }
 
     private void updateWorkIdes(String newWorkId) {
@@ -437,51 +412,18 @@ public class RegistrationWindowController implements Controllable {
         employeesWorkIdComboBox.setItems(FXCollections.observableArrayList(workIdes));
     }
 
-    public void onLogoutBtnClicked() {
-        mainWindowController.lock(true);
-    }
-
-    public void fingerprintButtonAction(ActionEvent actionEvent) {
+    public void onFingerprintBtnClicked(ActionEvent actionEvent) {
 
         Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
         openDeviceTask.addOnSucceeded(event -> {
-            fingerprintCaptureResult = FingerprintManager.device().captureHands();
-
+            if (FingerprintManager.device() != null)
+                fingerprintCaptureResult = FingerprintManager.device().captureHands();
         });
 
         openDeviceTask.addOnFailed(event -> {
-            fingerprintDeviceError(event.getSource().getException(), ()-> fingerprintButtonAction(actionEvent));
+            getMainController().fingerprintDeviceError(event.getSource().getException(), ()-> onFingerprintBtnClicked(actionEvent));
         });
 
         Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
     }
-
-    private final LoadingAlert loadingAlert = new LoadingAlert(null, LoadingAlert.LoadingStyle.SPINNER);
-    {
-        loadingAlert.setHeadingText(Utils.getI18nString("LOADING_CONNECTING"));
-        loadingAlert.setBodyText(Utils.getI18nString("LOADING_WAIT_TEXT"));
-        loadingAlert.initStyle(StageStyle.TRANSPARENT);
-
-    }
-    private void updateLoadingView(boolean loading){
-
-        if (loading)
-            loadingAlert.show();
-        else
-            loadingAlert.close();
-
-        double width = loadingAlert.getNativeAlert().getWidth();
-        double height = loadingAlert.getNativeAlert().getHeight();
-        Windows.centerDialog(loadingAlert.getNativeAlert(), width, height);
-    }
-
-    private void fingerprintDeviceError(Throwable throwable, Runnable tryAgainBlock) {
-
-        Optional<AlertAction> result = Windows.showFingerprintDeviceError(throwable);
-
-        if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN) {
-            tryAgainBlock.run();
-        }
-    }
-
 }

@@ -40,6 +40,8 @@ public class Main extends Application {
     public void start(Stage primaryStage) {
         Logger.getLogger("org.apache.catalina.core").setLevel(Level.OFF);
 
+        System.setProperty("prism.lcdtext", "false");
+
         Font.loadFont(getClass().getResource(Res.Font.CAIRO_SEMI_BOLD.getUrl()).toExternalForm(), 14);
 
         Windows.MAIN_WINDOW.open();

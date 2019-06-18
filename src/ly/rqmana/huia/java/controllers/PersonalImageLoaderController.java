@@ -158,12 +158,12 @@ public class PersonalImageLoaderController implements Controllable {
             Image image = SwingFXUtils.toFXImage(ImageIO.read(file), null);
             currentIVProperty.get().setImage(image);
         } catch (IOException e) {
-            Alerts.errorAlert(
-                    Windows.MAIN_WINDOW,
+            Windows.errorAlert(
                     Utils.getI18nString("ERROR"),
                     e.getLocalizedMessage(),
                     e,
-                    AlertAction.OK);
+                    AlertAction.OK
+            );
         }
     }
 
@@ -187,7 +187,7 @@ public class PersonalImageLoaderController implements Controllable {
             Windows.LOAD_PERSONAL_PICTURE_DIALOG.close();
         }
         else {
-            Alerts.warningAlert(Windows.MAIN_WINDOW,
+            Windows.warningAlert(
                     Utils.getI18nString("ERROR"),
                     Utils.getI18nString("SELECT_PICTURES_FIRST_ERROR"),
                     AlertAction.OK);

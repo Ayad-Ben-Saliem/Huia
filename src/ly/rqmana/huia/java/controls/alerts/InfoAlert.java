@@ -57,6 +57,7 @@ public class InfoAlert extends CustomAlert<InfoAlert.InfoAlertLayout>{
                 e.printStackTrace();
             }
 
+            detailsButton.getStyleClass().add("common-button");
             buttonsBar.getChildren().add(0, detailsButton);
             footerPane.getChildren().add(detailsPane);
 
@@ -98,7 +99,12 @@ public class InfoAlert extends CustomAlert<InfoAlert.InfoAlertLayout>{
             myCustomLayout.graphicView.setGlyphSize(newValue.glyphSize);
         });
 
-        useDetailsProperty().addListener((observable, oldValue, newValue) -> onUseDetailsChanged());
+        useDetailsProperty().addListener((observable, oldValue, newValue) -> {
+            myCustomLayout.detailsPane.setVisible(newValue);
+            myCustomLayout.detailsPane.setManaged(newValue);
+            myCustomLayout.detailsButton.setVisible(newValue);
+            myCustomLayout.detailsButton.setManaged(newValue);
+        });
 
         myCustomLayout.detailsButton.setOnAction(event -> {
             setShowingDetails(! isShowingDetails());
@@ -123,20 +129,14 @@ public class InfoAlert extends CustomAlert<InfoAlert.InfoAlertLayout>{
 
     }
 
-    private void onUseDetailsChanged(){
-        myCustomLayout.detailsPane.setVisible(isUseDetails());
-        myCustomLayout.detailsPane.setManaged(isUseDetails());
-        myCustomLayout.detailsButton.setVisible(isUseDetails());
-        myCustomLayout.detailsButton.setManaged(isUseDetails());
-    }
-
     public void visualizeStackTrace(Throwable throwable){
+        if (throwable != null) {
+            StringWriter stackTraceWriter = new StringWriter();
+            throwable.printStackTrace(new PrintWriter(stackTraceWriter));
 
-        StringWriter stackTraceWriter = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(stackTraceWriter));
-
-        String detailsText = stackTraceWriter.toString();
-        setDetailsText(detailsText);
+            String detailsText = stackTraceWriter.toString();
+            setDetailsText(detailsText);
+        }
     }
 
     public void setDetailsText(String text){

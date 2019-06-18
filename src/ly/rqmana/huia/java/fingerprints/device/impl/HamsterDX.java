@@ -119,7 +119,7 @@ public class HamsterDX extends FingerprintDevice {
 
         Hand rightHand = null;
         Hand leftHand = null;
-        String fingerprintsCode = "";
+        String fingerprintsString = "";
 
         NBioBSPJNI.FIR_HANDLE firDataHandler = BSP.new FIR_HANDLE();
         NBioBSPJNI.FIR_HANDLE auditDataHandler = BSP.new FIR_HANDLE();
@@ -209,14 +209,14 @@ public class HamsterDX extends FingerprintDevice {
 
             NBioBSPJNI.FIR_TEXTENCODE fingersCodeEncoder = BSP.new FIR_TEXTENCODE();
             BSP.GetTextFIRFromHandle(firDataHandler, fingersCodeEncoder, SCAN_FORMAT);
-            fingerprintsCode =  fingersCodeEncoder.TextFIR;
+            fingerprintsString =  fingersCodeEncoder.TextFIR;
         }
 
-        return new FingerprintCaptureResult(rightHand, leftHand, fingerprintsCode);
+        return new FingerprintCaptureResult(rightHand, leftHand, fingerprintsString);
     }
 
     @Override
-    public boolean matchFingerprintCode(String sourceFingerprint, String targetFingerprint) {
+    public boolean matchFingerprintTemplate(String sourceFingerprint, String targetFingerprint) {
 
         FIR_TEXTENCODE sourceTextEncode = BSP.new FIR_TEXTENCODE();
         sourceTextEncode.TextFIR = sourceFingerprint;

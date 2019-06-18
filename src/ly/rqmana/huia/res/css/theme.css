@@ -6,6 +6,14 @@
     -rq-accent-focus: #ff0000;
     -rq-accent-unfocus: #ff8888;
 
+
+    /* A bright blue for the focus indicator of objects. Typically used as the
+     * first color in -fx-background-color for the "focused" pseudo-class. Also
+     * typically used with insets of -1.4 to provide a glowing effect.
+     */
+    -fx-focus-color: -rq-accent-unfocus;
+    -fx-faint-focus-color: #039ED322;
+
     -rq-background: #303030;
     -rq-background-alt: white;
     -rq-background-alt2: -fx-background;
@@ -22,6 +30,11 @@
     -rq-shadow3: rgba(20, 20, 20, 0.3);
     -rq-shadow4: rgba(20, 20, 20, 0.4);
     -rq-shadow5: rgba(20, 20, 20, 0.5);
+}
+
+.text-input {
+    -fx-highlight-fill: -rq-accent-unfocus;
+    -fx-highlight-text-fill: -rq-text-background;
 }
 
 .common-button {

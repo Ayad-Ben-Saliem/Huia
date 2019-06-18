@@ -7,22 +7,19 @@
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.VBox?>
 
-<TitledPane fx:id="detailsPane" maxHeight="300.0" styleClass="details-pane" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1">
-      <content>
-         <VBox alignment="TOP_RIGHT" spacing="10.0" styleClass="details-container">
-            <children>
-               <TextArea fx:id="detailsArea" editable="false">
-                  <styleClass>
-                     <String fx:value="details-area" />
-                     <String fx:value="note-area" />
-                  </styleClass>
-               </TextArea>
-               <JFXButton fx:id="copyDetailsButton" styleClass="common-button" text="%ALERT_COPY_DETAILS" />
-            </children>
-         </VBox>
-      </content>
+<TitledPane fx:id="detailsPane" maxHeight="300.0" styleClass="details-pane" xmlns="http://javafx.com/javafx/8.0.172-ea"
+            xmlns:fx="http://javafx.com/fxml/1">
    <stylesheets>
-      <URL value="@../../css/templates.css" />
-      <URL value="@../../css/theme.css" />
+      <URL value="@../../css/templates.css"/>
+      <URL value="@../../css/theme.css"/>
    </stylesheets>
+   <VBox alignment="TOP_RIGHT" spacing="10.0" styleClass="details-container">
+      <TextArea fx:id="detailsArea" editable="false">
+         <styleClass>
+            <String fx:value="details-area"/>
+            <String fx:value="note-area"/>
+         </styleClass>
+      </TextArea>
+      <JFXButton fx:id="copyDetailsButton" styleClass="common-button" text="%ALERT_COPY_DETAILS"/>
+   </VBox>
 </TitledPane>
