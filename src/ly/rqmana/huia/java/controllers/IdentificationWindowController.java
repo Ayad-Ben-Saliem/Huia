@@ -19,7 +19,6 @@ import javafx.scene.layout.VBox;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
-import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
@@ -33,6 +32,7 @@ import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
 
 import java.net.URL;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Optional;
@@ -94,7 +94,7 @@ public class IdentificationWindowController implements Controllable {
         isActiveFilterComboBox.setValue(Utils.getI18nString("BOTH"));
 
         tableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (nameLabel != null) {
+            if (nameLabel != null && newValue != null) {
                 selectedSubscriber.setValue(newValue);
                 nameLabel.setText(newValue.getFullName());
             }
@@ -176,7 +176,7 @@ public class IdentificationWindowController implements Controllable {
         setToTableView(subscribers);
     }
 
-    void setToTableView(ObservableList<Subscriber> subscribers) {
+    private void setToTableView(ObservableList<Subscriber> subscribers) {
         filteredList = new FilteredList<>(subscribers, subscriberPredicate);
 
         tableView.setItems(filteredList);
@@ -195,8 +195,7 @@ public class IdentificationWindowController implements Controllable {
 
             Subscriber subscriber = selectedSubscriber.get();
             if (subscriber == null) {
-                Alerts.errorAlert(
-                        Windows.MAIN_WINDOW,
+                Windows.errorAlert(
                         Utils.getI18nString("ERROR"),
                         Utils.getI18nString("SELECT_SUBSCRIBER_FIRST"),
                         null,
@@ -205,14 +204,37 @@ public class IdentificationWindowController implements Controllable {
                 return;
             }
 
+            long identificationId;
+            try {
+                identificationId = DAO.insertSubscriberIdentification(subscriber);
+            } catch (SQLException e) {
+                Windows.errorAlert(
+                        Utils.getI18nString("ERROR"),
+                        Utils.getI18nString("INSERT_IDENTIFICATION_ERROR_BODY"),
+                        e,
+                        AlertAction.OK
+                );
+                return;
+            }
+
             Finger scannedFinger = FingerprintManager.device().captureFinger(FingerID.UNKNOWN);
             // if the user cancels capturing null finger is returned
-            if (scannedFinger == null || scannedFinger.isEmpty())
+            if (scannedFinger == null || scannedFinger.isEmpty()) {
+                try {
+                    DAO.updateSubscriberIdentification(identificationId, subscriber, false, Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED"));
+                } catch (SQLException e) {
+                    Windows.errorAlert(
+                            Utils.getI18nString("IDENTIFICATION_CANCELLED_ERROR_HEADING"),
+                            Utils.getI18nString("IDENTIFICATION_CANCELLED_ERROR_BODY"),
+                            e,
+                            AlertAction.OK
+                    );
+                }
                 return;
+            }
 
             if (!subscriber.isActive()) {
-                Alerts.warningAlert(
-                        Windows.MAIN_WINDOW,
+                Windows.warningAlert(
                         Utils.getI18nString("NOT_ACTIVE_SUBSCRIBER_WARRING_HEADING"),
                         Utils.getI18nString("NOT_ACTIVE_SUBSCRIBER_WARRING_BODY"),
                         AlertAction.OK
@@ -220,17 +242,9 @@ public class IdentificationWindowController implements Controllable {
                 return;
             }
 
-            String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
-            if (subscriberFingerprint != null && !subscriberFingerprint.isEmpty()){
-
-                String scannedFingerprint = scannedFinger.getFingerprintTemplate();
-                boolean match = FingerprintManager.device().matchFingerprintCode(scannedFingerprint, subscriberFingerprint);
-
-                showIdentificationStateError(match, subscriber);
-            } else {
-                Optional<AlertAction> alertAction = Alerts.infoAlert(
-                        Windows.MAIN_WINDOW,
-                        Utils.getI18nString("ADD_MISSING_FINGERPRITNS_HEADING"),
+            if (!subscriber.hasFingerprint()) {
+                Optional<AlertAction> alertAction = Windows.infoAlert(
+                        Utils.getI18nString("ADD_MISSING_FINGERPRINTS_HEADING"),
                         Utils.getI18nString("ADD_MISSING_FINGERPRINTS_BODY"),
                         AlertAction.NO, AlertAction.YES
                 );
@@ -241,45 +255,73 @@ public class IdentificationWindowController implements Controllable {
                         System.out.println("Yes");
                     }
                 }
+                return;
             }
+
+            Task<Boolean> task = new Task<Boolean>() {
+
+                @Override
+                protected Boolean call() throws Exception {
+                    String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
+                    String scannedFingerprint = scannedFinger.getFingerprintTemplate();
+                    boolean match = FingerprintManager.device().matchFingerprintCode(scannedFingerprint, subscriberFingerprint);
+                    return match;
+                }
+            };
+
+            task.addOnSucceeded(e -> {
+                boolean match = (Boolean) e.getSource().getValue();
+                try {
+                    DAO.updateSubscriberIdentification(identificationId, subscriber, match, match? null : Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED"));
+                } catch (SQLException ex) {
+                    Windows.errorAlert(
+                            Utils.getI18nString("ERROR"),
+                            Utils.getI18nString("UPDATE_IDENTIFICATION_ERROR_BODY"),
+                            ex,
+                            AlertAction.OK
+                    );
+                }
+                showIdentificationStateError(match, subscriber, identificationId);
+            });
+
+            task.addOnFailed(e -> Windows.errorAlert(
+                    Utils.getI18nString("ERROR"),
+                    Utils.getI18nString("UPDATE_IDENTIFICATION_ERROR_BODY"),
+                    e.getSource().getException(),
+                    AlertAction.OK
+            ));
+            Threading.MAIN_EXECUTOR_SERVICE.submit(task);
         });
 
         openDeviceTask.addOnFailed(event -> {
-
             Optional<AlertAction> result = Windows.showFingerprintDeviceError(event.getSource().getException());
             if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN){
                 onFingerprintBtnClicked(null);
             }
-
         });
 
         Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
     }
 
-    private void showIdentificationStateError(boolean state, @Nullable Subscriber subscriber){
+    private void showIdentificationStateError(boolean state, @Nullable Subscriber subscriber, long identificationId){
 
         if (state) {
-            System.out.printf("[Found match] %s%n", subscriber.getFullName());
-
             String heading = Utils.getI18nString("IDENTIFICATION_FOUND_HEADING");
-            String body = Utils.getI18nString("IDENTIFICATION_FOUND_BODY").replace("{0}", subscriber.getFullName());
+            String body = Utils.getI18nString("IDENTIFICATION_FOUND_BODY");
+            body = body.replace("{0}", subscriber.getFullName());
+            body = body.replace("{1}", String.valueOf(identificationId));
 
-            //fixme: fix the weird exception
-            Alert alert= new Alert(Alert.AlertType.INFORMATION, body, ButtonType.OK);
-            alert.setTitle(heading);
-            alert.show();
-
-//            Alerts.infoAlert(Windows.MAIN_WINDOW,
-//                    heading,
-//                    body,
-//                    AlertAction.OK);
+            Windows.infoAlert(
+                    heading,
+                    body,
+                    AlertAction.OK);
         }
         else {
 
             String heading = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_HEADING");
             String body = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_BODY");
 
-            Alerts.infoAlert(Windows.MAIN_WINDOW,
+            Windows.infoAlert(
                     heading,
                     body,
                     AlertAction.OK);

@@ -30,8 +30,6 @@ public abstract class Alerts {
     }
 
     public static Optional<AlertAction> errorAlert(@Nullable Stage stage, String heading, String body,@Nullable Throwable throwable, AlertAction... actions){
-
-
         Toolkit.getDefaultToolkit().beep();
         return createErrorAlert(stage, heading, body, throwable, actions).showAndWait();
     }

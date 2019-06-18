@@ -12,6 +12,7 @@ import ly.rqmana.huia.java.storage.DataStorage;
 import ly.rqmana.huia.java.util.SQLUtils;
 import ly.rqmana.huia.java.util.Utils;
 
+import java.nio.file.Files;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.Observable;
@@ -31,13 +32,11 @@ public class DAO {
     }
 
     public static void initializeDB() throws SQLException {
-
         createTables();
 
         addAdminUser();
 
         addInstitute("الحديد");
-        addInstitute("المباحث الجنائية");
     }
 
     private static void createTables() throws SQLException {
@@ -46,6 +45,24 @@ public class DAO {
         createPeopleTable();
         createNewRegistrationsTable();
         createContactsTable();
+        createIdentificationsTable();
+    }
+
+    private static void createIdentificationsTable() throws SQLException {
+        Statement statement = DB_CONNECTION.createStatement();
+
+        String createQuery = "CREATE TABLE IF NOT EXISTS Identifications("
+                + "id                  INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "subscriberId        INTEGER NOT NULL,"
+                + "datetime            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                + "isIdentified        BOOLEAN NOT NULL ,"
+                + "username            TEXT,"
+                + "notes"
+                + ");";
+        statement.execute(createQuery);
+
+        statement.close();
+
     }
 
     private static void createUsersTable() throws SQLException {
@@ -224,6 +241,7 @@ public class DAO {
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
         Connection connection = DriverManager.getConnection(DAO.getDataDBUrl());
         String query = "SELECT " +
+                "id," +
                 "first_name," +
                 "father_name," +
                 "last_name," +
@@ -239,17 +257,20 @@ public class DAO {
 
             while (resultSet.next()) {
                 Subscriber subscriber = new Subscriber();
-                subscriber.setFirstName(resultSet.getString(1));
-                subscriber.setFatherName(resultSet.getString(2));
-                subscriber.setFamilyName(resultSet.getString(3));
 
-                subscriber.setBirthday(LocalDate.parse(resultSet.getString(4)));
-                subscriber.setNationalId(resultSet.getString(5));
-                subscriber.setGender("M".equals(resultSet.getString(6)) ? Gender.MALE : Gender.FEMALE);
-                subscriber.setAllFingerprintsTemplate(resultSet.getString(7));
-                subscriber.setWorkId(resultSet.getString(8));
-                subscriber.setRelationship(resultSet.getString(9));
-                subscriber.setActive(resultSet.getString(10).equals("True"));
+                subscriber.setId(resultSet.getLong("id"));
+
+                subscriber.setFirstName(resultSet.getString("first_name"));
+                subscriber.setFatherName(resultSet.getString("father_name"));
+                subscriber.setFamilyName(resultSet.getString("last_name"));
+
+                subscriber.setBirthday(LocalDate.parse(resultSet.getString("birthday")));
+                subscriber.setNationalId(resultSet.getString("national_id"));
+                subscriber.setGender("M".equals(resultSet.getString("sex")) ? Gender.MALE : Gender.FEMALE);
+                subscriber.setAllFingerprintsTemplate(resultSet.getString("fingerprint_template"));
+                subscriber.setWorkId(resultSet.getString("work_id"));
+                subscriber.setRelationship(resultSet.getString("relationship"));
+                subscriber.setActive(resultSet.getString("is_active").equals("True"));
 
                 subscribers.add(subscriber);
             }
@@ -269,6 +290,7 @@ public class DAO {
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
 
         String query = "SELECT " +
+                "id," +
                 "firstName," +
                 "fatherName," +
                 "grandfatherName," +
@@ -299,6 +321,8 @@ public class DAO {
 
         while (resultSet.next()) {
             Subscriber subscriber = new Subscriber();
+
+            subscriber.setId(resultSet.getLong("id"));
 
             subscriber.setFirstName(resultSet.getString("firstName"));
             subscriber.setFatherName(resultSet.getString("fatherName"));
@@ -415,4 +439,58 @@ public class DAO {
 
         pStatement.executeUpdate();
     }
+
+    public static long insertSubscriberIdentification(Subscriber subscriber) throws SQLException {
+        final String insertQuery
+                        = "INSERT INTO Identifications ("
+                        + "subscriberId,"
+                        + "username,"
+                        + "isIdentified,"
+                        + "notes"
+                        + ") VALUES (?,?,?,?)";
+
+        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
+
+        pStatement.setLong(1, subscriber.getId());
+        pStatement.setString(2, Auth.getCurrentUser().getUsername());
+        pStatement.setBoolean(3, false);
+        String notes = "";
+        if (!subscriber.isActive())
+            notes += Utils.getI18nString("SUBSCRIBER_NOT_ACTIVE");
+        if (!subscriber.hasFingerprint())
+            notes += Utils.getI18nString("FINGERPRINT_NOT_REGISTERED");
+        pStatement.setString(4, notes);
+
+        pStatement.execute();
+
+        ResultSet generatedKeys = pStatement.getGeneratedKeys();
+        return generatedKeys.getLong(1);
+    }
+
+    public static boolean updateSubscriberIdentification(long identificationId, Subscriber subscriber, boolean isIdentified, String notes) throws SQLException {
+        String selectQuery = "SELECT notes FROM Identifications WHERE id=? AND subscriberId=?;";
+        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(selectQuery);
+        pStatement.setLong(1, identificationId);
+        pStatement.setLong(2, subscriber.getId());
+        ResultSet resultSet = pStatement.executeQuery();
+
+        String _notes = "";
+        if (resultSet.next()) {
+            _notes = resultSet.getString("notes");
+        }
+        if (notes != null)
+            _notes += ":\n:" + notes;
+
+        final String insertQuery = "UPDATE Identifications SET isIdentified=?, notes=? WHERE id=? AND subscriberId=?;";
+
+        pStatement = DAO.DB_CONNECTION.prepareStatement(insertQuery);
+
+        pStatement.setBoolean(1, isIdentified);
+        pStatement.setString(2, _notes);
+        pStatement.setLong(3, identificationId);
+        pStatement.setLong(4, subscriber.getId());
+
+        return pStatement.execute();
+    }
+
 }

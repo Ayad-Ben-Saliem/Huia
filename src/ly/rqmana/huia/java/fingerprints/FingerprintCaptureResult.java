@@ -11,8 +11,10 @@ public class FingerprintCaptureResult {
 
     public FingerprintCaptureResult(Hand rightHand, Hand leftHand, String fingerprintsTemplate){
 
-        this.rightHand.updateFingers(rightHand.getFingersUnmodifiable());
-        this.leftHand.updateFingers(leftHand.getFingersUnmodifiable());
+        if (rightHand != null)
+            this.rightHand.updateFingers(rightHand.getFingersUnmodifiable());
+        if (leftHand != null)
+            this.leftHand.updateFingers(leftHand.getFingersUnmodifiable());
         this.fingerprintsTemplate = fingerprintsTemplate;
     }
 
