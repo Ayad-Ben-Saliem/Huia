@@ -216,7 +216,7 @@ public class HamsterDX extends FingerprintDevice {
     }
 
     @Override
-    public boolean matchFingerprintCode(String sourceFingerprint, String targetFingerprint) {
+    public boolean matchFingerprintTemplate(String sourceFingerprint, String targetFingerprint) {
 
         FIR_TEXTENCODE sourceTextEncode = BSP.new FIR_TEXTENCODE();
         sourceTextEncode.TextFIR = sourceFingerprint;

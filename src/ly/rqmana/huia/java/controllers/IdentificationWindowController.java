@@ -264,8 +264,7 @@ public class IdentificationWindowController implements Controllable {
                 protected Boolean call() throws Exception {
                     String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
                     String scannedFingerprint = scannedFinger.getFingerprintTemplate();
-                    boolean match = FingerprintManager.device().matchFingerprintCode(scannedFingerprint, subscriberFingerprint);
-                    return match;
+                    return FingerprintManager.device().matchFingerprintTemplate(scannedFingerprint, subscriberFingerprint);
                 }
             };
 

@@ -25,6 +25,10 @@ public class Windows {
     public static final InfoAlert NETWORK_ERROR_ALERT;
 
     private static InfoAlert ALERT;
+    private static InfoAlert INFO_ALERT;
+    private static InfoAlert CONFIRM_ALERT;
+    private static InfoAlert WARNING_ALERT;
+    private static InfoAlert ERROR_ALERT;
 
     //fixme: fix weird dialog behavior
     private static final LoadingAlert LOADING_ALERT = new LoadingAlert(null, LoadingAlert.LoadingStyle.SPINNER);
@@ -45,6 +49,10 @@ public class Windows {
 //                AlertAction.OK);
         MAIN_WINDOW.addOnShown(event -> {
             ALERT = new InfoAlert(MAIN_WINDOW, InfoAlertType.NONE);
+            INFO_ALERT = new InfoAlert(MAIN_WINDOW, InfoAlertType.INFO);
+            CONFIRM_ALERT = new InfoAlert(MAIN_WINDOW, InfoAlertType.CONFIRM);
+            WARNING_ALERT = new InfoAlert(MAIN_WINDOW, InfoAlertType.WARNING);
+            ERROR_ALERT = new InfoAlert(MAIN_WINDOW, InfoAlertType.ERROR);
         });
 
         LOADING_ALERT.setHeadingText(Utils.getI18nString("LOADING_CONNECTING"));
@@ -91,25 +99,29 @@ public class Windows {
     }
 
     public static Optional<AlertAction> infoAlert(String heading, String body, AlertAction ... alertActions) {
-        prepAlert(InfoAlertType.INFO, heading, body, alertActions);
-        return ALERT.showAndWait();
+//        prepAlert(InfoAlertType.INFO, heading, body, alertActions);
+        prepAlert(INFO_ALERT, heading, body, alertActions);
+        return INFO_ALERT.showAndWait();
     }
 
     public static Optional<AlertAction> confirmAlert(String heading, String body, AlertAction ... alertActions) {
-        prepAlert(InfoAlertType.CONFIRM, heading, body, alertActions);
-        return ALERT.showAndWait();
+//        prepAlert(InfoAlertType.CONFIRM, heading, body, alertActions);
+        prepAlert(CONFIRM_ALERT, heading, body, alertActions);
+        return CONFIRM_ALERT.showAndWait();
     }
 
     public static Optional<AlertAction> warningAlert(String heading, String body, AlertAction ... alertActions) {
-        prepAlert(InfoAlertType.WARNING, heading, body, alertActions);
-        return ALERT.showAndWait();
+//        prepAlert(InfoAlertType.WARNING, heading, body, alertActions);
+        prepAlert(WARNING_ALERT, heading, body, alertActions);
+        return WARNING_ALERT.showAndWait();
     }
 
     public static Optional<AlertAction> errorAlert(String heading, String body, Throwable throwable, AlertAction ... alertActions) {
-        prepAlert(InfoAlertType.ERROR, heading, body, alertActions);
-        ALERT.setUseDetails(throwable != null);
-        ALERT.visualizeStackTrace(throwable);
-        return ALERT.showAndWait();
+//        prepAlert(InfoAlertType.ERROR, heading, body, alertActions);
+        prepAlert(ERROR_ALERT, heading, body, alertActions);
+        ERROR_ALERT.setUseDetails(throwable != null);
+        ERROR_ALERT.visualizeStackTrace(throwable);
+        return ERROR_ALERT.showAndWait();
     }
 
     private static void prepAlert(InfoAlertType alertType, String heading, String body, AlertAction ... alertActions) {
@@ -121,5 +133,13 @@ public class Windows {
         // fixme: alertActions just works for once at first, then doesn't close the alert.
         ALERT.getAlertActions().clear();
         ALERT.getAlertActions().addAll(alertActions);
+    }
+
+    private static void prepAlert(InfoAlert alert, String heading, String body, AlertAction ... alertActions) {
+        alert.setHeadingText(heading);
+        alert.setBodyText(body);
+        // fixme: alertActions just works for once at first, then doesn't close the alert.
+        alert.getAlertActions().clear();
+        alert.getAlertActions().addAll(alertActions);
     }
 }

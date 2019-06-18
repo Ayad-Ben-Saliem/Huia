@@ -136,8 +136,6 @@ public class InfoAlert extends CustomAlert<InfoAlert.InfoAlertLayout>{
 
             String detailsText = stackTraceWriter.toString();
             setDetailsText(detailsText);
-        } else {
-//            setDetailsText("");
         }
     }
 
