@@ -16,6 +16,7 @@ import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.WindowEvent;
+import javafx.util.Pair;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
@@ -44,11 +45,9 @@ public class MainWindowController implements Controllable {
 
     private Node homeWindow;
 
-    private final ObservableMap<MainPage, Node> pageNodeMap = FXCollections.observableHashMap();
+    private final ObservableMap<MainPage, Pair<Node, Object>> pageNodeMap = FXCollections.observableHashMap();
 
     private HomeWindowController homeWindowController;
-    private RegistrationWindowController registrationWindowController;
-    private IdentificationWindowController identificationWindowController;
 
     private EventHandler<WindowEvent> windowEventHandler;
 
@@ -96,7 +95,6 @@ public class MainWindowController implements Controllable {
 
     }
 
-
     enum MainPage {
 
         REGISTRATION(Res.Fxml.REGISTRATION_WINDOW.getUrl()),
@@ -116,8 +114,8 @@ public class MainWindowController implements Controllable {
 
     final ObjectProperty<MainPage> selectedPageProperty = new SimpleObjectProperty<>();
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    @FXML
+    private void initialize() {
         rootStack.getChildren().addAll(getHomeWindow());
 
         selectedPageProperty.addListener((observable, oldValue, newValue) -> {
@@ -130,15 +128,20 @@ public class MainWindowController implements Controllable {
             identificationBtn.pseudoClassStateChanged(PseudoClass.getPseudoClass("selected"), isIdentification);
             identificationHistoryBtn.pseudoClassStateChanged(PseudoClass.getPseudoClass("selected"), isHistory);
 
-            Node pageNode = pageNodeMap.get(newValue);
-            if (pageNode == null){
+            Pair<Node, Object> nodeControllerPair = pageNodeMap.get(newValue);
+
+            Node pageNode = null;
+            if (nodeControllerPair != null)
+                pageNode = nodeControllerPair.getKey();
+
+            if (nodeControllerPair == null || nodeControllerPair.getKey() == null){
                 FXMLLoader loader = new FXMLLoader(newValue.fxmlUrl(), Utils.getBundle());
                 try {
                     pageNode = loader.load();
-                    // a loaded node means that it's not previously added.
-                    centralStack.getChildren().addAll(pageNode);
+                    Object controller = loader.getController();
 
-                    pageNodeMap.put(newValue, pageNode);
+                    pageNodeMap.put(newValue, new Pair<>(pageNode, controller));
+                    centralStack.getChildren().addAll(pageNode);
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -155,6 +158,7 @@ public class MainWindowController implements Controllable {
         identificationBtn.setOnAction(event -> selectedPageProperty.set(MainPage.IDENTIFICATION));
         identificationHistoryBtn.setOnAction(event -> selectedPageProperty.set(MainPage.IDENTIFICATION_HISTORY));
 
+        identificationBtn.fire();
         registrationBtn.fire();
 
         lock(true);
@@ -194,11 +198,11 @@ public class MainWindowController implements Controllable {
     }
 
     public RegistrationWindowController getRegistrationWindowController() {
-        return registrationWindowController;
+        return (RegistrationWindowController) pageNodeMap.get(MainPage.REGISTRATION).getValue();
     }
 
     public IdentificationWindowController getIdentificationWindowController() {
-        return identificationWindowController;
+        return (IdentificationWindowController) pageNodeMap.get(MainPage.IDENTIFICATION).getValue();
     }
 
     public StackPane getRootStack() {

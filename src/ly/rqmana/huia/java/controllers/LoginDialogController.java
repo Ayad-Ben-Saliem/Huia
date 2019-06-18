@@ -28,8 +28,8 @@ public class LoginDialogController implements Controllable {
     @FXML Label authFailed;
     @FXML ProgressIndicator progress;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    @FXML
+    private void initialize() {
 
         Platform.runLater(() -> Auth.getLoginDialog().setOnDialogOpened(event -> usernameTF.requestFocus()));
 

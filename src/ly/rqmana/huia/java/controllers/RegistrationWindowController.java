@@ -69,8 +69,8 @@ public class RegistrationWindowController implements Controllable {
     private FingerprintCaptureResult fingerprintCaptureResult;
     private Map<Integer, Image> personalPictures;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    @FXML
+    private void initialize() {
 
         relationshipComboBox.setItems(FXCollections.observableArrayList(Relationship.values()));
         relationshipComboBox.setValue(Relationship.EMPLOYEE);

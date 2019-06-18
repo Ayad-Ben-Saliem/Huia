@@ -89,8 +89,8 @@ public class IdentificationWindowController implements Controllable {
     private FilteredList<Subscriber> filteredList;
     private Predicate<Subscriber> subscriberPredicate;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    @FXML
+    private void initialize() {
 
         Task<Boolean> loadTask = new Task<Boolean>() {
             @Override
@@ -100,7 +100,8 @@ public class IdentificationWindowController implements Controllable {
             }
         };
 
-        loadTask.runningProperty().addListener((observable, oldValue, newValue) -> getMainController().updateLoadingView(newValue));
+//        loadTask.runningProperty().addListener((observable, oldValue, newValue) -> getMainController().updateLoadingView(newValue));
+
         loadTask.addOnFailed(event -> {
             Throwable ex = event.getSource().getException();
             Windows.errorAlert(Utils.getI18nString("ERROR"),

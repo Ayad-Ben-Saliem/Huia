@@ -80,6 +80,11 @@
 }
 
 
+.filters-box{
+    -fx-background-radius: 7pt;
+    -fx-padding: 30 10 15 10;
+}
+
 
 /*********** info alert {type: CustomAlert} ***********/
 /*

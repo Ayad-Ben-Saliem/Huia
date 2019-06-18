@@ -12,11 +12,6 @@ public class HomeWindowController implements Controllable {
     public Label companyName;
     public JFXButton loginBtn;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-
-    }
-
     public void onLoginBtnClicked() {
         Auth.authenticate();
     }
