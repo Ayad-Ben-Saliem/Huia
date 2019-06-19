@@ -15,8 +15,8 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.WindowEvent;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
+import ly.rqmana.huia.java.controllers.settings.SettingsWindowController;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
-import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
 import ly.rqmana.huia.java.util.Controllable;
@@ -31,23 +31,42 @@ import java.util.ResourceBundle;
 
 public class MainWindowController implements Controllable {
 
-    public StackPane rootStack;
-    public StackPane centralStack;
-    public BorderPane mainContainer;
-    public JFXButton registrationBtn;
-    public JFXButton identificationBtn;
+    @FXML public StackPane centralStack;
+    @FXML public JFXButton registrationBtn;
+    @FXML public JFXButton identificationBtn;
+    @FXML public JFXButton settingsBtn;
 
-    private BooleanProperty locked = new SimpleBooleanProperty(true);
-
-    private Node homeWindow;
     private Node registrationWindow;
-    private Node authenticationWindow;
+    private Node identificationWindow;
+    private Node settingsWindow;
 
-    private HomeWindowController homeWindowController;
     private RegistrationWindowController registrationWindowController;
     private IdentificationWindowController identificationWindowController;
+    private SettingsWindowController settingsWindowController;
 
     private EventHandler<WindowEvent> windowEventHandler;
+
+    enum SelectedPage {
+        REGISTRATION,
+        IDENTIFICATION,
+        SETTINGS
+    }
+
+    final ObjectProperty<SelectedPage> selectedPageProperty = new SimpleObjectProperty<>();
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+
+        centralStack.getChildren().addAll(getRegistrationWindow(), getIdentificationWindow(), getSettingsWindow());
+
+        selectedPageProperty.addListener((observable, oldValue, newValue) -> this.activeTab(newValue));
+
+        registrationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.REGISTRATION));
+        identificationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.IDENTIFICATION));
+        settingsBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.SETTINGS));
+
+        registrationBtn.fire();
+    }
 
     @FXML
     private void onDeviceRefreshButtonClicked(ActionEvent actionEvent){
@@ -69,100 +88,39 @@ public class MainWindowController implements Controllable {
         Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
     }
 
-    public void onLogoutBtnClicked() {
-        lock(true);
-    }
-
-
-    void updateLoadingView(boolean loading){
-        if (loading)
-            Windows.showLoadingAlert();
-        else
-            Windows.closeLoadingAlert();
-    }
-
-    void fingerprintDeviceError(Throwable throwable, Runnable tryAgainBlock) {
-
-        Optional<AlertAction> result = Windows.showFingerprintDeviceError(throwable);
-
-        if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN) {
-            tryAgainBlock.run();
-        }
-    }
-
-
+    @FXML
     public void onLogoutBtnClicked(ActionEvent actionEvent) {
-
-    }
-
-    enum SelectedPage {
-        REGISTRATION,
-        AUTHENTICATION
-    }
-
-    final ObjectProperty<SelectedPage> selectedPageProperty = new SimpleObjectProperty<>();
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-
-        rootStack.getChildren().addAll(getHomeWindow());
-        centralStack.getChildren().addAll(getRegistrationWindow(), getAuthenticationWindow());
-
-        selectedPageProperty.addListener((observable, oldValue, newValue) -> {
-            switch (newValue) {
-                case REGISTRATION:
-                    registrationBtn.setStyle("-fx-background-color: -rq-background-alt;" +
-                                             "-fx-text-fill: -rq-text-background-alt;");
-                    identificationBtn.setStyle("-fx-background-color: -rq-background;" +
-                                               "-fx-text-fill: -rq-text-background;");
-                    getRegistrationWindow().toFront();
-                    break;
-                case AUTHENTICATION:
-                    registrationBtn.setStyle("-fx-background-color: -rq-background;" +
-                                             "-fx-text-fill: -rq-text-background;");
-                    identificationBtn.setStyle("-fx-background-color: -rq-background-alt;" +
-                                               "-fx-text-fill: -rq-text-background-alt;");
-                    getAuthenticationWindow().toFront();
-                    break;
-            }
-        });
-
-        registrationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.REGISTRATION));
-        identificationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.AUTHENTICATION));
-
-        registrationBtn.fire();
-
         lock(true);
     }
 
-    public void lock(Boolean isLocked) {
-        if (isLocked) {
-            getHomeWindow().toFront();
-        } else {
-            mainContainer.toFront();
+    private void activeTab(SelectedPage selectedPage) {
+        activeBtn(registrationBtn, selectedPage.equals(SelectedPage.REGISTRATION));
+        activeBtn(identificationBtn, selectedPage.equals(SelectedPage.IDENTIFICATION));
+        activeBtn(settingsBtn, selectedPage.equals(SelectedPage.SETTINGS));
+
+        switch (selectedPage) {
+            case REGISTRATION:
+                getRegistrationWindow().toFront();
+                break;
+            case IDENTIFICATION:
+                getIdentificationWindow().toFront();
+                break;
+            case SETTINGS:
+                getSettingsWindow().toFront();
+                break;
         }
     }
 
-    private void lock() {
-        lock(isLocked());
+    private void activeBtn(JFXButton button, boolean active) {
+        if (active)
+            button.setStyle("-fx-background-color: -rq-background-alt;-fx-text-fill: -rq-text-background-alt;");
+        else
+            button.setStyle("-fx-background-color: -rq-background;-fx-text-fill: -rq-text-background;");
+
     }
 
-    private boolean isLocked() {
-        return locked.get();
-    }
 
-    private Node getHomeWindow() {
-        if (homeWindow == null) {
-            try {
-                FXMLLoader loader = new FXMLLoader(Res.Fxml.HOME_WINDOW.getUrl(), Utils.getBundle());
-                homeWindow = loader.load();
-                homeWindowController = loader.getController();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return homeWindow;
-    }
+
 
     private Node getRegistrationWindow() {
         if (registrationWindow == null) {
@@ -177,33 +135,45 @@ public class MainWindowController implements Controllable {
         return registrationWindow;
     }
 
-    private Node getAuthenticationWindow() {
-        if (authenticationWindow == null) {
+    private Node getIdentificationWindow() {
+        if (identificationWindow == null) {
             try {
-                FXMLLoader loader = new FXMLLoader(Res.Fxml.AUTHENTICATION.getUrl(), Utils.getBundle());
-                authenticationWindow = loader.load();
+                FXMLLoader loader = new FXMLLoader(Res.Fxml.IDENTIFICATION_WINDOW.getUrl(), Utils.getBundle());
+                identificationWindow = loader.load();
                 identificationWindowController = loader.getController();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        return authenticationWindow;
+        return identificationWindow;
     }
 
-    public HomeWindowController getHomeWindowController() {
-        return homeWindowController;
+    private Node getSettingsWindow() {
+        if (settingsWindow == null) {
+            try {
+                FXMLLoader loader = new FXMLLoader(Res.Fxml.SETTINGS_WINDOW.getUrl(), Utils.getBundle());
+                settingsWindow = loader.load();
+                settingsWindowController = loader.getController();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return settingsWindow;
     }
 
+    @Override
     public RegistrationWindowController getRegistrationWindowController() {
         return registrationWindowController;
     }
 
+    @Override
     public IdentificationWindowController getIdentificationWindowController() {
         return identificationWindowController;
     }
 
-    public StackPane getRootStack() {
-        return rootStack;
+    @Override
+    public SettingsWindowController getSettingsWindowController() {
+        return settingsWindowController;
     }
 
     public StackPane getCentralStack() {

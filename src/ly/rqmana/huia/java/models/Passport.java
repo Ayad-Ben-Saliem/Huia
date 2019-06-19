@@ -10,7 +10,6 @@ public class Passport {
     private Name name;
     private LocalDate issueDate;
     private LocalDate expirationDate;
-    private Boolean isActive;
 
     public String getCountry() {
         return country;
@@ -50,13 +49,5 @@ public class Passport {
 
     public void setExpirationDate(LocalDate expirationDate) {
         this.expirationDate = expirationDate;
-    }
-
-    public Boolean getActive() {
-        return isActive;
-    }
-
-    public void setActive(Boolean active) {
-        isActive = active;
     }
 }

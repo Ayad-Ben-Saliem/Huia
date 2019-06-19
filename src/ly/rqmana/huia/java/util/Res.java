@@ -19,23 +19,26 @@ public final class Res {
     private final static String INSTALLATION = "installation/";
     private final static String ALERTS = "alerts/";
 
-    private final static String AUTH = FXML + "auth/";
+    private final static String AUTH = "auth/";
 
-    private final static String SETTING = FXML + "settings/";
+    private final static String SETTING = "settings/";
 
     public final static String LANGUAGE_PATH = "ly.rqmana.huia.res.strings.strings";
 
 
     public enum Fxml {
+        ROOT_WINDOW             ("RootWindow.fxml"),
         MAIN_WINDOW             ("MainWindow.fxml"),
         HOME_WINDOW             ("HomeWindow.fxml"),
         REGISTRATION_WINDOW     ("RegistrationWindow.fxml"),
         LOGIN_DIALOG            ("LoginDialog.fxml"),
         SIGN_UP_WINDOW          ("SignUpWindow.fxml"),
-        AUTHENTICATION          ("IdentificationWindow.fxml"),
+        IDENTIFICATION_WINDOW   ("IdentificationWindow.fxml"),
+        SETTINGS_WINDOW         (SETTING + "SettingsWindow.fxml"),
 
         ADD_CONTACTS_METHOD_WINDOW("AddContactMethodDialog.fxml"),
         PERSONAL_IMAGE_WINDOW("PersonalImageLoader.fxml"),
+        ADD_NEW_USER_WINDOW(SETTING + "AddNewUserWindow.fxml"),
         INSTALLATION_WINDOW(INSTALLATION + "InstallationWindow.fxml"),
         LICENSE_TERMS_PAGE(INSTALLATION + "License&TermsPage.fxml"),
         INSTALLATION_DIR_PAGE(INSTALLATION + "InstallationDirectoryPage.fxml"),

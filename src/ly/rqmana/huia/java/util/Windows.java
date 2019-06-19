@@ -19,7 +19,7 @@ import static ly.rqmana.huia.java.util.Utils.getI18nString;
 
 public class Windows {
 
-    public static final Window MAIN_WINDOW = new Window(Res.Fxml.MAIN_WINDOW);
+    public static final Window ROOT_WINDOW = new Window(Res.Fxml.ROOT_WINDOW);
     public static final JFXDialog LOAD_PERSONAL_PICTURE_DIALOG = new JFXDialog();
 
     public static final InfoAlert NETWORK_ERROR_ALERT;
@@ -35,11 +35,11 @@ public class Windows {
 
     static {
 
-        MAIN_WINDOW.getIcons().addAll(Res.Image.PERSON.getImage());
+        ROOT_WINDOW.getIcons().addAll(Res.Image.PERSON.getImage());
 
-        MAIN_WINDOW.setTitle(getI18nString("APP_NAME"));
-        MAIN_WINDOW.setMinWidth(1000);
-        MAIN_WINDOW.setMinHeight(700);
+        ROOT_WINDOW.setTitle(getI18nString("APP_NAME"));
+        ROOT_WINDOW.setMinWidth(1000);
+        ROOT_WINDOW.setMinHeight(700);
 
         NETWORK_ERROR_ALERT = null;
 //        NETWORK_ERROR_ALERT = Alerts.createErrorAlert(Windows.MAIN_WINDOW,
@@ -47,12 +47,12 @@ public class Windows {
 //                getI18nString("NO_INTERNET"),
 //                null,
 //                AlertAction.OK);
-        MAIN_WINDOW.addOnShown(event -> {
-            ALERT = new InfoAlert(MAIN_WINDOW, InfoAlertType.NONE);
-            INFO_ALERT = new InfoAlert(MAIN_WINDOW, InfoAlertType.INFO);
-            CONFIRM_ALERT = new InfoAlert(MAIN_WINDOW, InfoAlertType.CONFIRM);
-            WARNING_ALERT = new InfoAlert(MAIN_WINDOW, InfoAlertType.WARNING);
-            ERROR_ALERT = new InfoAlert(MAIN_WINDOW, InfoAlertType.ERROR);
+        ROOT_WINDOW.addOnShown(event -> {
+            ALERT = new InfoAlert(ROOT_WINDOW, InfoAlertType.NONE);
+            INFO_ALERT = new InfoAlert(ROOT_WINDOW, InfoAlertType.INFO);
+            CONFIRM_ALERT = new InfoAlert(ROOT_WINDOW, InfoAlertType.CONFIRM);
+            WARNING_ALERT = new InfoAlert(ROOT_WINDOW, InfoAlertType.WARNING);
+            ERROR_ALERT = new InfoAlert(ROOT_WINDOW, InfoAlertType.ERROR);
         });
 
         LOADING_ALERT.setHeadingText(Utils.getI18nString("LOADING_CONNECTING"));

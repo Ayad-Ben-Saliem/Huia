@@ -1,54 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import com.jfoenix.controls.JFXButton?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 
-<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
-<StackPane fx:id="rootStack" nodeOrientation="RIGHT_TO_LEFT" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.MainWindowController">
-    <stylesheets>
-        <URL value="@../css/theme.css" />
-        <URL value="@../css/templates.css" />
-    </stylesheets>
-    <BorderPane fx:id="mainContainer">
-        <center>
-          <StackPane fx:id="centralStack" prefHeight="400.0" prefWidth="720.0" BorderPane.alignment="CENTER" />
-        </center>
-        <bottom>
-            <HBox BorderPane.alignment="CENTER">
-                <JFXButton fx:id="registrationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%REGISTRATION_PAGE" HBox.hgrow="ALWAYS">
-               <HBox.margin>
-                  <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
-               </HBox.margin></JFXButton>
-                <JFXButton fx:id="identificationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%AUTHENTICATION_PAGE" HBox.hgrow="ALWAYS">
-               <HBox.margin>
-                  <Insets bottom="1.0" top="1.0" />
-               </HBox.margin></JFXButton>
-            </HBox>
-        </bottom>
-        <top>
-            <HBox alignment="CENTER" styleClass="menu-bar-button">
-                <HBox HBox.hgrow="ALWAYS">
-                    <JFXButton contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onDeviceRefreshButtonClicked" styleClass="menu-bar-button" text="%REFRESH_FINGERPRINT_DEVICE">
-                        <graphic>
-                            <FontAwesomeIconView glyphName="REFRESH" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon"/>
-                        </graphic>
-                    </JFXButton>
-                </HBox>
-                <JFXButton contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onLogoutBtnClicked" styleClass="menu-bar-button" text="%LOGOUT">
-                    <graphic>
-                        <FontAwesomeIconView glyphName="SIGN_OUT" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon" />
-                    </graphic>
-                </JFXButton>
-                <JFXButton contentDisplay="RIGHT" layoutX="161.0" layoutY="10.0" mnemonicParsing="false" styleClass="menu-bar-button" text="%SETTINGS">
-                    <graphic>
-                        <FontAwesomeIconView glyphName="COG" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon" />
-                    </graphic>
-                </JFXButton>
-            </HBox>
-        </top>
-    </BorderPane>
-</StackPane>
+
+ <BorderPane xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.MainWindowController">
+     <center>
+       <StackPane fx:id="centralStack" prefHeight="400.0" prefWidth="720.0" BorderPane.alignment="CENTER" />
+     </center>
+     <bottom>
+         <HBox BorderPane.alignment="CENTER">
+             <JFXButton fx:id="registrationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%REGISTRATION_PAGE" HBox.hgrow="ALWAYS">
+            <HBox.margin>
+                <Insets top="1.0" />
+            </HBox.margin>
+         </JFXButton>
+             <JFXButton fx:id="identificationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%AUTHENTICATION_PAGE" HBox.hgrow="ALWAYS">
+            <HBox.margin>
+                <Insets top="1.0" />
+            </HBox.margin>
+         </JFXButton>
+         <JFXButton fx:id="settingsBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%SETTINGS" HBox.hgrow="ALWAYS">
+            <HBox.margin>
+                <Insets top="1.0" />
+            </HBox.margin>
+         </JFXButton>
+         </HBox>
+     </bottom>
+     <top>
+         <HBox alignment="CENTER" styleClass="menu-bar-button">
+             <HBox HBox.hgrow="ALWAYS">
+                 <JFXButton contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onDeviceRefreshButtonClicked" styleClass="menu-bar-button" text="%REFRESH_FINGERPRINT_DEVICE">
+                     <graphic>
+                         <FontAwesomeIconView glyphName="REFRESH" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon" />
+                     </graphic>
+                 </JFXButton>
+             </HBox>
+             <JFXButton contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onLogoutBtnClicked" styleClass="menu-bar-button" text="%LOGOUT">
+                 <graphic>
+                     <FontAwesomeIconView glyphName="SIGN_OUT" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon" />
+                 </graphic>
+             </JFXButton>
+         </HBox>
+     </top>
+   <stylesheets>
+      <URL value="@../css/theme.css" />
+      <URL value="@../css/templates.css" />
+   </stylesheets>
+ </BorderPane>

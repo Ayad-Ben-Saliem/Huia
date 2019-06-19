@@ -153,7 +153,7 @@ public class PersonalImageLoaderController implements Controllable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(Utils.getI18nString("CHOOSE_PERSONAL_PICTURE"));
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(Utils.getI18nString("PERSONAL_PICTURE"), "*.jpg", "*.png", "*.bmp", "*.gif"));
-        File file = fileChooser.showOpenDialog(Windows.MAIN_WINDOW);
+        File file = fileChooser.showOpenDialog(Windows.ROOT_WINDOW);
         try {
             Image image = SwingFXUtils.toFXImage(ImageIO.read(file), null);
             currentIVProperty.get().setImage(image);

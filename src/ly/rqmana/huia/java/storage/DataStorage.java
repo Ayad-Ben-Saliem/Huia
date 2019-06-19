@@ -346,4 +346,8 @@ public class DataStorage {
     public static Path desktop() {
         return Paths.get(getHomePath() + "/Desktop");
     }
+
+    public static void updateBaseInfo(String key, Object value) {
+        // TODO
+    }
 }

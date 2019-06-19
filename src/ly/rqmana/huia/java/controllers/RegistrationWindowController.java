@@ -18,6 +18,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
@@ -33,6 +34,7 @@ import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Institute;
 import ly.rqmana.huia.java.models.Relationship;
 import ly.rqmana.huia.java.models.Subscriber;
+import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.storage.DataStorage;
 import ly.rqmana.huia.java.util.*;
 
@@ -65,12 +67,14 @@ public class RegistrationWindowController implements Controllable {
 
     @FXML public ImageView personalPictureIV;
 
-    private final MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
+    public VBox mainContainer;
     private FingerprintCaptureResult fingerprintCaptureResult;
     private Map<Integer, Image> personalPictures;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
+        mainContainer.setVisible(Auth.getCurrentUser().isStaff());
 
         relationshipComboBox.setItems(FXCollections.observableArrayList(Relationship.values()));
         relationshipComboBox.setValue(Relationship.EMPLOYEE);
@@ -137,7 +141,7 @@ public class RegistrationWindowController implements Controllable {
             FXMLLoader fxmlLoader = new FXMLLoader(Res.Fxml.PERSONAL_IMAGE_WINDOW.getUrl(), Utils.getBundle());
             Region content = fxmlLoader.load();
 
-            Windows.LOAD_PERSONAL_PICTURE_DIALOG.setDialogContainer(getMainController().getRootStack());
+            Windows.LOAD_PERSONAL_PICTURE_DIALOG.setDialogContainer(getRootStack());
             Windows.LOAD_PERSONAL_PICTURE_DIALOG.setContent(content);
             Windows.LOAD_PERSONAL_PICTURE_DIALOG.setTransitionType(JFXDialog.DialogTransition.CENTER);
 
@@ -193,8 +197,8 @@ public class RegistrationWindowController implements Controllable {
     public void onAddContactBtnClicked() {
         try {
             FXMLLoader loader = new FXMLLoader(Res.Fxml.ADD_CONTACTS_METHOD_WINDOW.getUrl(), Utils.getBundle());
-            Pane rootPane = loader.load();
-            JFXDialog dialog = new JFXDialog(getMainController().getRootStack(), rootPane, JFXDialog.DialogTransition.CENTER, true);
+            Pane content = loader.load();
+            JFXDialog dialog = new JFXDialog(getRootStack(), content, JFXDialog.DialogTransition.CENTER, true);
             AddContactMethodDialogController controller = loader.getController();
             controller.setOnSelectListener(type -> {
                 ContactField contactField = null;
@@ -346,7 +350,7 @@ public class RegistrationWindowController implements Controllable {
             Subscriber newSubscriber = saveTask.getValue();
             updateWorkIdes(newSubscriber.getWorkId());
 
-            getMainController().getIdentificationWindowController().addToTableView(newSubscriber);
+            getMainWindowController().getIdentificationWindowController().addToTableView(newSubscriber);
 
             String heading = Utils.getI18nString("SUBSCRIBER_ADDED_SUCCESSFULLY_HEADING");
             String body = Utils.getI18nString("SUBSCRIBER_ADDED_SUCCESSFULLY_BODY").replace("{0}", newSubscriber.getFullName());
@@ -369,7 +373,7 @@ public class RegistrationWindowController implements Controllable {
             );
         });
 
-        saveTask.runningProperty().addListener((observable, oldValue, newValue) -> getMainController().updateLoadingView(newValue));
+        saveTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
         Threading.MAIN_EXECUTOR_SERVICE.submit(saveTask);
     }
 
@@ -421,7 +425,7 @@ public class RegistrationWindowController implements Controllable {
         });
 
         openDeviceTask.addOnFailed(event -> {
-            getMainController().fingerprintDeviceError(event.getSource().getException(), ()-> onFingerprintBtnClicked(actionEvent));
+            fingerprintDeviceError(event.getSource().getException(), ()-> onFingerprintBtnClicked(actionEvent));
         });
 
         Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);

@@ -10,6 +10,8 @@ public class User extends Person {
     private String email;
     private LocalDateTime dateJoined;
     private Boolean isSuperuser;
+    private Boolean isStaff;
+    private Boolean isActive;
     private LocalDateTime lastLogin;
 
 
@@ -45,7 +47,7 @@ public class User extends Person {
         this.dateJoined = dateJoined;
     }
 
-    public Boolean getSuperuser() {
+    public Boolean isSuperuser() {
         return isSuperuser;
     }
 
@@ -59,5 +61,21 @@ public class User extends Person {
 
     public void setLastLogin(LocalDateTime lastLogin) {
         this.lastLogin = lastLogin;
+    }
+
+    public Boolean isStaff() {
+        return isStaff;
+    }
+
+    public void setStaff(Boolean staff) {
+        isStaff = staff;
+    }
+
+    public Boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(Boolean active) {
+        isActive = active;
     }
 }

@@ -20,6 +20,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -139,5 +140,16 @@ public class Utils {
             Windows.NETWORK_ERROR_ALERT.visualizeStackTrace(ex);
             Windows.NETWORK_ERROR_ALERT.showAndWait();
         });
+    }
+
+    public static String getRandomString(int length) {
+        StringBuilder stringBuilder = new StringBuilder();
+        Random random = new Random();
+        random.setSeed(System.currentTimeMillis());
+        for (int i = 0; i < length; i++) {
+            int num = random.nextInt(26) + 65;
+            stringBuilder.append((char) num);
+        }
+        return stringBuilder.toString();
     }
 }

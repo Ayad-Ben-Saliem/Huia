@@ -11,6 +11,7 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import ly.rqmana.huia.java.concurrent.Task;
+import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Utils;
@@ -62,15 +63,20 @@ public class LoginDialogController implements Controllable {
 
             if (isSuccess) {
                 Auth.cancel();
-
-                MainWindowController mainWindowController = Windows.MAIN_WINDOW.getController();
-                Platform.runLater(() -> mainWindowController.lock(false));
+                Platform.runLater(() -> lock(false));
             } else {
                 authFailed.setVisible(true);
             }
         });
 
-        loginTask.setOnFailed(e -> e.getSource().getException().printStackTrace());
+        loginTask.setOnFailed(e -> {
+            Throwable t = loginTask.getException();
+            Windows.errorAlert(
+                    Utils.getI18nString("ERROR"),
+                    t.getLocalizedMessage(),
+                    t,
+                    AlertAction.OK);
+        });
 
         loginTask.addOnComplete(event1 -> {
             formContainer.setDisable(false);

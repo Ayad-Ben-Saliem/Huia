@@ -2,20 +2,20 @@ package ly.rqmana.huia.java.db;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.models.Gender;
-import ly.rqmana.huia.java.models.Relationship;
 import ly.rqmana.huia.java.models.Subscriber;
+import ly.rqmana.huia.java.models.User;
 import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.security.Hasher;
 import ly.rqmana.huia.java.storage.DataStorage;
-import ly.rqmana.huia.java.util.SQLUtils;
 import ly.rqmana.huia.java.util.Utils;
 
-import java.nio.file.Files;
 import java.sql.*;
 import java.time.LocalDate;
-import java.util.Observable;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DAO {
 
@@ -54,7 +54,7 @@ public class DAO {
         String createQuery = "CREATE TABLE IF NOT EXISTS Identifications("
                 + "id                  INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "subscriberId        INTEGER NOT NULL,"
-                + "datetime            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                + "datetime            DATETIME NOT NULL DEFAULT (DATETIME(CURRENT_TIMESTAMP)),"
                 + "isIdentified        BOOLEAN NOT NULL ,"
                 + "username            TEXT,"
                 + "notes"
@@ -69,21 +69,23 @@ public class DAO {
         Statement statement = DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS Users("
-                + "id                  INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "id                INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
                 + "username          TEXT NOT NULL UNIQUE,"
                 + "password          TEXT NOT NULL,"
                 + "email             TEXT,"
-                + "firstName         TEXT,"
+                + "firstName         TEXT NOT NULL,"
                 + "fatherName        TEXT,"
                 + "grandfatherName   TEXT,"
                 + "familyName        TEXT,"
                 + "nationality       TEXT,"
                 + "nationalId        TEXT,"
-                + "birthday          DATE,"
+                + "birthday          DATETIME,"
                 + "gender            TEXT,"
-                + "dateJoined        DATE,"
+                + "dateJoined        DATETIME,"
                 + "isSuperuser       BOOLEAN NOT NULL,"
-                + "lastLogin         DATE"
+                + "isStaff           BOOLEAN NOT NULL,"
+                + "isActive          BOOLEAN NOT NULL,"
+                + "lastLogin         DATETIME"
                 + ");";
         statement.execute(createQuery);
 
@@ -94,7 +96,7 @@ public class DAO {
         Statement statement = DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS Institutes("
-                + "id                  INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "id           INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "name         TEXT NOT NULL,"
                 + "description  TEXT"
                 + ");";
@@ -136,8 +138,8 @@ public class DAO {
                 + "allFingerprintTemplates TEXT,"
                 + "dataPath                 TEXT,"
                 + "user                 INTEGER NOT NULL,"
-                + "dateAdded            DATE NOT NULL DEFAULT (STRFTIME('%s', 'now')),"
-                + "dateUploaded         DATE,"
+                + "dateAdded            DATETIME NOT NULL,"
+                + "dateUploaded         DATETIME,"
                 + "notes                TEXT,"
                 + "FOREIGN KEY (instituteId) REFERENCES Institutes(id),"
                 + "FOREIGN KEY (user) REFERENCES Users(id)"
@@ -158,8 +160,8 @@ public class DAO {
                 + "familyName           TEXT NOT NULL,"
                 + "nationality          TEXT,"
                 + "nationalId           TEXT,"
-                + "birthday             DATE NOT NULL ,"
-                + "gender               TEXT NOT NULL,"
+                + "birthday             DATE,"
+                + "gender               TEXT,"
                 + "passport             TEXT UNIQUE,"
                 + "familyId             TEXT,"
                 + "residence            TEXT,"
@@ -179,10 +181,10 @@ public class DAO {
                 + "allFingerprintTemplates TEXT,"
                 + "dataPath                 TEXT,"
                 + "user                 INTEGER NOT NULL,"
-                + "dateAdded            DATE NOT NULL DEFAULT (STRFTIME('%s', 'now')),"
+                + "dateAdded            DATETIME NOT NULL DEFAULT (DATETIME(CURRENT_TIMESTAMP)),"
                 + "isUploaded           BOOLEAN NOT NULL DEFAULT FALSE,"
                 + "isViewed             BOOLEAN NOT NULL DEFAULT FALSE,"
-                + "dateUploaded         DATE,"
+                + "dateUploaded         DATETIME,"
                 + "hasProblem           BOOLEAN DEFAULT FALSE,"
                 + "notes                TEXT,"
                 + "FOREIGN KEY (instituteId) REFERENCES Institutes(id),"
@@ -209,13 +211,31 @@ public class DAO {
     }
 
     private static void addAdminUser() throws SQLException {
-        Statement statement = DB_CONNECTION.createStatement();
+        String hashedPassword = Hasher.encode("H.Admin.ly", Utils.getRandomString(10));
+        String insertQuery = "INSERT INTO Users (" +
+                "username," +
+                "password," +
+                "email," +
+                "firstName," +
+                "dateJoined," +
+                "isSuperuser," +
+                "isStaff," +
+                "isActive" +
+                ") VALUES (?,?,?,?,?,?,?,?);";
 
-        String hashedPassword = Hasher.encode("Admin", "Salt");
-        String insertQuery = "INSERT INTO Users (username, password, email, firstName, isSuperuser) VALUES ('Admin', '" + hashedPassword + "', 'admin@huia.ly', 'Admin', FALSE);";
-        statement.execute(insertQuery);
+        PreparedStatement pStatement = DB_CONNECTION.prepareStatement(insertQuery);
 
-        statement.close();
+        pStatement.setString(1, "Admin");
+        pStatement.setString(2, hashedPassword);
+        pStatement.setString(3, "admin@huia.ly");
+        pStatement.setString(4, "Admin");
+        pStatement.setString(5, LocalDateTime.now().toString());
+        pStatement.setBoolean(6, true);
+        pStatement.setBoolean(7, true);
+        pStatement.setBoolean(8, true);
+
+        pStatement.execute();
+        pStatement.close();
     }
 
     private static void addInstitute(String institute) throws SQLException {
@@ -235,6 +255,106 @@ public class DAO {
 
     public static String getDataDBUrl() {
         return "jdbc:sqlite:" + DataStorage.getDataPath().resolve(DATA_DB_NAME).toString();
+    }
+
+    public static User getUserByUsername(String username) throws SQLException {
+        String query = "SELECT   " +
+                "username       ," +
+                "password       ," +
+                "email          ," +
+                "firstName      ," +
+                "fatherName     ," +
+                "grandfatherName," +
+                "familyName     ," +
+                "nationality    ," +
+                "nationalId     ," +
+                "birthday       ," +
+                "gender         ," +
+                "dateJoined     ," +
+                "isSuperuser    ," +
+                "isStaff        ," +
+                "isActive       ," +
+                "lastLogin       " +
+                "FROM Users WHERE username=? COLLATE NOCASE";
+
+        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(query);
+        pStatement.setString(1, username);
+        ResultSet resultSet = pStatement.executeQuery();
+
+        User user = null;
+        if (resultSet.next()) {
+            user = new User();
+            user.setUsername(username);
+            user.setPassword(resultSet.getString("password"));
+            user.setEmail(resultSet.getString("email"));
+            user.setFirstName(resultSet.getString("firstName"));
+            user.setFatherName(resultSet.getString("fatherName"));
+            user.setGrandfatherName(resultSet.getString("grandfatherName"));
+            user.setFamilyName(resultSet.getString("familyName"));
+            user.setNationality(resultSet.getString("nationality"));
+            user.setNationalId(resultSet.getString("nationalId"));
+            String birthday = resultSet.getString("birthday");
+            user.setBirthday(birthday == null? null : LocalDate.parse(birthday));
+            String gender = resultSet.getString("gender");
+            user.setGender(Gender.MALE.name().equalsIgnoreCase(gender)? Gender.MALE : Gender.FEMALE);
+            String dateJoined = resultSet.getString("dateJoined");
+            user.setDateJoined(dateJoined == null? null : LocalDateTime.parse(dateJoined));
+            user.setSuperuser(resultSet.getBoolean("isSuperuser"));
+            user.setStaff(resultSet.getBoolean("isStaff"));
+            user.setActive(resultSet.getBoolean("isActive"));
+            String lastLogin = resultSet.getString("lastLogin");
+            user.setLastLogin(lastLogin == null? null : LocalDateTime.parse(lastLogin));
+        }
+        return user;
+    }
+
+    public static void updateUser(User user, String field, Object value) throws SQLException {
+        if (user.getId() > 0)
+            updateUserById(user.getId(), field, value);
+        else if (user.getUsername() != null && !user.getUsername().isEmpty())
+            updateUserByUsername(user.getUsername(), field, value);
+        else
+            throw new RuntimeException("Wrong User");
+    }
+
+    public static boolean updateUserById(long userId, String field, Object value) throws SQLException {
+        Map<String, Object> updateMap = new HashMap<>();
+        updateMap.put(field, value);
+        return updateUserById(userId, updateMap);
+    }
+
+    public static boolean updateUserById(long userId, Map<String, Object> updateMap) throws SQLException {
+        StringBuilder query = new StringBuilder("UPDATE Users SET ");
+        updateMap.keySet().forEach(key -> query.append(key).append("=?,"));
+        query.deleteCharAt(query.length() - 1);
+        query.append(" WHERE userId=?;");
+        PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
+        int i = 0;
+        for (; i < updateMap.values().size(); ++i) {
+            pStatement.setObject(i+1, updateMap.get(i));
+        }
+        pStatement.setLong(i, userId);
+        return pStatement.execute();
+    }
+
+    public static void updateUserByUsername(String username, String field, Object value) throws SQLException {
+        Map<String, Object> updateMap = new HashMap<>();
+        updateMap.put(field, value);
+        updateUserByUsername(username, updateMap);
+    }
+
+    public static void updateUserByUsername(String username, Map<String, Object> updateMap) throws SQLException {
+        StringBuilder query = new StringBuilder("UPDATE Users SET ");
+        updateMap.keySet().forEach(key -> query.append(String.format("%s=?,", key)));
+        query.deleteCharAt(query.length() - 1);
+        query.append(" WHERE username=?");
+        PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
+        int i = 1;
+        for (Map.Entry<String, Object> entry : updateMap.entrySet()) {
+            pStatement.setString(i++, (String) entry.getValue());
+        }
+        pStatement.setString(i, username);
+        pStatement.execute();
     }
 
     public static ObservableList<Subscriber> getOldSubscribers() throws SQLException {
@@ -329,7 +449,8 @@ public class DAO {
             subscriber.setGrandfatherName(resultSet.getString("grandfatherName"));
             subscriber.setFamilyName(resultSet.getString("familyName"));
 
-            subscriber.setBirthday(SQLUtils.timestampToDate(resultSet.getLong("birthday")));
+            String birthday = resultSet.getString("birthday");
+            subscriber.setBirthday(birthday==null? null : LocalDate.parse(birthday));
             subscriber.setNationalId(resultSet.getString("nationalId"));
             subscriber.setGender(Gender.valueOf(resultSet.getString("gender")));
 
@@ -399,7 +520,8 @@ public class DAO {
         pStatement.setString(4, subscriber.getFamilyName());
         pStatement.setString(5, subscriber.getNationality());
         pStatement.setString(6, subscriber.getNationalId());
-        pStatement.setLong(7, SQLUtils.dateToTimestamp(subscriber.getBirthday()));
+        LocalDate birthday = subscriber.getBirthday();
+        pStatement.setString(7, birthday==null? null : birthday.toString());
         pStatement.setString(8, subscriber.getGender().name());
         pStatement.setInt(9, subscriber.getInstitute().getId());
 

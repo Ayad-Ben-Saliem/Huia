@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXCheckBox?>
+<?import com.jfoenix.controls.JFXDatePicker?>
+<?import com.jfoenix.controls.JFXPasswordField?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import ly.rqmana.huia.java.controls.CustomComboBox?>
+
+<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="885.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.settings.AddNewUserWindowController">
+    <stylesheets>
+        <URL value="@../../css/theme.css" />
+        <URL value="@../../css/templates.css" />
+    </stylesheets>
+   <Label text="%ADD_NEW_USER">
+      <VBox.margin>
+         <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+      </VBox.margin>
+   </Label>
+    <FlowPane alignment="TOP_CENTER" columnHalignment="CENTER" hgap="8.0" vgap="32.0" VBox.vgrow="ALWAYS">
+        <HBox alignment="CENTER" focusTraversable="true">
+            <JFXTextField fx:id="firstNameTF" labelFloat="true" promptText="%FIRST_NAME" />
+            <Pane prefWidth="1.0" styleClass="separator" />
+            <JFXTextField fx:id="fatherNameTF" labelFloat="true" promptText="%FATHER_NAME" />
+            <Pane prefWidth="1.0" styleClass="separator" />
+            <JFXTextField fx:id="grandfatherNameTF" labelFloat="true" promptText="%GRANDFATHER_NAME" />
+            <Pane prefWidth="1.0" styleClass="separator" />
+            <JFXTextField fx:id="familyNameTF" labelFloat="true" promptText="%FAMILY_NAME" />
+        </HBox>
+        <JFXTextField fx:id="usernameTF" labelFloat="true" promptText="%USERNAME" />
+        <JFXPasswordField fx:id="passwordTF" labelFloat="true" promptText="%PASSWORD" />
+        <JFXTextField fx:id="emailTF" labelFloat="true" promptText="%EMAIL" />
+        <JFXTextField fx:id="nationality" labelFloat="true" promptText="%NATIONALITY" />
+        <JFXTextField fx:id="nationalId" labelFloat="true" promptText="%NATIONAL_ID" />
+        <JFXDatePicker fx:id="birthdayDP" overLay="true" promptText="%BIRTHDAY" />
+        <CustomComboBox fx:id="gender" labelFloat="true" prefWidth="235.0" promptText="%GENDER" />
+        <JFXCheckBox fx:id="isSuperuser" text="%IS_SUPERUSER" />
+        <JFXCheckBox fx:id="isStuff" text="%IS_STAFF" />
+        <JFXCheckBox fx:id="isActive" text="%IS_ACTIVE" />
+
+        <padding>
+          <Insets bottom="32.0" left="32.0" right="32.0" top="32.0" />
+        </padding>
+    </FlowPane>
+    <HBox alignment="CENTER" spacing="8.0" style="-fx-background-color: -rq-shadow1;">
+        <padding>
+            <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+        </padding>
+        <Separator visible="false" HBox.hgrow="ALWAYS" />
+        <JFXButton fx:id="cancelBtn" buttonType="RAISED" mnemonicParsing="false" prefWidth="100.0" styleClass="common-button" text="%CANCEL" />
+        <JFXButton fx:id="okBtn" buttonType="RAISED" mnemonicParsing="false" prefWidth="100.0" styleClass="common-button" text="%OK" />
+    </HBox>
+</VBox>

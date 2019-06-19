@@ -17,9 +17,7 @@
 <?import ly.rqmana.huia.java.controls.ContactField?>
 <?import ly.rqmana.huia.java.controls.CustomComboBox?>
 
-<VBox xmlns="http://javafx.com/javafx/8.0.172-ea"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="ly.rqmana.huia.java.controllers.RegistrationWindowController">
+<VBox fx:id="mainContainer" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.RegistrationWindowController">
     <stylesheets>
         <URL value="@../css/theme.css" />
         <URL value="@../css/templates.css" />

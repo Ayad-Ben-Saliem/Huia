@@ -1,17 +1,14 @@
 package ly.rqmana.huia.java;
 
 import javafx.application.Application;
-import javafx.scene.control.Alert;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
-import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
 import ly.rqmana.huia.java.util.Res;
-import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
 
 import java.util.Optional;
@@ -44,7 +41,7 @@ public class Main extends Application {
 
         Font.loadFont(getClass().getResource(Res.Font.CAIRO_SEMI_BOLD.getUrl()).toExternalForm(), 14);
 
-        Windows.MAIN_WINDOW.open();
+        Windows.ROOT_WINDOW.open();
         establishFingerprintDevice();
     }
 
