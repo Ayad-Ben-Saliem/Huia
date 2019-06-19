@@ -5,6 +5,7 @@ import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.JFXTextField;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Utils;
@@ -22,12 +23,7 @@ public class SignUpWindowController implements Controllable {
     public JFXButton enterBtn;
     public JFXButton cancelBtn;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-
-    }
-
-    public void setOnEnterBtnClicked(EventHandler<ActionEvent> handler) {
+     public void setOnEnterBtnClicked(EventHandler<ActionEvent> handler) {
         enterBtn.setOnAction(handler);
     }
 

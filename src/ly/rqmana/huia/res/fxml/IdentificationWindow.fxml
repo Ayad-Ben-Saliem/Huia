@@ -48,7 +48,7 @@
                         <Insets />
                     </HBox.margin>
                 </JFXTextField>
-                <JFXTextField fx:id="workIdTF" labelFloat="true" layoutX="10.0" layoutY="10.0" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="150.0" promptText="%FILTER_BY_WORK_ID" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;" HBox.hgrow="ALWAYS">
+                <JFXTextField fx:id="workIdTF" labelFloat="true" layoutX="10.0" layoutY="10.0" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="240.0" promptText="%FILTER_BY_WORK_ID" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 1 0 1;" HBox.hgrow="ALWAYS">
                     <HBox.margin>
                         <Insets />
                     </HBox.margin>

@@ -5,6 +5,9 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -13,6 +16,7 @@ import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.WindowEvent;
+import javafx.util.Pair;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controllers.settings.SettingsWindowController;
@@ -37,6 +41,7 @@ public class MainWindowController implements Controllable {
     @FXML public JFXButton registrationBtn;
     @FXML public JFXButton identificationBtn;
     @FXML public JFXButton settingsBtn;
+    @FXML public JFXButton identificationHistoryBtn;
 
     private Node registrationWindow;
     private Node identificationWindow;
@@ -175,12 +180,12 @@ public class MainWindowController implements Controllable {
 
     @Override
     public RegistrationWindowController getRegistrationWindowController() {
-        return registrationWindowController;
+        return (RegistrationWindowController) pageNodeMap.get(MainPage.REGISTRATION).getValue();
     }
 
     @Override
     public IdentificationWindowController getIdentificationWindowController() {
-        return identificationWindowController;
+        return (IdentificationWindowController) pageNodeMap.get(MainPage.IDENTIFICATION).getValue();
     }
 
     @Override

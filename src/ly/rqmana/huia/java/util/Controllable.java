@@ -11,7 +11,7 @@ import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import javax.xml.soap.Node;
 import java.util.Optional;
 
-public interface Controllable extends Initializable {
+public interface Controllable{
 
     /**
      * This should invokes when attached window is selected ti be viewed.

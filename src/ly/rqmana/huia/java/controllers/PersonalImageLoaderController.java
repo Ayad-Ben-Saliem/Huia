@@ -72,8 +72,8 @@ public class PersonalImageLoaderController implements Controllable {
         startCapturing();
     };
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    @FXML
+    private void initialize() {
 
         leftIV.setImage(grayPersonImage);
         rightIV.setImage(grayPersonImage);

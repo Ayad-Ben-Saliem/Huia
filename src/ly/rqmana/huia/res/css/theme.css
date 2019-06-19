@@ -46,6 +46,10 @@
     -fx-background-color: derive(-rq-accent-focus, 50%);
 }
 
+.common-button .glyph-icon{
+    -fx-fill: -rq-text-background;
+}
+
 .main-button {
     -fx-background-color: -rq-background;
     -fx-text-fill: -rq-text-background;
@@ -53,6 +57,11 @@
 
 .main-button:focused {
     -fx-background-color: derive(-rq-background, 50%);
+}
+
+.main-button:selected{
+    -fx-background-color: -rq-background-alt;
+    -fx-text-fill: -rq-text-background-alt;
 }
 
 .jfx-combo-box,
@@ -124,4 +133,21 @@
 
 .table-row-cell:selected {
     -fx-background-color: -rq-accent-unfocus;
+}
+
+
+.filters-box{
+    -fx-background-color: derive(-rq-background-alt, -7%);
+}
+
+.header-pane{
+    -fx-background-color: -rq-background;
+}
+
+.header-pane .label{
+    -fx-text-fill: -rq-text-background;
+}
+
+.header-pane .glyph-icon{
+    -fx-fill: -rq-text-background;
 }

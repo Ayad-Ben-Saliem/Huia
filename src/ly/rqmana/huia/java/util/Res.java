@@ -38,6 +38,7 @@ public final class Res {
         SETTINGS_WINDOW         (SETTING + "SettingsWindow.fxml"),
         DATABASE_SITTINGS_WINDOW(SETTING + "DatabaseSettingsWindow.fxml"),
         USERS_SITTINGS_WINDOW   (SETTING + "UsersSettingsWindow.fxml"),
+        IDENTIFICATION_HISTORY  ("IdentificationHistoryWindow.fxml"),
 
         ADD_CONTACTS_METHOD_WINDOW("AddContactMethodDialog.fxml"),
         PERSONAL_IMAGE_WINDOW("PersonalImageLoader.fxml"),

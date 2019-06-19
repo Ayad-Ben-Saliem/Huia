@@ -6,8 +6,11 @@ import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Subscriber;
 import ly.rqmana.huia.java.models.User;
+import ly.rqmana.huia.java.fingerprints.hand.Hand;
+import ly.rqmana.huia.java.models.*;
 import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.storage.DataStorage;
+import ly.rqmana.huia.java.util.SQLUtils;
 import ly.rqmana.huia.java.util.Utils;
 
 import java.sql.*;
@@ -17,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.Observable;
 
 public class DAO {
 
@@ -733,4 +738,62 @@ public class DAO {
             }
         };
     }
+
+    public static ObservableList<SubscriberIdentification> getSubscriberIdentifications(boolean identifiedOnly) throws SQLException {
+        ObservableList<SubscriberIdentification> identifications = FXCollections.observableArrayList();
+
+        String query = "SELECT "
+                + "Identifications.id,"
+                + "NewRegistrations.firstName AS subFirstName,"
+                + "NewRegistrations.fatherName AS subFatherName,"
+                + "NewRegistrations.grandfatherName AS subGrandfatherName,"
+                + "NewRegistrations.familyName AS subFamilyName,"
+                + "workId,"
+                + "datetime,"
+                + "isIdentified,"
+                + "Identifications.username,"
+                + "Users.firstName AS userFirstName,"
+                + "Users.fatherName AS userFatherName,"
+                + "Users.grandfatherName AS userGrandfatherName,"
+                + "Users.familyName AS userFamilyName"
+                + " FROM Identifications "
+                + " INNER JOIN NewRegistrations ON NewRegistrations.id = Identifications.subscriberId"
+                + " INNER JOIN Users ON Users.username = Identifications.username";
+
+        if (identifiedOnly)
+            query += " WHERE isIdentified = 1;";
+
+        Statement statement = DB_CONNECTION.createStatement();
+        ResultSet resultSet = statement.executeQuery(query);
+
+        while (resultSet.next()) {
+
+            SubscriberIdentification identification = new SubscriberIdentification();
+
+            identification.setId(resultSet.getLong("id"));
+            identification.setDateTime(SQLUtils.timestampToDateTime(resultSet.getLong("datetime")));
+            identification.setIdentified(resultSet.getBoolean("isIdentified"));
+
+            Subscriber subscriber = new Subscriber();
+            subscriber.setFirstName(resultSet.getString("subFirstName"));
+            subscriber.setFatherName(resultSet.getString("subFatherName"));
+            subscriber.setGrandfatherName(resultSet.getString("subGrandfatherName"));
+            subscriber.setFamilyName(resultSet.getString("subFamilyName"));
+            subscriber.setWorkId(resultSet.getString("workId"));
+            subscriber.setWorkId(resultSet.getString("workId"));
+
+
+            User user = new User();
+            user.setFirstName(resultSet.getString("userFirstName"));
+            user.setFatherName(resultSet.getString("userFatherName"));
+            user.setGrandfatherName(resultSet.getString("userGrandfatherName"));
+            user.setFamilyName(resultSet.getString("userFamilyName"));
+
+            identification.setSubscriber(subscriber);
+            identification.setUser(user);
+        }
+
+        return identifications;
+    }
+
 }
