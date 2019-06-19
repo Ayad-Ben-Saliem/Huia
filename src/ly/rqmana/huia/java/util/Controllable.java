@@ -11,7 +11,7 @@ import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import javax.xml.soap.Node;
 import java.util.Optional;
 
-public interface Controllable{
+public interface Controllable extends Initializable{
 
     /**
      * This should invokes when attached window is selected ti be viewed.
@@ -37,6 +37,10 @@ public interface Controllable{
 
     default IdentificationWindowController getIdentificationWindowController() {
         return getMainWindowController().getIdentificationWindowController();
+    }
+
+    default IdentificationsRecordsWindowController getIdentificationsRecordsWindowController() {
+        return getMainWindowController().getIdentificationsRecordsWindowController();
     }
 
     default SettingsWindowController getSettingsWindowController() {

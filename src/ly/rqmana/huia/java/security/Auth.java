@@ -1,6 +1,7 @@
 package ly.rqmana.huia.java.security;
 
 import com.jfoenix.controls.JFXDialog;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXMLLoader;
@@ -48,10 +49,16 @@ public class Auth {
             protected Boolean call() throws Exception {
                 User user = DAO.getUserByUsername(username);
 
-                if (Hasher.checkPassword(password, user.getPassword())) {
-                    currentUser.set(user);
-                    DAO.updateUserByUsername(username, "lastLogin", LocalDateTime.now().toString()).runAndGet();
-                    return true;
+                if (Hasher.checkPassword(password, user.getHashedPassword())) {
+                    if (user.isActive()) {
+                        currentUser.set(user);
+                        DAO.updateUserByUsername(username, "lastLogin", LocalDateTime.now().toString()).runAndGet();
+                        return true;
+                    } else {
+                        Platform.runLater(() -> loginDialogController.setAuthFailMsg(Utils.getI18nString("USER_NOT_ACTIVE")));
+                    }
+                } else {
+                    Platform.runLater(() -> loginDialogController.setAuthFailMsg(Utils.getI18nString("AUTH_FAILED")));
                 }
                 return false;
             }

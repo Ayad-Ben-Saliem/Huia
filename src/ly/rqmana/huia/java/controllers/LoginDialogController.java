@@ -30,8 +30,8 @@ public class LoginDialogController implements Controllable {
     @FXML Label authFailed;
     @FXML ProgressIndicator progress;
 
-    @FXML
-    private void initialize() {
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
 
         Platform.runLater(() -> Auth.getLoginDialog().setOnDialogOpened(event -> usernameTF.requestFocus()));
 
@@ -86,9 +86,12 @@ public class LoginDialogController implements Controllable {
         Threading.MAIN_EXECUTOR_SERVICE.submit(loginTask);
     }
 
+    public void setAuthFailMsg(String msg) {
+        authFailed.setText(msg);
+    }
+
     public void clearInputs() {
         usernameTF.clear();
         passwordTF.clear();
     }
-
 }

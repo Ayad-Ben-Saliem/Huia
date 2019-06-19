@@ -21,9 +21,11 @@ import ly.rqmana.huia.java.models.User;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Utils;
 
+import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.ResourceBundle;
 
-public class IdentificationHistoryWindowController implements Controllable {
+public class IdentificationsRecordsWindowController implements Controllable {
 
     @FXML private Label subscriberNameLabel;
     @FXML private Label subscriberWorkIdLabel;
@@ -51,10 +53,13 @@ public class IdentificationHistoryWindowController implements Controllable {
 
     private final ObservableList<SubscriberIdentification> cachedData = FXCollections.observableArrayList();
 
-    @FXML
-    private void initialize(){
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
         initComponents();
         initListeners();
+
+        lowerBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
+        upperBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
 
         for (int i = 0; i < 4; i++){
 
@@ -148,7 +153,7 @@ public class IdentificationHistoryWindowController implements Controllable {
         loadTask.addOnFailed(event -> {
             event.getSource().getException().printStackTrace();
         });
-        loadTask.runningProperty().addListener((observable, oldValue, newValue) -> getMainController().updateLoadingView(newValue));
+        loadTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
 
         Threading.MAIN_EXECUTOR_SERVICE.submit(loadTask);
     }

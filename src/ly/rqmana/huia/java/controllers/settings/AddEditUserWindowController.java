@@ -1,31 +1,31 @@
 package ly.rqmana.huia.java.controllers.settings;
 
-import com.jfoenix.controls.JFXCheckBox;
-import com.jfoenix.controls.JFXDatePicker;
-import com.jfoenix.controls.JFXPasswordField;
-import com.jfoenix.controls.JFXTextField;
+import com.jfoenix.controls.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Region;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
+import ly.rqmana.huia.java.controllers.PasswordReenterValidationDialogController;
 import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.User;
-import ly.rqmana.huia.java.util.Controllable;
-import ly.rqmana.huia.java.util.Utils;
-import ly.rqmana.huia.java.util.Window;
-import ly.rqmana.huia.java.util.Windows;
+import ly.rqmana.huia.java.security.Hasher;
+import ly.rqmana.huia.java.util.*;
 
+import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
-public class AddNewUserWindowController implements Controllable {
+public class AddEditUserWindowController implements Controllable {
 
     public Label title;
 
@@ -55,9 +55,12 @@ public class AddNewUserWindowController implements Controllable {
         Utils.setFieldRequired(usernameTF);
         Utils.setFieldRequired(passwordTF);
         Utils.setFieldRequired(firstNameTF);
+        passwordTF.setValidators(new PasswordValidator());
 
         gender.getItems().addAll(Gender.values());
         gender.setValue(Gender.MALE);
+
+        isActive.setSelected(true);
     }
 
     public void editUser(User user) {
@@ -100,47 +103,66 @@ public class AddNewUserWindowController implements Controllable {
     }
 
     @FXML
-    public void onOkBtnClicked(ActionEvent actionEvent) {
+    public void onOkBtnClicked(ActionEvent actionEvent) throws IOException {
         if (validate()) {
+            FXMLLoader fxmlLoader = new FXMLLoader(Res.Fxml.PASSWORD_REENTER_VALIDATOR_DIALOG.getUrl(), Utils.getBundle());
+            Region content = fxmlLoader.load();
+            PasswordReenterValidationDialogController controller = fxmlLoader.getController();
+            JFXDialog dialog = new JFXDialog(getRootStack(), content, JFXDialog.DialogTransition.CENTER);
+            controller.cancelBtn.setOnAction(event1 -> dialog.close());
+            controller.okBtn.setOnAction(event -> {
+                if (controller.validate(passwordTF.getText())) {
+                    // Password valid
+                    dialog.close();
+                    insetUpdateUser();
+                }
+            });
+            dialog.show();
+
+        }
+//        else {
+//            Windows.errorAlert(
+//                    Utils.getI18nString("ERROR"),
+//                    Utils.getI18nString("FILL_REQUIRED_FIELDS_FIRST"),
+//                    null,
+//                    AlertAction.OK
+//            );
+//        }
+    }
+
+    public void insetUpdateUser() {
+        Optional<AlertAction> alertAction = Windows.infoAlert(
+                Utils.getI18nString("SAVE_NEW_SITTING_HEADING"),
+                Utils.getI18nString("SAVE_NEW_SITTING_BODY"),
+                AlertAction.OK, AlertAction.CANCEL
+        );
+        if (alertAction.isPresent()) {
+            if (alertAction.get().equals(AlertAction.CANCEL))
+                return;
+
+            Task<Void> insertUpdateUserTask;
             if (editMode) {
                 // Register User
-
-                Task<Void> updateUserTask = DAO.updateUser(user, getUpdateMap());
-                updateUserTask.addOnSucceeded(event -> onCancelBtnClicked(null));
-                updateUserTask.addOnFailed(event -> {
-                    Throwable t = updateUserTask.getException();
-                    Windows.errorAlert(
-                            Utils.getI18nString("ERROR"),
-                            t.getLocalizedMessage(),
-                            t,
-                            AlertAction.OK
-                    );
-                });
-                Threading.MAIN_EXECUTOR_SERVICE.submit(updateUserTask);
+                insertUpdateUserTask = DAO.updateUser(user, getUpdateMap());
             } else {
                 // Register new User
-
-                user = constructUser();
-                Task<Void> insertUserTask = DAO.insertUser(user);
-                insertUserTask.addOnSucceeded(event -> onCancelBtnClicked(null));
-                insertUserTask.addOnFailed(event -> {
-                    Throwable t = insertUserTask.getException();
-                    Windows.errorAlert(
-                            Utils.getI18nString("ERROR"),
-                            t.getLocalizedMessage(),
-                            t,
-                            AlertAction.OK
-                    );
-                });
-                Threading.MAIN_EXECUTOR_SERVICE.submit(insertUserTask);
+                insertUpdateUserTask = DAO.insertUser(constructUser());
             }
-        } else {
-            Windows.errorAlert(
-                    Utils.getI18nString("ERROR"),
-                    Utils.getI18nString("FILL_REQUIRED_FIELDS_FIRST"),
-                    null,
-                    AlertAction.OK
-            );
+
+            insertUpdateUserTask.addOnSucceeded(event -> {
+                onCancelBtnClicked(null);
+                System.exit(0);
+            });
+            insertUpdateUserTask.addOnFailed(event -> {
+                Throwable t = insertUpdateUserTask.getException();
+                Windows.errorAlert(
+                        Utils.getI18nString("ERROR"),
+                        t.getLocalizedMessage(),
+                        t,
+                        AlertAction.OK
+                );
+            });
+            Threading.MAIN_EXECUTOR_SERVICE.submit(insertUpdateUserTask);
         }
     }
 
@@ -170,18 +192,19 @@ public class AddNewUserWindowController implements Controllable {
         Map<String, Object> updateMap = new HashMap<>();
 
         updateMap.put("username", usernameTF.getText());
-        updateMap.put("passwordTF", passwordTF.getText());
-        updateMap.put("firstNameTF", firstNameTF.getText());
-        updateMap.put("fatherNameTF", fatherNameTF.getText());
-        updateMap.put("grandfatherNameTF", grandfatherNameTF.getText());
-        updateMap.put("familyNameTF", familyNameTF.getText());
-        updateMap.put("emailTF", emailTF.getText());
+        String hashedPassword = Hasher.encode(passwordTF.getText(), Utils.getRandomString(10));
+        updateMap.put("password", hashedPassword);
+        updateMap.put("firstName", firstNameTF.getText());
+        updateMap.put("fatherName", fatherNameTF.getText());
+        updateMap.put("grandfatherName", grandfatherNameTF.getText());
+        updateMap.put("familyName", familyNameTF.getText());
+        updateMap.put("email", emailTF.getText());
         updateMap.put("nationality", nationality.getText());
         updateMap.put("nationalId", nationalId.getText());
         updateMap.put("passport", passportTF.getText());
         updateMap.put("familyId", familyIdTF.getText());
         updateMap.put("residence", residenceTF.getText());
-        updateMap.put("birthdayDP", birthdayDP.getValue());
+        updateMap.put("birthday", birthdayDP.getValue());
         updateMap.put("gender", gender.getValue());
         updateMap.put("isSuperuser", isSuperuser.isSelected());
         updateMap.put("isStaff", isStaff.isSelected());

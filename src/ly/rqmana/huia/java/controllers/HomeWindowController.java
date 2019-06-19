@@ -15,4 +15,9 @@ public class HomeWindowController implements Controllable {
     public void onLoginBtnClicked() {
         Auth.authenticate();
     }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+
+    }
 }

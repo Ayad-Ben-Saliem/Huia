@@ -100,10 +100,9 @@ public class User extends Person {
     }
 
     public String getHashedPassword() {
-        String newHashPassword = Hasher.encode(getPassword(), Utils.getRandomString(10));
-        if (hashedPassword == null || !hashedPassword.equals(newHashPassword))
-            hashedPassword = newHashPassword;
-
+        if (getPassword() != null) {
+            setHashedPassword(Hasher.encode(getPassword(), Utils.getRandomString(10)));
+        }
         return hashedPassword;
     }
 

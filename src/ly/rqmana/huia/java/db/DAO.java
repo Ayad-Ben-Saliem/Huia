@@ -338,7 +338,7 @@ public class DAO {
         if (resultSet.next()) {
             user = new User();
             user.setUsername(username);
-            user.setPassword(resultSet.getString("password"));
+            user.setHashedPassword(resultSet.getString("password"));
             user.setEmail(resultSet.getString("email"));
             user.setFirstName(resultSet.getString("firstName"));
             user.setFatherName(resultSet.getString("fatherName"));
@@ -389,16 +389,9 @@ public class DAO {
         return new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                StringBuilder query = new StringBuilder("UPDATE Users SET ");
-                updateMap.keySet().forEach(key -> query.append(key).append("=?,"));
-                query.deleteCharAt(query.length() - 1);
-                query.append(" WHERE userId=?;");
-                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
-                int i = 0;
-                for (; i < updateMap.values().size(); ++i) {
-                    pStatement.setObject(i+1, updateMap.get(i));
-                }
-                pStatement.setLong(i, userId);
+                Map<String, Object> filterMap = new HashMap<>();
+                filterMap.put("id", userId);
+                PreparedStatement pStatement = setUpdateMap("Users", updateMap, filterMap);
                 pStatement.execute();
 
                 return null;
@@ -416,16 +409,9 @@ public class DAO {
         return new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                StringBuilder query = new StringBuilder("UPDATE Users SET ");
-                updateMap.keySet().forEach(key -> query.append(String.format("%s=?,", key)));
-                query.deleteCharAt(query.length() - 1);
-                query.append(" WHERE username=?");
-                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
-                int i = 1;
-                for (Map.Entry<String, Object> entry : updateMap.entrySet()) {
-                    pStatement.setString(i++, (String) entry.getValue());
-                }
-                pStatement.setString(i, username);
+                Map<String, Object> filterMap = new HashMap<>();
+                filterMap.put("username", username);
+                PreparedStatement pStatement = setUpdateMap("Users", updateMap, filterMap);
                 pStatement.execute();
 
                 return null;
@@ -794,6 +780,26 @@ public class DAO {
         }
 
         return identifications;
+    }
+
+    private static PreparedStatement setUpdateMap(String tableName, Map<String, Object> updateMap, Map<String, Object> filterMap) throws SQLException {
+        StringBuilder query = new StringBuilder("UPDATE Users SET ");
+        updateMap.keySet().forEach(key -> query.append(String.format("%s=?,", key)));
+        query.deleteCharAt(query.length() - 1);
+
+        query.append(" WHERE ");
+        filterMap.keySet().forEach(key -> query.append(String.format("%s=? AND ", key)));
+        query.delete(query.length() - 5, query.length()).append(";");
+
+        PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
+        int i = 1;
+        for (Map.Entry<String, Object> entry : updateMap.entrySet()) {
+            pStatement.setObject(i++, entry.getValue());
+        }
+        for (Map.Entry<String, Object> entry : filterMap.entrySet()) {
+            pStatement.setObject(i++, entry.getValue());
+        }
+        return pStatement;
     }
 
 }

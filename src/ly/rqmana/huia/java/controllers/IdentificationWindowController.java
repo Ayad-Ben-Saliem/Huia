@@ -89,9 +89,8 @@ public class IdentificationWindowController implements Controllable {
     private FilteredList<Subscriber> filteredList;
     private Predicate<Subscriber> subscriberPredicate;
 
-    @FXML
-    private void initialize() {
-
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
         Task<Boolean> loadTask = new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
@@ -234,12 +233,7 @@ public class IdentificationWindowController implements Controllable {
 
         Subscriber subscriber = selectedSubscriber.get();
         if (subscriber == null) {
-            Windows.errorAlert(
-                    Utils.getI18nString("ERROR"),
-                    Utils.getI18nString("SELECT_SUBSCRIBER_FIRST"),
-                    null,
-                    AlertAction.OK
-            );
+            showSelectSubscriberFirstAlert();
             return;
         }
 
@@ -251,12 +245,7 @@ public class IdentificationWindowController implements Controllable {
             try {
                 identificationId = DAO.insertSubscriberIdentification(subscriber);
             } catch (SQLException e) {
-                Windows.errorAlert(
-                        Utils.getI18nString("ERROR"),
-                        Utils.getI18nString("INSERT_IDENTIFICATION_ERROR_BODY"),
-                        e,
-                        AlertAction.OK
-                );
+                showInsertIdentificationErrorAlert(e);
                 return;
             }
 
@@ -272,38 +261,21 @@ public class IdentificationWindowController implements Controllable {
                 Finger scannedFinger = captureFingerTask.getValue();
                 // if the user cancels capturing null finger is returned
                 if (scannedFinger == null || scannedFinger.isEmpty()) {
-                    Task<Void> updateSubscriberIdentificationTask = DAO.updateSubscriberIdentification(
-                        identificationId,
-                        subscriber,
-                        false,
-                        Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED"));
-                updateSubscriberIdentificationTask.addOnFailed(event1 -> {
-                    Throwable t = updateSubscriberIdentificationTask.getException();
-                        Windows.errorAlert(
-                                Utils.getI18nString("IDENTIFICATION_CANCELLED_ERROR_HEADING"),
-                                Utils.getI18nString("IDENTIFICATION_CANCELLED_ERROR_BODY"),
-                                t,
-                                AlertAction.OK
-                        );
-                    });
-                Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
+                    String notes =  Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED");
+                    Task<Void> updateSubscriberIdentificationTask = DAO.updateSubscriberIdentification(identificationId, subscriber,false, notes);
+                    updateSubscriberIdentificationTask.addOnSucceeded(event2 -> showIdentificationProcessCanceledAlert());
+                    updateSubscriberIdentificationTask.addOnFailed(event2 -> showUpdateIdentificationErrorAlert(updateSubscriberIdentificationTask.getException()));
+                    Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
                     return;
                 }
 
                 if (!subscriber.isActive()) {
-                    Windows.warningAlert(
-                            Utils.getI18nString("NOT_ACTIVE_SUBSCRIBER_WARRING_HEADING"),
-                            Utils.getI18nString("NOT_ACTIVE_SUBSCRIBER_WARRING_BODY"),
-                            AlertAction.OK);
+                    showSubscriberNotActiveAlert();
                     return;
                 }
 
                 if (!subscriber.hasFingerprint()) {
-                    Optional<AlertAction> alertAction = Windows.infoAlert(
-                            Utils.getI18nString("ADD_MISSING_FINGERPRINTS_HEADING"),
-                            Utils.getI18nString("ADD_MISSING_FINGERPRINTS_BODY"),
-                            AlertAction.NO, AlertAction.YES
-                    );
+                    Optional<AlertAction> alertAction = showAddMissingFingerprintAlert();
 
                     if (alertAction.isPresent()) {
                         if (alertAction.get().equals(AlertAction.YES)) {
@@ -326,37 +298,25 @@ public class IdentificationWindowController implements Controllable {
 
             matchFingerprintsTemplateTask.addOnSucceeded(e -> {
                 boolean match = (Boolean) e.getSource().getValue();
-                Task<Void> updateSubscriberIdentificationTask = DAO.updateSubscriberIdentification(
-                        identificationId,
-                        subscriber,
-                        match,
-                        match ? null : Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED"));
-
-                updateSubscriberIdentificationTask.addOnSucceeded(event1 -> showIdentificationStateError(match, subscriber, identificationId));
-
-                updateSubscriberIdentificationTask.addOnFailed(event1 -> {
+                String notes = match ? null : Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED");
+                Task<Void> updateSubscriberIdentificationTask = DAO.updateSubscriberIdentification(identificationId, subscriber, match, notes);
+                updateSubscriberIdentificationTask.addOnSucceeded(event2 -> showIdentificationState(match, subscriber, identificationId));
+                updateSubscriberIdentificationTask.addOnFailed(event2 -> {
                     Throwable t = updateSubscriberIdentificationTask.getException();
-                    Windows.errorAlert(
-                            Utils.getI18nString("ERROR"),
-                            Utils.getI18nString("UPDATE_IDENTIFICATION_ERROR_BODY"),
-                            t,
-                            AlertAction.OK
-                    );
+                    showUpdateIdentificationErrorAlert(t);
                 });
 
                 Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
             });
 
-            matchFingerprintsTemplateTask.addOnFailed(e -> Windows.errorAlert(
-                    Utils.getI18nString("ERROR"),
-                    Utils.getI18nString("UPDATE_IDENTIFICATION_ERROR_BODY"),
-                    e.getSource().getException(),
-                    AlertAction.OK
-            ));
+            matchFingerprintsTemplateTask.addOnFailed(e -> {
+                Throwable t = matchFingerprintsTemplateTask.getException();
+                showFailMatchFingerprintsAlert(t);
+            });
             Threading.MAIN_EXECUTOR_SERVICE.submit(matchFingerprintsTemplateTask);
         });
 
-        openDeviceTask.addOnFailed(event -> {
+        openDeviceTask.addOnFailed(event1 -> {
             Optional<AlertAction> result = Windows.showFingerprintDeviceError(event.getSource().getException());
             if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN) {
                 onFingerprintBtnClicked(null);
@@ -364,6 +324,7 @@ public class IdentificationWindowController implements Controllable {
         });
 
         Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
+        });
     }
 
     private void showIdentificationState(boolean state, @Nullable Subscriber subscriber, long identificationId) {
@@ -389,4 +350,65 @@ public class IdentificationWindowController implements Controllable {
                     AlertAction.OK);
         }
     }
+
+    private void showFailMatchFingerprintsAlert(Throwable t) {
+        Windows.errorAlert(
+                Utils.getI18nString("ERROR"),
+                Utils.getI18nString("MATCH_FINGERPRINTS_TEMPLATE_FAILED"),
+                t,
+                AlertAction.OK);
+    }
+
+    private Optional<AlertAction> showAddMissingFingerprintAlert() {
+        return Windows.infoAlert(
+                Utils.getI18nString("ADD_MISSING_FINGERPRINTS_HEADING"),
+                Utils.getI18nString("ADD_MISSING_FINGERPRINTS_BODY"),
+                AlertAction.NO, AlertAction.YES
+        );
+    }
+
+    private void showSubscriberNotActiveAlert() {
+        Windows.warningAlert(
+                Utils.getI18nString("NOT_ACTIVE_SUBSCRIBER_WARRING_HEADING"),
+                Utils.getI18nString("NOT_ACTIVE_SUBSCRIBER_WARRING_BODY"),
+                AlertAction.OK);
+    }
+
+    private void showIdentificationProcessCanceledAlert() {
+        Windows.errorAlert(
+                Utils.getI18nString("IDENTIFICATION_CANCELLED_ERROR_HEADING"),
+                Utils.getI18nString("IDENTIFICATION_CANCELLED_ERROR_BODY"),
+                null,
+                AlertAction.OK
+        );
+    }
+
+    private void showInsertIdentificationErrorAlert(Throwable t) {
+        Windows.errorAlert(
+                Utils.getI18nString("ERROR"),
+                Utils.getI18nString("INSERT_IDENTIFICATION_ERROR_BODY"),
+                t,
+                AlertAction.OK
+        );
+    }
+
+    private void showUpdateIdentificationErrorAlert(Throwable t) {
+        Windows.errorAlert(
+                Utils.getI18nString("ERROR"),
+                Utils.getI18nString("UPDATE_IDENTIFICATION_ERROR_BODY"),
+                t,
+                AlertAction.OK
+        );
+
+    }
+
+    private void showSelectSubscriberFirstAlert() {
+        Windows.errorAlert(
+                Utils.getI18nString("ERROR"),
+                Utils.getI18nString("SELECT_SUBSCRIBER_FIRST"),
+                null,
+                AlertAction.OK
+        );
+    }
+
 }

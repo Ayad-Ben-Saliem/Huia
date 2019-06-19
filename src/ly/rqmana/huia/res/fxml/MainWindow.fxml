@@ -8,8 +8,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 
-
- <BorderPane xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.MainWindowController">
+<BorderPane xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.MainWindowController">
      <center>
        <StackPane fx:id="centralStack" prefHeight="400.0" prefWidth="720.0" BorderPane.alignment="CENTER" />
      </center>
@@ -17,17 +16,21 @@
          <HBox BorderPane.alignment="CENTER">
              <JFXButton fx:id="registrationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%REGISTRATION_PAGE" HBox.hgrow="ALWAYS">
             <HBox.margin>
-                <Insets top="1.0" />
+                <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
             </HBox.margin>
          </JFXButton>
-             <JFXButton fx:id="identificationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%AUTHENTICATION_PAGE" HBox.hgrow="ALWAYS">
+             <JFXButton fx:id="identificationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%IDENTIFICATION_PAGE" HBox.hgrow="ALWAYS">
             <HBox.margin>
-                <Insets top="1.0" />
+                <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
             </HBox.margin>
          </JFXButton>
+         <JFXButton fx:id="identificationsRecordsBtn" layoutX="275.0" layoutY="11.0" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%IDENTIFICATIONS_RECORDS_PAGE" HBox.hgrow="ALWAYS">
+            <HBox.margin>
+               <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+            </HBox.margin></JFXButton>
          <JFXButton fx:id="settingsBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%SETTINGS" HBox.hgrow="ALWAYS">
             <HBox.margin>
-                <Insets top="1.0" />
+                <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
             </HBox.margin>
          </JFXButton>
          </HBox>

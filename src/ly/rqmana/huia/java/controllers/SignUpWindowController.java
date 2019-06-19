@@ -30,4 +30,9 @@ public class SignUpWindowController implements Controllable {
     public void setOnCancelBtnClicked(EventHandler<ActionEvent> handler) {
         cancelBtn.setOnAction(handler);
     }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+
+    }
 }

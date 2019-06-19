@@ -80,7 +80,7 @@ public class UsersSettingsWindowController implements Controllable {
         if (Auth.getCurrentUser().isSuperuser()) {
             FXMLLoader fxmlLoader = new FXMLLoader(Res.Fxml.ADD_NEW_USER_WINDOW.getUrl(), Utils.getBundle());
             Region content = fxmlLoader.load();
-            AddNewUserWindowController controller = fxmlLoader.getController();
+            AddEditUserWindowController controller = fxmlLoader.getController();
             controller.editUser(selectedUser.get());
             addEditUserDialog = new JFXDialog(getRootStack(), content, JFXDialog.DialogTransition.CENTER);
             addEditUserDialog.show();

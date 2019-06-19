@@ -1,22 +1,15 @@
 package ly.rqmana.huia.java.controllers;
 
 import com.jfoenix.controls.JFXButton;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
-import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.WindowEvent;
-import javafx.util.Pair;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controllers.settings.SettingsWindowController;
@@ -32,7 +25,6 @@ import ly.rqmana.huia.java.util.Windows;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class MainWindowController implements Controllable {
@@ -40,15 +32,17 @@ public class MainWindowController implements Controllable {
     @FXML public StackPane centralStack;
     @FXML public JFXButton registrationBtn;
     @FXML public JFXButton identificationBtn;
+    @FXML public JFXButton identificationsRecordsBtn;
     @FXML public JFXButton settingsBtn;
-    @FXML public JFXButton identificationHistoryBtn;
 
     private Node registrationWindow;
     private Node identificationWindow;
+    private Node identificationsRecordsWindow;
     private Node settingsWindow;
 
     private RegistrationWindowController registrationWindowController;
     private IdentificationWindowController identificationWindowController;
+    private IdentificationsRecordsWindowController identificationsRecordsWindowController;
     private SettingsWindowController settingsWindowController;
 
     private EventHandler<WindowEvent> windowEventHandler;
@@ -56,6 +50,7 @@ public class MainWindowController implements Controllable {
     enum SelectedPage {
         REGISTRATION,
         IDENTIFICATION,
+        IDENTIFICATIONS_RECORD,
         SETTINGS
     }
 
@@ -64,12 +59,13 @@ public class MainWindowController implements Controllable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-        centralStack.getChildren().addAll(getRegistrationWindow(), getIdentificationWindow(), getSettingsWindow());
+        centralStack.getChildren().addAll(getRegistrationWindow(), getIdentificationWindow(), getIdentificationsRecordsWindow(), getSettingsWindow());
 
         selectedPageProperty.addListener((observable, oldValue, newValue) -> activeTab(newValue));
 
         registrationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.REGISTRATION));
         identificationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.IDENTIFICATION));
+        identificationsRecordsBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.IDENTIFICATIONS_RECORD));
         settingsBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.SETTINGS));
 
         User currentUser = Auth.getCurrentUser();
@@ -114,6 +110,7 @@ public class MainWindowController implements Controllable {
     private void activeTab(SelectedPage selectedPage) {
         activeBtn(registrationBtn, selectedPage.equals(SelectedPage.REGISTRATION));
         activeBtn(identificationBtn, selectedPage.equals(SelectedPage.IDENTIFICATION));
+        activeBtn(identificationsRecordsBtn, selectedPage.equals(SelectedPage.IDENTIFICATIONS_RECORD));
         activeBtn(settingsBtn, selectedPage.equals(SelectedPage.SETTINGS));
 
         switch (selectedPage) {
@@ -122,6 +119,9 @@ public class MainWindowController implements Controllable {
                 break;
             case IDENTIFICATION:
                 getIdentificationWindow().toFront();
+                break;
+            case IDENTIFICATIONS_RECORD:
+                getIdentificationsRecordsWindow().toFront();
                 break;
             case SETTINGS:
                 getSettingsWindow().toFront();
@@ -135,9 +135,6 @@ public class MainWindowController implements Controllable {
         else
             button.setStyle("-fx-background-color: -rq-background;-fx-text-fill: -rq-text-background;");
     }
-
-
-
 
     private Node getRegistrationWindow() {
         if (registrationWindow == null) {
@@ -165,6 +162,19 @@ public class MainWindowController implements Controllable {
         return identificationWindow;
     }
 
+    private Node getIdentificationsRecordsWindow() {
+        if (identificationsRecordsWindow == null) {
+            try {
+                FXMLLoader loader = new FXMLLoader(Res.Fxml.IDENTIFICATIONS_RECORDS.getUrl(), Utils.getBundle());
+                identificationsRecordsWindow = loader.load();
+                identificationsRecordsWindowController = loader.getController();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return identificationsRecordsWindow;
+    }
+
     private Node getSettingsWindow() {
         if (settingsWindow == null) {
             try {
@@ -180,12 +190,17 @@ public class MainWindowController implements Controllable {
 
     @Override
     public RegistrationWindowController getRegistrationWindowController() {
-        return (RegistrationWindowController) pageNodeMap.get(MainPage.REGISTRATION).getValue();
+        return registrationWindowController;
     }
 
     @Override
     public IdentificationWindowController getIdentificationWindowController() {
-        return (IdentificationWindowController) pageNodeMap.get(MainPage.IDENTIFICATION).getValue();
+        return identificationWindowController;
+    }
+
+    @Override
+    public IdentificationsRecordsWindowController getIdentificationsRecordsWindowController() {
+        return identificationsRecordsWindowController;
     }
 
     @Override

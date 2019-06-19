@@ -1,10 +1,13 @@
 package ly.rqmana.huia.java.util;
 
+import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.base.IFXValidatableControl;
 import com.jfoenix.validation.base.ValidatorBase;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBoxBase;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextInputControl;
 
 public class RequiredFieldValidator extends ValidatorBase {
     {
@@ -14,10 +17,11 @@ public class RequiredFieldValidator extends ValidatorBase {
     @Override
     protected void eval() {
         Node srcNode = srcControl.get();
-        if (srcNode instanceof JFXTextField) {
-            JFXTextField textField = (JFXTextField) srcNode;
-            textField.resetValidation();
-            if (textField.getText().isEmpty()) {
+
+        if (srcNode instanceof TextInputControl) {
+            ((IFXValidatableControl) srcNode).resetValidation();
+            String text = ((TextInputControl) srcNode).getText();
+            if (text.isEmpty()) {
                 hasErrors.set(true);
             } else {
                 hasErrors.set(false);
