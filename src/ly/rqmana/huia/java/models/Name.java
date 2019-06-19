@@ -32,48 +32,33 @@ public class Name {
     public String getFormattedName(NameFormat nameFormat){
         switch (nameFormat) {
             case FAMILY_FIRST:
-                if (firstName == null || firstName.isEmpty()) {
-//                    throw new RuntimeException("Set firstName first");
-                }
-                if (familyName == null || familyName.isEmpty()) {
-//                    throw new RuntimeException("Set familyName first");
-                }
-                return getFamilyName() + " " + getFirstName();
+                return getTwoSegmentName(familyName, firstName);
             case FIRST_FATHER:
-                if (firstName == null || firstName.isEmpty()) {
-//                    throw new RuntimeException("Set firstName first");
-                }
-                if (fatherName == null || fatherName.isEmpty()) {
-//                    throw new RuntimeException("Set fatherName first");
-                }
-                return getFirstName() + " " + getFatherName();
+                return getTwoSegmentName(firstName, fatherName);
             case FIRST_FAMILY:
-                if (firstName == null || firstName.isEmpty()) {
-//                    throw new RuntimeException("Set firstName first");
-                }
-                if (familyName == null || familyName.isEmpty()) {
-//                    throw new RuntimeException("Set familyName first");
-                }
-                return getFirstName() + " " + getFamilyName();
+                return getTwoSegmentName(firstName, familyName);
             case FULL_NAME:
-                if (firstName == null || firstName.isEmpty()) {
-//                    throw new RuntimeException("Set firstName first");
-                }
-                if (fatherName == null || fatherName.isEmpty()) {
-                    //throw new RuntimeException("Set fatherName first");
-                }
-                if (familyName == null || familyName.isEmpty()) {
-//                    throw new RuntimeException("Set familyName first");
-                }
-                String result = firstName + " " + fatherName;
-                if (grandfatherName != null && !grandfatherName.isEmpty()) {
-                    result += " " + grandfatherName;
-                }
-                result += " " + familyName;
-                return result;
+                String fullName = getTwoSegmentName(firstName, familyName);
+//                if (fullName==null) return null;
+                fullName = getTwoSegmentName(fullName, grandfatherName);
+//                if (fullName==null) return null;
+                return getTwoSegmentName(fullName, familyName);
             default:
-                return "error";
+                return null;
         }
+    }
+
+    private String getTwoSegmentName(String first, String second) {
+        String result = "";
+        if (first != null && !first.isEmpty()) {
+            result = first;
+        }
+        if (second != null && !second.isEmpty()) {
+            if (!result.isEmpty())
+                result += " ";
+            result += second;
+        }
+        return result;
     }
 
     public String getFirstName() {

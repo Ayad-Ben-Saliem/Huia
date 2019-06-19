@@ -101,6 +101,10 @@ public class Person {
         return name;
     }
 
+    public void setPassportNumber(String passportNumber) {
+        passport.setNumber(passportNumber);
+    }
+
     public Passport getPassport() {
         return passport;
     }

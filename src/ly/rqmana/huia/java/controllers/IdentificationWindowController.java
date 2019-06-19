@@ -220,16 +220,21 @@ public class IdentificationWindowController implements Controllable {
             Finger scannedFinger = FingerprintManager.device().captureFinger(FingerID.UNKNOWN);
             // if the user cancels capturing null finger is returned
             if (scannedFinger == null || scannedFinger.isEmpty()) {
-                try {
-                    DAO.updateSubscriberIdentification(identificationId, subscriber, false, Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED"));
-                } catch (SQLException e) {
+                Task<Void> updateSubscriberIdentificationTask = DAO.updateSubscriberIdentification(
+                        identificationId,
+                        subscriber,
+                        false,
+                        Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED"));
+                updateSubscriberIdentificationTask.addOnFailed(event1 -> {
+                    Throwable t = updateSubscriberIdentificationTask.getException();
                     Windows.errorAlert(
                             Utils.getI18nString("IDENTIFICATION_CANCELLED_ERROR_HEADING"),
                             Utils.getI18nString("IDENTIFICATION_CANCELLED_ERROR_BODY"),
-                            e,
+                            t,
                             AlertAction.OK
                     );
-                }
+                });
+                Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
                 return;
             }
 
@@ -258,7 +263,7 @@ public class IdentificationWindowController implements Controllable {
                 return;
             }
 
-            Task<Boolean> task = new Task<Boolean>() {
+            Task<Boolean> matchFingerprintsTemplateTask = new Task<Boolean>() {
 
                 @Override
                 protected Boolean call() throws Exception {
@@ -268,28 +273,36 @@ public class IdentificationWindowController implements Controllable {
                 }
             };
 
-            task.addOnSucceeded(e -> {
+            matchFingerprintsTemplateTask.addOnSucceeded(e -> {
                 boolean match = (Boolean) e.getSource().getValue();
-                try {
-                    DAO.updateSubscriberIdentification(identificationId, subscriber, match, match? null : Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED"));
-                } catch (SQLException ex) {
+                Task<Void> updateSubscriberIdentificationTask = DAO.updateSubscriberIdentification(
+                        identificationId,
+                        subscriber,
+                        match,
+                        match ? null : Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED"));
+
+                updateSubscriberIdentificationTask.addOnSucceeded(event1 -> showIdentificationStateError(match, subscriber, identificationId));
+
+                updateSubscriberIdentificationTask.addOnFailed(event1 -> {
+                    Throwable t = updateSubscriberIdentificationTask.getException();
                     Windows.errorAlert(
                             Utils.getI18nString("ERROR"),
                             Utils.getI18nString("UPDATE_IDENTIFICATION_ERROR_BODY"),
-                            ex,
+                            t,
                             AlertAction.OK
                     );
-                }
-                showIdentificationStateError(match, subscriber, identificationId);
+                });
+
+                Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
             });
 
-            task.addOnFailed(e -> Windows.errorAlert(
+            matchFingerprintsTemplateTask.addOnFailed(e -> Windows.errorAlert(
                     Utils.getI18nString("ERROR"),
                     Utils.getI18nString("UPDATE_IDENTIFICATION_ERROR_BODY"),
                     e.getSource().getException(),
                     AlertAction.OK
             ));
-            Threading.MAIN_EXECUTOR_SERVICE.submit(task);
+            Threading.MAIN_EXECUTOR_SERVICE.submit(matchFingerprintsTemplateTask);
         });
 
         openDeviceTask.addOnFailed(event -> {

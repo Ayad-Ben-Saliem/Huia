@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.settings.DatabaseSettingsWindow">
+<VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" style="-fx-background-color: -rq-background-alt;" fx:controller="ly.rqmana.huia.java.controllers.settings.DatabaseSettingsWindowController">
     <stylesheets>
         <URL value="@../../css/theme.css" />
         <URL value="@../../css/templates.css" />

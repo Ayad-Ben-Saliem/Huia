@@ -19,6 +19,8 @@ import ly.rqmana.huia.java.controllers.settings.SettingsWindowController;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
+import ly.rqmana.huia.java.models.User;
+import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Res;
 import ly.rqmana.huia.java.util.Utils;
@@ -59,13 +61,24 @@ public class MainWindowController implements Controllable {
 
         centralStack.getChildren().addAll(getRegistrationWindow(), getIdentificationWindow(), getSettingsWindow());
 
-        selectedPageProperty.addListener((observable, oldValue, newValue) -> this.activeTab(newValue));
+        selectedPageProperty.addListener((observable, oldValue, newValue) -> activeTab(newValue));
 
         registrationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.REGISTRATION));
         identificationBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.IDENTIFICATION));
         settingsBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.SETTINGS));
 
-        registrationBtn.fire();
+        User currentUser = Auth.getCurrentUser();
+        if (currentUser.isSuperuser())
+            registrationBtn.fire();
+        else {
+            settingsBtn.setDisable(true);
+            settingsBtn.setManaged(false);
+            if (!currentUser.isStaff()) {
+                registrationBtn.setDisable(true);
+                registrationBtn.setManaged(false);
+            }
+            identificationBtn.fire();
+        }
     }
 
     @FXML
@@ -116,7 +129,6 @@ public class MainWindowController implements Controllable {
             button.setStyle("-fx-background-color: -rq-background-alt;-fx-text-fill: -rq-text-background-alt;");
         else
             button.setStyle("-fx-background-color: -rq-background;-fx-text-fill: -rq-text-background;");
-
     }
 
 

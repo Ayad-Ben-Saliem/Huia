@@ -3,9 +3,12 @@ package ly.rqmana.huia.java.util;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.StackPane;
 import ly.rqmana.huia.java.controllers.*;
+import ly.rqmana.huia.java.controllers.settings.DatabaseSettingsWindowController;
 import ly.rqmana.huia.java.controllers.settings.SettingsWindowController;
+import ly.rqmana.huia.java.controllers.settings.UsersSettingsWindowController;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 
+import javax.xml.soap.Node;
 import java.util.Optional;
 
 public interface Controllable extends Initializable {
@@ -38,6 +41,14 @@ public interface Controllable extends Initializable {
 
     default SettingsWindowController getSettingsWindowController() {
         return getMainWindowController().getSettingsWindowController();
+    }
+
+    default public DatabaseSettingsWindowController getDatabaseSettingsWindowController() {
+        return getSettingsWindowController().getDatabaseSettingsWindowController();
+    }
+
+    default public UsersSettingsWindowController getUsersSettingsWindowController() {
+        return getSettingsWindowController().getUsersSettingsWindowController();
     }
 
     default StackPane getRootStack() {

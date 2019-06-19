@@ -2,20 +2,21 @@ package ly.rqmana.huia.java.db;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Subscriber;
 import ly.rqmana.huia.java.models.User;
 import ly.rqmana.huia.java.security.Auth;
-import ly.rqmana.huia.java.security.Hasher;
 import ly.rqmana.huia.java.storage.DataStorage;
 import ly.rqmana.huia.java.util.Utils;
 
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class DAO {
 
@@ -34,9 +35,9 @@ public class DAO {
     public static void initializeDB() throws SQLException {
         createTables();
 
-        addAdminUser();
+        insertAdminUser().runAndGet();
 
-        addInstitute("الحديد");
+        insertInstitute("الحديد").runAndGet();
     }
 
     private static void createTables() throws SQLException {
@@ -81,6 +82,9 @@ public class DAO {
                 + "nationalId        TEXT,"
                 + "birthday          DATETIME,"
                 + "gender            TEXT,"
+                + "passport          TEXT,"
+                + "familyId          TEXT,"
+                + "residence         TEXT,"
                 + "dateJoined        DATETIME,"
                 + "isSuperuser       BOOLEAN NOT NULL,"
                 + "isStaff           BOOLEAN NOT NULL,"
@@ -210,41 +214,85 @@ public class DAO {
         statement.close();
     }
 
-    private static void addAdminUser() throws SQLException {
-        String hashedPassword = Hasher.encode("H.Admin.ly", Utils.getRandomString(10));
-        String insertQuery = "INSERT INTO Users (" +
-                "username," +
-                "password," +
-                "email," +
-                "firstName," +
-                "dateJoined," +
-                "isSuperuser," +
-                "isStaff," +
-                "isActive" +
-                ") VALUES (?,?,?,?,?,?,?,?);";
-
-        PreparedStatement pStatement = DB_CONNECTION.prepareStatement(insertQuery);
-
-        pStatement.setString(1, "Admin");
-        pStatement.setString(2, hashedPassword);
-        pStatement.setString(3, "admin@huia.ly");
-        pStatement.setString(4, "Admin");
-        pStatement.setString(5, LocalDateTime.now().toString());
-        pStatement.setBoolean(6, true);
-        pStatement.setBoolean(7, true);
-        pStatement.setBoolean(8, true);
-
-        pStatement.execute();
-        pStatement.close();
+    private static Task<Void> insertAdminUser() {
+        User adminUser = new User();
+        adminUser.setUsername("Admin");
+        adminUser.setPassword("Admin");
+        adminUser.setFirstName("Admin");
+        adminUser.setSuperuser(true);
+        adminUser.setStaff(true);
+        adminUser.setActive(true);
+        return insertUser(adminUser);
     }
 
-    private static void addInstitute(String institute) throws SQLException {
-        Statement statement = DB_CONNECTION.createStatement();
+    public static Task<Void> insertUser(User user) {
+        return new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                String insertQuery = "INSERT INTO Users (" +
+                        "username," +
+                        "password," +
+                        "email," +
+                        "firstName," +
+                        "fatherName," +
+                        "grandfatherName," +
+                        "familyName," +
+                        "nationality," +
+                        "nationalId," +
+                        "birthday," +
+                        "gender," +
+                        "password," +
+                        "familyId," +
+                        "residence," +
+                        "dateJoined," +
+                        "isSuperuser," +
+                        "isStaff," +
+                        "isActive" +
+                        ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
-        String insertQuery = "INSERT INTO Institutes (name) VALUES ('" + institute + "');";
-        statement.execute(insertQuery);
+                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(insertQuery);
 
-        statement.close();
+                pStatement.setString(1, user.getUsername());
+                pStatement.setString(2, user.getHashedPassword());
+                pStatement.setString(3, user.getEmail());
+                pStatement.setString(4, user.getFirstName());
+                pStatement.setString(5, user.getFatherName());
+                pStatement.setString(6, user.getGrandfatherName());
+                pStatement.setString(7, user.getFamilyName());
+                pStatement.setString(8, user.getNationality());
+                pStatement.setString(9, user.getNationalId());
+                String birthday = user.getBirthday()==null? null : user.getBirthday().toString();
+                pStatement.setString(10, birthday);
+                String gender = user.getGender()==null? null : user.getGender().name();
+                pStatement.setString(11, gender);
+                pStatement.setString(12, user.getPassportNumber());
+                pStatement.setString(13, user.getFamilyId());
+                pStatement.setString(14, user.getResidence());
+                pStatement.setString(15, LocalDateTime.now().toString());
+                pStatement.setBoolean(16, user.isSuperuser());
+                pStatement.setBoolean(17, user.isStaff());
+                pStatement.setBoolean(18, user.isActive());
+
+                pStatement.execute();
+                pStatement.close();
+                return null;
+            }
+        };
+    }
+
+    private static Task<Void> insertInstitute(String institute) {
+        return new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                Statement statement = DB_CONNECTION.createStatement();
+
+                String insertQuery = "INSERT INTO Institutes (name) VALUES ('" + institute + "');";
+                statement.execute(insertQuery);
+
+                statement.close();
+                return null;
+            }
+        };
     }
 
     private static String getDBUrl() {
@@ -308,53 +356,76 @@ public class DAO {
         return user;
     }
 
-    public static void updateUser(User user, String field, Object value) throws SQLException {
+    public static Task<Void> updateUser(User user, String field, Object value) throws SQLException {
         if (user.getId() > 0)
-            updateUserById(user.getId(), field, value);
+            return updateUserById(user.getId(), field, value);
         else if (user.getUsername() != null && !user.getUsername().isEmpty())
-            updateUserByUsername(user.getUsername(), field, value);
+            return updateUserByUsername(user.getUsername(), field, value);
         else
             throw new RuntimeException("Wrong User");
     }
 
-    public static boolean updateUserById(long userId, String field, Object value) throws SQLException {
+    public static Task<Void> updateUser(User user, Map<String, Object> updateMap)  {
+        if (user.getId() > 0)
+            return updateUserById(user.getId(), updateMap);
+        else if (user.getUsername() != null && !user.getUsername().isEmpty())
+            return updateUserByUsername(user.getUsername(), updateMap);
+        else
+            throw new RuntimeException("Wrong User");
+    }
+
+    public static Task<Void> updateUserById(long userId, String field, Object value) {
         Map<String, Object> updateMap = new HashMap<>();
         updateMap.put(field, value);
         return updateUserById(userId, updateMap);
     }
 
-    public static boolean updateUserById(long userId, Map<String, Object> updateMap) throws SQLException {
-        StringBuilder query = new StringBuilder("UPDATE Users SET ");
-        updateMap.keySet().forEach(key -> query.append(key).append("=?,"));
-        query.deleteCharAt(query.length() - 1);
-        query.append(" WHERE userId=?;");
-        PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
-        int i = 0;
-        for (; i < updateMap.values().size(); ++i) {
-            pStatement.setObject(i+1, updateMap.get(i));
-        }
-        pStatement.setLong(i, userId);
-        return pStatement.execute();
+    public static Task<Void> updateUserById(long userId, Map<String, Object> updateMap) {
+        return new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                StringBuilder query = new StringBuilder("UPDATE Users SET ");
+                updateMap.keySet().forEach(key -> query.append(key).append("=?,"));
+                query.deleteCharAt(query.length() - 1);
+                query.append(" WHERE userId=?;");
+                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
+                int i = 0;
+                for (; i < updateMap.values().size(); ++i) {
+                    pStatement.setObject(i+1, updateMap.get(i));
+                }
+                pStatement.setLong(i, userId);
+                pStatement.execute();
+
+                return null;
+            }
+        };
     }
 
-    public static void updateUserByUsername(String username, String field, Object value) throws SQLException {
+    public static Task<Void> updateUserByUsername(String username, String field, Object value) throws SQLException {
         Map<String, Object> updateMap = new HashMap<>();
         updateMap.put(field, value);
-        updateUserByUsername(username, updateMap);
+        return updateUserByUsername(username, updateMap);
     }
 
-    public static void updateUserByUsername(String username, Map<String, Object> updateMap) throws SQLException {
-        StringBuilder query = new StringBuilder("UPDATE Users SET ");
-        updateMap.keySet().forEach(key -> query.append(String.format("%s=?,", key)));
-        query.deleteCharAt(query.length() - 1);
-        query.append(" WHERE username=?");
-        PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
-        int i = 1;
-        for (Map.Entry<String, Object> entry : updateMap.entrySet()) {
-            pStatement.setString(i++, (String) entry.getValue());
-        }
-        pStatement.setString(i, username);
-        pStatement.execute();
+    public static Task<Void> updateUserByUsername(String username, Map<String, Object> updateMap) {
+        return new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                StringBuilder query = new StringBuilder("UPDATE Users SET ");
+                updateMap.keySet().forEach(key -> query.append(String.format("%s=?,", key)));
+                query.deleteCharAt(query.length() - 1);
+                query.append(" WHERE username=?");
+                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
+                int i = 1;
+                for (Map.Entry<String, Object> entry : updateMap.entrySet()) {
+                    pStatement.setString(i++, (String) entry.getValue());
+                }
+                pStatement.setString(i, username);
+                pStatement.execute();
+
+                return null;
+            }
+        };
     }
 
     public static ObservableList<Subscriber> getOldSubscribers() throws SQLException {
@@ -589,30 +660,77 @@ public class DAO {
         return generatedKeys.getLong(1);
     }
 
-    public static boolean updateSubscriberIdentification(long identificationId, Subscriber subscriber, boolean isIdentified, String notes) throws SQLException {
-        String selectQuery = "SELECT notes FROM Identifications WHERE id=? AND subscriberId=?;";
-        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(selectQuery);
-        pStatement.setLong(1, identificationId);
-        pStatement.setLong(2, subscriber.getId());
-        ResultSet resultSet = pStatement.executeQuery();
+    public static Task<Void> updateSubscriberIdentification(long identificationId, Subscriber subscriber, boolean isIdentified, String notes) {
+        return new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                String selectQuery = "SELECT notes FROM Identifications WHERE id=? AND subscriberId=?;";
+                PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(selectQuery);
+                pStatement.setLong(1, identificationId);
+                pStatement.setLong(2, subscriber.getId());
+                ResultSet resultSet = pStatement.executeQuery();
 
-        String _notes = "";
-        if (resultSet.next()) {
-            _notes = resultSet.getString("notes");
-        }
-        if (notes != null)
-            _notes += ":\n:" + notes;
+                String _notes = "";
+                if (resultSet.next()) {
+                    _notes = resultSet.getString("notes");
+                }
+                if (notes != null)
+                    _notes += ":\n:" + notes;
 
-        final String insertQuery = "UPDATE Identifications SET isIdentified=?, notes=? WHERE id=? AND subscriberId=?;";
+                final String insertQuery = "UPDATE Identifications SET isIdentified=?, notes=? WHERE id=? AND subscriberId=?;";
 
-        pStatement = DAO.DB_CONNECTION.prepareStatement(insertQuery);
+                pStatement = DAO.DB_CONNECTION.prepareStatement(insertQuery);
 
-        pStatement.setBoolean(1, isIdentified);
-        pStatement.setString(2, _notes);
-        pStatement.setLong(3, identificationId);
-        pStatement.setLong(4, subscriber.getId());
+                pStatement.setBoolean(1, isIdentified);
+                pStatement.setString(2, _notes);
+                pStatement.setLong(3, identificationId);
+                pStatement.setLong(4, subscriber.getId());
 
-        return pStatement.execute();
+                pStatement.execute();
+
+                return null;
+            }
+        };
     }
 
+    public static Task<Collection<User>> getAllUsers() {
+        return new Task<Collection<User>>() {
+            @Override
+            protected Collection<User> call() throws Exception {
+                Collection<User> resultUsers = new ArrayList<>();
+                String query = "SELECT * FROM Users;";
+                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query);
+                ResultSet resultSet = pStatement.executeQuery();
+                while (resultSet.next()) {
+                    User user = new User();
+                    user.setId(resultSet.getLong("id"));
+                    user.setUsername(resultSet.getString("username"));
+                    user.setPassword(resultSet.getString("password"));
+                    user.setFirstName(resultSet.getString("firstName"));
+                    user.setFatherName(resultSet.getString("fatherName"));
+                    user.setGrandfatherName(resultSet.getString("grandfatherName"));
+                    user.setFamilyName(resultSet.getString("familyName"));
+                    user.setEmail(resultSet.getString("email"));
+                    user.setGender(Gender.MALE.name().equals(resultSet.getString("gender"))? Gender.MALE : Gender.FEMALE);
+                    String birthday = resultSet.getString("birthday");
+                    user.setBirthday(birthday==null? null : LocalDate.parse(birthday));
+                    user.setNationalId(resultSet.getString("nationalId"));
+                    user.setNationality(resultSet.getString("nationality"));
+                    user.setPassportNumber(resultSet.getString("passport"));
+                    user.setFamilyId(resultSet.getString("familyId"));
+                    user.setResidence(resultSet.getString("residence"));
+                    user.setSuperuser(resultSet.getBoolean("isSuperuser"));
+                    user.setStaff(resultSet.getBoolean("isStaff"));
+                    user.setActive(resultSet.getBoolean("isActive"));
+                    String dateJoined = resultSet.getString("dateJoined");
+                    user.setDateJoined((dateJoined==null || dateJoined.isEmpty())? null : LocalDateTime.parse(dateJoined));
+                    String lastLogin = resultSet.getString("lastLogin");
+                    user.setLastLogin((lastLogin==null||lastLogin.isEmpty())? null : LocalDateTime.parse(lastLogin));
+
+                    resultUsers.add(user);
+                }
+                return resultUsers;
+            }
+        };
+    }
 }

@@ -34,7 +34,10 @@ public final class Res {
         LOGIN_DIALOG            ("LoginDialog.fxml"),
         SIGN_UP_WINDOW          ("SignUpWindow.fxml"),
         IDENTIFICATION_WINDOW   ("IdentificationWindow.fxml"),
+
         SETTINGS_WINDOW         (SETTING + "SettingsWindow.fxml"),
+        DATABASE_SITTINGS_WINDOW(SETTING + "DatabaseSettingsWindow.fxml"),
+        USERS_SITTINGS_WINDOW   (SETTING + "UsersSettingsWindow.fxml"),
 
         ADD_CONTACTS_METHOD_WINDOW("AddContactMethodDialog.fxml"),
         PERSONAL_IMAGE_WINDOW("PersonalImageLoader.fxml"),

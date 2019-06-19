@@ -20,7 +20,7 @@
         <URL value="@../../css/theme.css" />
         <URL value="@../../css/templates.css" />
     </stylesheets>
-   <Label text="%ADD_NEW_USER">
+   <Label fx:id="title" text="%ADD_NEW_USER">
       <VBox.margin>
          <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
       </VBox.margin>
@@ -40,11 +40,16 @@
         <JFXTextField fx:id="emailTF" labelFloat="true" promptText="%EMAIL" />
         <JFXTextField fx:id="nationality" labelFloat="true" promptText="%NATIONALITY" />
         <JFXTextField fx:id="nationalId" labelFloat="true" promptText="%NATIONAL_ID" />
+      <JFXTextField fx:id="passportTF" labelFloat="true" layoutX="110.0" layoutY="208.0" promptText="%PASSPORT" />
+      <JFXTextField fx:id="familyIdTF" labelFloat="true" layoutX="586.0" layoutY="291.0" promptText="%NO_FAMILY_BOOKLET" />
+      <JFXTextField fx:id="residenceTF" labelFloat="true" layoutX="353.0" layoutY="374.0" promptText="%RESIDENCE_CITY" />
         <JFXDatePicker fx:id="birthdayDP" overLay="true" promptText="%BIRTHDAY" />
         <CustomComboBox fx:id="gender" labelFloat="true" prefWidth="235.0" promptText="%GENDER" />
-        <JFXCheckBox fx:id="isSuperuser" text="%IS_SUPERUSER" />
-        <JFXCheckBox fx:id="isStuff" text="%IS_STAFF" />
-        <JFXCheckBox fx:id="isActive" text="%IS_ACTIVE" />
+        <HBox spacing="50.0">
+            <JFXCheckBox fx:id="isSuperuser" text="%IS_SUPERUSER" />
+            <JFXCheckBox fx:id="isStaff" text="%IS_STAFF" />
+            <JFXCheckBox fx:id="isActive" text="%IS_ACTIVE" />
+        </HBox>
 
         <padding>
           <Insets bottom="32.0" left="32.0" right="32.0" top="32.0" />
@@ -55,7 +60,7 @@
             <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
         </padding>
         <Separator visible="false" HBox.hgrow="ALWAYS" />
-        <JFXButton fx:id="cancelBtn" buttonType="RAISED" mnemonicParsing="false" prefWidth="100.0" styleClass="common-button" text="%CANCEL" />
-        <JFXButton fx:id="okBtn" buttonType="RAISED" mnemonicParsing="false" prefWidth="100.0" styleClass="common-button" text="%OK" />
+        <JFXButton buttonType="RAISED" mnemonicParsing="false" onAction="#onCancelBtnClicked" prefWidth="100.0" styleClass="common-button" text="%CANCEL" />
+        <JFXButton buttonType="RAISED" mnemonicParsing="false" onAction="#onOkBtnClicked" prefWidth="100.0" styleClass="common-button" text="%OK" />
     </HBox>
 </VBox>

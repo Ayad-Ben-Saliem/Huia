@@ -11,6 +11,7 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import ly.rqmana.huia.java.concurrent.Task;
+import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.util.Controllable;
@@ -59,6 +60,8 @@ public class LoginDialogController implements Controllable {
 
         Task<Boolean> loginTask = Auth.login(usernameTF.getText(), passwordTF.getText());
         loginTask.setOnSucceeded(e -> {
+            formContainer.setDisable(false);
+            progress.setVisible(false);
             Boolean isSuccess = (Boolean) e.getSource().getValue();
 
             if (isSuccess) {
@@ -70,6 +73,8 @@ public class LoginDialogController implements Controllable {
         });
 
         loginTask.setOnFailed(e -> {
+            formContainer.setDisable(false);
+            progress.setVisible(false);
             Throwable t = loginTask.getException();
             Windows.errorAlert(
                     Utils.getI18nString("ERROR"),
@@ -78,12 +83,12 @@ public class LoginDialogController implements Controllable {
                     AlertAction.OK);
         });
 
-        loginTask.addOnComplete(event1 -> {
-            formContainer.setDisable(false);
-            progress.setVisible(false);
-        });
+        Threading.MAIN_EXECUTOR_SERVICE.submit(loginTask);
+    }
 
-        loginTask.start();
+    public void clearInputs() {
+        usernameTF.clear();
+        passwordTF.clear();
     }
 
 }

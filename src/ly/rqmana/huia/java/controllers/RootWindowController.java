@@ -8,6 +8,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import ly.rqmana.huia.java.concurrent.Task;
+import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Res;
@@ -42,11 +44,20 @@ public class RootWindowController implements Controllable {
     }
 
     public void lock(Boolean isLocked) {
-        if (isLocked) {
-            getHomeWindow().toFront();
-        } else {
-            getMainWindow().toFront();
-        }
+        Task<Void> lockTask = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                if (isLocked) {
+                    getHomeWindow();
+                    Platform.runLater(homeWindow::toFront);
+                } else {
+                    getMainWindow();
+                    Platform.runLater(mainWindow::toFront);
+                }
+                return null;
+            }
+        };
+        Threading.MAIN_EXECUTOR_SERVICE.submit(lockTask);
     }
 
     private void lock() {

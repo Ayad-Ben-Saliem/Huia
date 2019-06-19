@@ -74,8 +74,6 @@ public class RegistrationWindowController implements Controllable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-        mainContainer.setVisible(Auth.getCurrentUser().isStaff());
-
         relationshipComboBox.setItems(FXCollections.observableArrayList(Relationship.values()));
         relationshipComboBox.setValue(Relationship.EMPLOYEE);
         relationshipComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {

@@ -1,5 +1,8 @@
 package ly.rqmana.huia.java.models;
 
+import ly.rqmana.huia.java.security.Hasher;
+import ly.rqmana.huia.java.util.Utils;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -7,13 +10,13 @@ public class User extends Person {
 
     private String username;
     private String password;
+    private String hashedPassword;
     private String email;
     private LocalDateTime dateJoined;
     private Boolean isSuperuser;
     private Boolean isStaff;
     private Boolean isActive;
     private LocalDateTime lastLogin;
-
 
     public String getUsername() {
         return username;
@@ -77,5 +80,34 @@ public class User extends Person {
 
     public void setActive(Boolean active) {
         isActive = active;
+    }
+
+    /**
+     * This method has been wrote to be used in TableView.
+     * @return userType
+     */
+    public String getUserType() {
+        String userType = "";
+        if (isSuperuser())
+            userType += "SuperUser";
+        if (isStaff()) {
+            if (!userType.isEmpty())
+                userType += ", ";
+            userType += "Staff";
+        }
+
+        return userType;
+    }
+
+    public String getHashedPassword() {
+        String newHashPassword = Hasher.encode(getPassword(), Utils.getRandomString(10));
+        if (hashedPassword == null || !hashedPassword.equals(newHashPassword))
+            hashedPassword = newHashPassword;
+
+        return hashedPassword;
+    }
+
+    public void setHashedPassword(String hashedPassword) {
+        this.hashedPassword = hashedPassword;
     }
 }

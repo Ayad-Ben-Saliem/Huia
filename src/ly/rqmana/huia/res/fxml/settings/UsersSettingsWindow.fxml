@@ -7,7 +7,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="TOP_CENTER" spacing="8.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.settings.UsersSettingsWindowController">
+<VBox alignment="TOP_CENTER" spacing="8.0" style="-fx-background-color: -rq-background-alt;" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.settings.UsersSettingsWindowController">
     <padding>
         <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
     </padding>
@@ -15,14 +15,18 @@
         <URL value="@../../css/theme.css" />
         <URL value="@../../css/templates.css" />
     </stylesheets>
-    <JFXButton buttonType="RAISED" mnemonicParsing="false" onAction="#onAddNewUserBtnClicked" styleClass="common-button" text="%ADD_NEW_USER" />
-    <TableView>
+   <JFXButton fx:id="editBtn" buttonType="RAISED" disable="true" layoutX="310.0" layoutY="18.0" mnemonicParsing="false" onAction="#onEditUserBtnClicked" styleClass="common-button" text="%EDIT" />
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
       <columns>
-          <TableColumn minWidth="100.0" prefWidth="100.0" text="%USERNAME" />
-          <TableColumn minWidth="250.0" prefWidth="250.0" text="%NAME" />
-          <TableColumn minWidth="150.0" prefWidth="150.0" text="%EMAIL" />
-          <TableColumn minWidth="100.0" prefWidth="100.0" text="%USER_TYPE" />
-          <TableColumn minWidth="150.0" prefWidth="150.0" text="%LAST_LOGIN" />
+          <TableColumn fx:id="usernameColumn" minWidth="100.0" prefWidth="100.0" text="%USERNAME" />
+          <TableColumn fx:id="nameColumn" minWidth="250.0" prefWidth="250.0" text="%NAME" />
+          <TableColumn fx:id="emailColumn" minWidth="150.0" prefWidth="150.0" text="%EMAIL" />
+          <TableColumn fx:id="userTypeColumn" minWidth="100.0" prefWidth="100.0" text="%USER_TYPE" />
+          <TableColumn fx:id="lastLoginColumn" minWidth="150.0" prefWidth="150.0" text="%LAST_LOGIN" />
       </columns>
+      <columnResizePolicy>
+         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+      </columnResizePolicy>
     </TableView>
+    <JFXButton buttonType="RAISED" mnemonicParsing="false" onAction="#onAddNewUserBtnClicked" styleClass="common-button" text="%ADD_NEW_USER" />
 </VBox>
