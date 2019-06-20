@@ -8,18 +8,19 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
+import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.db.DAO;
-import ly.rqmana.huia.java.models.Subscriber;
 import ly.rqmana.huia.java.models.SubscriberIdentification;
-import ly.rqmana.huia.java.models.User;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Utils;
+import ly.rqmana.huia.java.util.Windows;
 
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -52,6 +53,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
     private final ObjectProperty<LocalDateTime> lowerDateTimeBound = new SimpleObjectProperty<>();
 
     private final ObservableList<SubscriberIdentification> cachedData = FXCollections.observableArrayList();
+    private final FilteredList<SubscriberIdentification> filteredList = new FilteredList<SubscriberIdentification>(cachedData);
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -61,32 +63,33 @@ public class IdentificationsRecordsWindowController implements Controllable {
         lowerBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
         upperBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
 
-        for (int i = 0; i < 4; i++){
-
-            Subscriber subscriber = new Subscriber();
-            subscriber.setWorkId("TWorker" + i);
-
-            subscriber.setFirstName("Test" + i);
-            subscriber.setFatherName("Test");
-            subscriber.setGrandfatherName("Test");
-            subscriber.setFamilyName("Test");
-
-            User user = new User();
-            user.setFirstName("Test " + i);
-            user.setFamilyName("User");
-
-            SubscriberIdentification identification = new SubscriberIdentification();
-            identification.setIdentified(true);
-            identification.setDateTime(LocalDateTime.now());
-            identification.setSubscriber(subscriber);
-            identification.setUser(user);
-
-            identification.setId((long) (Math.random() * 1000 + i));
-
-            tableView.getItems().add(identification);
-        }
+//        for (int i = 0; i < 4; i++){
+//
+//            Subscriber subscriber = new Subscriber();
+//            subscriber.setWorkId("TWorker" + i);
+//
+//            subscriber.setFirstName("Test" + i);
+//            subscriber.setFatherName("Test");
+//            subscriber.setGrandfatherName("Test");
+//            subscriber.setFamilyName("Test");
+//
+//            User user = new User();
+//            user.setFirstName("Test " + i);
+//            user.setFamilyName("User");
+//
+//            SubscriberIdentification identification = new SubscriberIdentification();
+//            identification.setIdentified(true);
+//            identification.setDateTime(LocalDateTime.now());
+//            identification.setSubscriber(subscriber);
+//            identification.setUser(user);
+//
+//            identification.setId((long) (Math.random() * 1000 + i));
+//
+//            tableView.getItems().add(identification);
+//        }
 
         loadFromDatabase();
+        tableView.setItems(filteredList);
     }
 
     private void initComponents(){
@@ -136,22 +139,24 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
     private void loadFromDatabase(){
 
-        Task<ObservableList<SubscriberIdentification>> loadTask = new Task<ObservableList<SubscriberIdentification>>() {
-            @Override
-            protected ObservableList<SubscriberIdentification> call() throws Exception {
-                //TODO: check if you want to load identified only or not
-                return DAO.getSubscriberIdentifications(true);
-            }
-        };
+        //TODO: check if you want to load identified only or not
+        Task<ObservableList<SubscriberIdentification>> loadTask = DAO.getSubscribersIdentifications(true);
 
         loadTask.addOnSucceeded(event -> {
             ObservableList<SubscriberIdentification> loadedData = loadTask.getValue();
             cachedData.setAll(loadedData);
-            syncTableData();
+            System.out.println("loadedData = " + loadedData);
+//            syncTableData();
         });
 
         loadTask.addOnFailed(event -> {
-            event.getSource().getException().printStackTrace();
+            Throwable exception = event.getSource().getException();
+            Windows.errorAlert(
+                    Utils.getI18nString("ERROR"),
+                    exception.getLocalizedMessage(),
+                    exception,
+                    AlertAction.OK
+            );
         });
         loadTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
 

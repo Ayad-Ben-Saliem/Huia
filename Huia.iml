@@ -12,10 +12,10 @@
     <orderEntry type="library" name="com.jfoenix:jfoenix:8.0.8" level="project" />
     <orderEntry type="library" name="org.xerial:sqlite-jdbc:3.27.2.1" level="project" />
     <orderEntry type="library" name="Simple Logging Facade for Java:1.7.26" level="project" />
-    <orderEntry type="library" name="NBioBSPJNI" level="project" />
     <orderEntry type="library" name="javax.media:jmf:2.1.1e" level="project" />
     <orderEntry type="library" name="com.github.sarxos:webcam-capture:0.3.12" level="project" />
     <orderEntry type="library" name="commons-io:commons-io:2.6" level="project" />
     <orderEntry type="library" name="org.zeroturnaround:zt-zip:1.13" level="project" />
+    <orderEntry type="library" name="NBioBSPJNI" level="project" />
   </component>
 </module>

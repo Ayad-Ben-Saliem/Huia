@@ -22,7 +22,6 @@ public class Main extends Application {
         Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
 
         openDeviceTask.addOnFailed(event -> {
-
             Optional<AlertAction> result = Windows.showFingerprintDeviceError(event.getSource().getException());
 
             if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN){

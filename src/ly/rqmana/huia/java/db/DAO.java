@@ -6,11 +6,9 @@ import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Subscriber;
 import ly.rqmana.huia.java.models.User;
-import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.models.*;
 import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.storage.DataStorage;
-import ly.rqmana.huia.java.util.SQLUtils;
 import ly.rqmana.huia.java.util.Utils;
 
 import java.sql.*;
@@ -20,17 +18,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.time.LocalDateTime;
-import java.util.Observable;
 
 public class DAO {
 
-    public static final Connection DB_CONNECTION;
+    public static final Connection HUIA_DB_CONNECTION;
+    public static final Connection OLD_DB_CONNECTION;
     private static final String DB_NAME = Utils.APP_NAME + ".sqlite";
 
     static {
         try {
-            DB_CONNECTION = DriverManager.getConnection(getDBUrl());
+            HUIA_DB_CONNECTION = DriverManager.getConnection(getDBUrl());
+            OLD_DB_CONNECTION = DriverManager.getConnection(DAO.getDataDBUrl());
+
 //            initializeDB();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -55,7 +54,7 @@ public class DAO {
     }
 
     private static void createIdentificationsTable() throws SQLException {
-        Statement statement = DB_CONNECTION.createStatement();
+        Statement statement = HUIA_DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS Identifications("
                 + "id                  INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -72,7 +71,7 @@ public class DAO {
     }
 
     private static void createUsersTable() throws SQLException {
-        Statement statement = DB_CONNECTION.createStatement();
+        Statement statement = HUIA_DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS Users("
                 + "id                INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
@@ -102,7 +101,7 @@ public class DAO {
     }
 
     private static void createInstitutesTable() throws SQLException {
-        Statement statement = DB_CONNECTION.createStatement();
+        Statement statement = HUIA_DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS Institutes("
                 + "id           INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -115,7 +114,7 @@ public class DAO {
     }
 
     private static void createPeopleTable() throws SQLException {
-        Statement statement = DB_CONNECTION.createStatement();
+        Statement statement = HUIA_DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS People"
                 + "(id                  INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -159,7 +158,7 @@ public class DAO {
     }
 
     private static void createNewRegistrationsTable() throws SQLException {
-        Statement statement = DB_CONNECTION.createStatement();
+        Statement statement = HUIA_DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS NewRegistrations ("
                 + "id                   INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -205,7 +204,7 @@ public class DAO {
     }
 
     private static void createContactsTable() throws SQLException {
-        Statement statement = DB_CONNECTION.createStatement();
+        Statement statement = HUIA_DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS Contacts ("
                 + "id          INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -255,7 +254,7 @@ public class DAO {
                         "isActive" +
                         ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
-                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(insertQuery);
+                PreparedStatement pStatement = HUIA_DB_CONNECTION.prepareStatement(insertQuery);
 
                 pStatement.setString(1, user.getUsername());
                 pStatement.setString(2, user.getHashedPassword());
@@ -289,7 +288,7 @@ public class DAO {
         return new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                Statement statement = DB_CONNECTION.createStatement();
+                Statement statement = HUIA_DB_CONNECTION.createStatement();
 
                 String insertQuery = "INSERT INTO Institutes (name) VALUES ('" + institute + "');";
                 statement.execute(insertQuery);
@@ -330,7 +329,7 @@ public class DAO {
                 "lastLogin       " +
                 "FROM Users WHERE username=? COLLATE NOCASE";
 
-        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(query);
+        PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(query);
         pStatement.setString(1, username);
         ResultSet resultSet = pStatement.executeQuery();
 
@@ -421,7 +420,6 @@ public class DAO {
 
     public static ObservableList<Subscriber> getOldSubscribers() throws SQLException {
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
-        Connection connection = DriverManager.getConnection(DAO.getDataDBUrl());
         String query = "SELECT " +
                 "id," +
                 "first_name," +
@@ -434,7 +432,7 @@ public class DAO {
                 "work_id," +
                 "relationship," +
                 "is_active FROM Fingerprint";
-        try (Statement statement = connection.createStatement()) {
+        try (Statement statement = OLD_DB_CONNECTION.createStatement()) {
             ResultSet resultSet = statement.executeQuery(query);
 
             while (resultSet.next()) {
@@ -498,7 +496,7 @@ public class DAO {
                  "leftLittleFingerprint" +
                  " FROM " + tableName;
 
-        Statement statement = DB_CONNECTION.createStatement();
+        Statement statement = HUIA_DB_CONNECTION.createStatement();
         ResultSet resultSet = statement.executeQuery(query);
 
         while (resultSet.next()) {
@@ -543,6 +541,40 @@ public class DAO {
         return subscribers;
     }
 
+    public static Task<Subscriber> getOldSubscriberById(long subscriberId)  {
+        return new Task<Subscriber>() {
+            @Override
+            protected Subscriber call() throws Exception {
+                PreparedStatement pStatement = OLD_DB_CONNECTION.prepareStatement("SELECT * FROM Fingerprint WHERE id=?;");
+                pStatement.setLong(1, subscriberId);
+                ResultSet resultSet = pStatement.executeQuery();
+                if (resultSet.next()) {
+                    Subscriber subscriber = new Subscriber();
+
+                    subscriber.setId(subscriberId);
+                    subscriber.setFirstName(resultSet.getString("first_name"));
+                    subscriber.setFirstName(resultSet.getString("work_id"));
+
+                    return subscriber;
+                }
+                return null;
+            }
+        };
+    }
+
+    public static Task<ObservableList<Subscriber>> getSubscribersByIdes(ObservableList<Long> subscribersByIdes)  {
+        return new Task<ObservableList<Subscriber>>() {
+            @Override
+            protected ObservableList<Subscriber> call() throws Exception {
+                final ObservableList<Subscriber> result = FXCollections.observableArrayList();
+                subscribersByIdes.forEach(subscriberById -> {
+                    result.add(getOldSubscriberById(subscriberById).runAndGet());
+                });
+                return result;
+            }
+        };
+    }
+
     public static long insertNewSubscriber(Subscriber subscriber) throws SQLException {
         final String INSERT_QUERY =
                 "INSERT INTO NewRegistrations ("
@@ -574,7 +606,7 @@ public class DAO {
                         + "user"
                         + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
 
         pStatement.setString(1, subscriber.getFirstName());
         pStatement.setString(2, subscriber.getFatherName());
@@ -617,7 +649,7 @@ public class DAO {
     }
 
     public static void updateSubscriberDataPath(Subscriber subscriber) throws SQLException {
-        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement("UPDATE NewRegistrations SET dataPath= ? WHERE id= ?");
+        PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement("UPDATE NewRegistrations SET dataPath= ? WHERE id= ?");
         pStatement.setString(1, subscriber.getDataPath());
         pStatement.setLong(2, subscriber.getId());
 
@@ -633,7 +665,7 @@ public class DAO {
                         + "notes"
                         + ") VALUES (?,?,?,?)";
 
-        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
 
         pStatement.setLong(1, subscriber.getId());
         pStatement.setString(2, Auth.getCurrentUser().getUsername());
@@ -656,7 +688,7 @@ public class DAO {
             @Override
             protected Void call() throws Exception {
                 String selectQuery = "SELECT notes FROM Identifications WHERE id=? AND subscriberId=?;";
-                PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(selectQuery);
+                PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(selectQuery);
                 pStatement.setLong(1, identificationId);
                 pStatement.setLong(2, subscriber.getId());
                 ResultSet resultSet = pStatement.executeQuery();
@@ -670,7 +702,7 @@ public class DAO {
 
                 final String insertQuery = "UPDATE Identifications SET isIdentified=?, notes=? WHERE id=? AND subscriberId=?;";
 
-                pStatement = DAO.DB_CONNECTION.prepareStatement(insertQuery);
+                pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(insertQuery);
 
                 pStatement.setBoolean(1, isIdentified);
                 pStatement.setString(2, _notes);
@@ -690,7 +722,7 @@ public class DAO {
             protected Collection<User> call() throws Exception {
                 Collection<User> resultUsers = new ArrayList<>();
                 String query = "SELECT * FROM Users;";
-                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query);
+                PreparedStatement pStatement = HUIA_DB_CONNECTION.prepareStatement(query);
                 ResultSet resultSet = pStatement.executeQuery();
                 while (resultSet.next()) {
                     User user = new User();
@@ -725,61 +757,80 @@ public class DAO {
         };
     }
 
-    public static ObservableList<SubscriberIdentification> getSubscriberIdentifications(boolean identifiedOnly) throws SQLException {
-        ObservableList<SubscriberIdentification> identifications = FXCollections.observableArrayList();
+    public static Task<ObservableList<SubscriberIdentification>> getSubscribersIdentifications(boolean identifiedOnly) {
 
-        String query = "SELECT "
-                + "Identifications.id,"
-                + "NewRegistrations.firstName AS subFirstName,"
-                + "NewRegistrations.fatherName AS subFatherName,"
-                + "NewRegistrations.grandfatherName AS subGrandfatherName,"
-                + "NewRegistrations.familyName AS subFamilyName,"
-                + "workId,"
-                + "datetime,"
-                + "isIdentified,"
-                + "Identifications.username,"
-                + "Users.firstName AS userFirstName,"
-                + "Users.fatherName AS userFatherName,"
-                + "Users.grandfatherName AS userGrandfatherName,"
-                + "Users.familyName AS userFamilyName"
-                + " FROM Identifications "
-                + " INNER JOIN NewRegistrations ON NewRegistrations.id = Identifications.subscriberId"
-                + " INNER JOIN Users ON Users.username = Identifications.username";
+//        String query = "SELECT "
+//                + "Identifications.id,"
+//                + "NewRegistrations.firstName AS subFirstName,"
+//                + "NewRegistrations.fatherName AS subFatherName,"
+//                + "NewRegistrations.grandfatherName AS subGrandfatherName,"
+//                + "NewRegistrations.familyName AS subFamilyName,"
+//                + "workId,"
+//                + "datetime,"
+//                + "isIdentified,"
+//                + "Identifications.username,"
+//                + "Users.firstName AS userFirstName,"
+//                + "Users.fatherName AS userFatherName,"
+//                + "Users.grandfatherName AS userGrandfatherName,"
+//                + "Users.familyName AS userFamilyName"
+//                + " FROM Identifications "
+//                + " INNER JOIN NewRegistrations ON NewRegistrations.id = Identifications.subscriberId"
+//                + " INNER JOIN Users ON Users.username = Identifications.username";
+//
+//        if (identifiedOnly)
+//            query += " WHERE isIdentified = 1;";
+//
+//        Statement statement = HUIA_DB_CONNECTION.createStatement();
+//        ResultSet resultSet = statement.executeQuery(query);
+//
+//        while (resultSet.next()) {
+//
+//            SubscriberIdentification identification = new SubscriberIdentification();
+//
+//            identification.setId(resultSet.getLong("id"));
+//            identification.setDateTime(SQLUtils.timestampToDateTime(resultSet.getLong("datetime")));
+//            identification.setIdentified(resultSet.getBoolean("isIdentified"));
+//
+//            Subscriber subscriber = new Subscriber();
+//            subscriber.setFirstName(resultSet.getString("subFirstName"));
+//            subscriber.setFatherName(resultSet.getString("subFatherName"));
+//            subscriber.setGrandfatherName(resultSet.getString("subGrandfatherName"));
+//            subscriber.setFamilyName(resultSet.getString("subFamilyName"));
+//            subscriber.setWorkId(resultSet.getString("workId"));
+//            subscriber.setWorkId(resultSet.getString("workId"));
+//
+//
+//            User user = new User();
+//            user.setFirstName(resultSet.getString("userFirstName"));
+//            user.setFatherName(resultSet.getString("userFatherName"));
+//            user.setGrandfatherName(resultSet.getString("userGrandfatherName"));
+//            user.setFamilyName(resultSet.getString("userFamilyName"));
+//
+//            identification.setSubscriber(subscriber);
+//            identification.setUser(user);
+//
+//            identifications.add(identification);
+//        }
 
-        if (identifiedOnly)
-            query += " WHERE isIdentified = 1;";
+        return new Task<ObservableList<SubscriberIdentification>>() {
+            @Override
+            protected ObservableList<SubscriberIdentification> call() throws Exception {
+                ObservableList<SubscriberIdentification> identifications = FXCollections.observableArrayList();
 
-        Statement statement = DB_CONNECTION.createStatement();
-        ResultSet resultSet = statement.executeQuery(query);
-
-        while (resultSet.next()) {
-
-            SubscriberIdentification identification = new SubscriberIdentification();
-
-            identification.setId(resultSet.getLong("id"));
-            identification.setDateTime(SQLUtils.timestampToDateTime(resultSet.getLong("datetime")));
-            identification.setIdentified(resultSet.getBoolean("isIdentified"));
-
-            Subscriber subscriber = new Subscriber();
-            subscriber.setFirstName(resultSet.getString("subFirstName"));
-            subscriber.setFatherName(resultSet.getString("subFatherName"));
-            subscriber.setGrandfatherName(resultSet.getString("subGrandfatherName"));
-            subscriber.setFamilyName(resultSet.getString("subFamilyName"));
-            subscriber.setWorkId(resultSet.getString("workId"));
-            subscriber.setWorkId(resultSet.getString("workId"));
-
-
-            User user = new User();
-            user.setFirstName(resultSet.getString("userFirstName"));
-            user.setFatherName(resultSet.getString("userFatherName"));
-            user.setGrandfatherName(resultSet.getString("userGrandfatherName"));
-            user.setFamilyName(resultSet.getString("userFamilyName"));
-
-            identification.setSubscriber(subscriber);
-            identification.setUser(user);
-        }
-
-        return identifications;
+                ResultSet resultSet = HUIA_DB_CONNECTION.createStatement().executeQuery("SELECT * FROM Identifications;");
+                while (resultSet.next()) {
+                    Subscriber subscriber = getOldSubscriberById(resultSet.getLong("subscriberId")).runAndGet();
+                    SubscriberIdentification subscriberIdentification = new SubscriberIdentification();
+                    subscriberIdentification.setId(resultSet.getLong("id"));
+                    subscriberIdentification.setSubscriber(subscriber);
+                    subscriberIdentification.setDateTime(LocalDateTime.parse(resultSet.getString("id")));
+                    subscriberIdentification.setIdentified(resultSet.getBoolean("isIdentified"));
+//                    subscriberIdentification.setUser(resultSet.getBoolean("isIdentified"));
+                    identifications.add(subscriberIdentification);
+                }
+                return identifications;
+            }
+        };
     }
 
     private static PreparedStatement setUpdateMap(String tableName, Map<String, Object> updateMap, Map<String, Object> filterMap) throws SQLException {
@@ -791,7 +842,7 @@ public class DAO {
         filterMap.keySet().forEach(key -> query.append(String.format("%s=? AND ", key)));
         query.delete(query.length() - 5, query.length()).append(";");
 
-        PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
+        PreparedStatement pStatement = HUIA_DB_CONNECTION.prepareStatement(query.toString());
         int i = 1;
         for (Map.Entry<String, Object> entry : updateMap.entrySet()) {
             pStatement.setObject(i++, entry.getValue());

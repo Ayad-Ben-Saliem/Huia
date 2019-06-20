@@ -7,7 +7,6 @@ import com.jfoenix.validation.base.ValidatorBase;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
-import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -25,7 +24,6 @@ import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
-import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
@@ -34,7 +32,6 @@ import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Institute;
 import ly.rqmana.huia.java.models.Relationship;
 import ly.rqmana.huia.java.models.Subscriber;
-import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.storage.DataStorage;
 import ly.rqmana.huia.java.util.*;
 
@@ -168,7 +165,7 @@ public class RegistrationWindowController implements Controllable {
     }
 
     private void loadInstituteNames() throws SQLException {
-        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement("SELECT id, name FROM Institutes;");
+        PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement("SELECT id, name FROM Institutes;");
         ResultSet resultSet = pStatement.executeQuery();
         ObservableList<Institute> institutes = FXCollections.observableArrayList();
         while (resultSet.next()) {
@@ -183,7 +180,7 @@ public class RegistrationWindowController implements Controllable {
         ObservableSet<String> workIdes = FXCollections.observableSet();
         String[] queries = {"SELECT workId FROM People;", "SELECT workId FROM NewRegistrations;"};
         for (String query : queries) {
-            PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(query);
+            PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(query);
             ResultSet resultSet = pStatement.executeQuery();
             while (resultSet.next()) {
                 workIdes.add(resultSet.getString("workId"));

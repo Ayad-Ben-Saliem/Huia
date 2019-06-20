@@ -41,48 +41,28 @@ import java.util.function.Predicate;
 
 public class IdentificationWindowController implements Controllable {
 
-    @FXML
-    public Label nameLabel;
-    @FXML
-    public Label fingerprintLabel;
-    @FXML
-    public JFXButton fingerprintBtn;
+    @FXML public Label nameLabel;
+    @FXML public Label fingerprintLabel;
+    @FXML public JFXButton fingerprintBtn;
 
-    @FXML
-    public TableView<Subscriber> tableView;
-    @FXML
-    public TableColumn<String, Subscriber> nameColumn;
-    @FXML
-    public TableColumn<String, Subscriber> workIdColumn;
-    @FXML
-    public TableColumn<Gender, Subscriber> genderColumn;
-    @FXML
-    public TableColumn<LocalDate, Subscriber> birthdayColumn;
-    @FXML
-    public TableColumn<String, Subscriber> fingerprintColumn;
-    @FXML
-    public TableColumn<String, Subscriber> relationshipColumn;
-    @FXML
-    public TableColumn<ImageView, Subscriber> isActiveColumn;
+    @FXML public TableView<Subscriber> tableView;
+    @FXML public TableColumn<String, Subscriber> nameColumn;
+    @FXML public TableColumn<String, Subscriber> workIdColumn;
+    @FXML public TableColumn<Gender, Subscriber> genderColumn;
+    @FXML public TableColumn<LocalDate, Subscriber> birthdayColumn;
+    @FXML public TableColumn<String, Subscriber> fingerprintColumn;
+    @FXML public TableColumn<String, Subscriber> relationshipColumn;
+    @FXML public TableColumn<ImageView, Subscriber> isActiveColumn;
 
-    @FXML
-    public VBox searchFieldsContainer;
-    @FXML
-    public JFXTextField nameFilterTF;
-    @FXML
-    public JFXTextField workIdTF;
-    @FXML
-    public JFXDatePicker fromDateFilterDatePicker;
-    @FXML
-    public JFXDatePicker toDateFilterDatePicker;
-    @FXML
-    public JFXComboBox<String> genderFilterComboBox;
-    @FXML
-    public JFXComboBox<String> fingerprintFilterComboBox;
-    @FXML
-    public JFXComboBox<Relationship> relationshipFilterComboBox;
-    @FXML
-    public JFXComboBox<String> isActiveFilterComboBox;
+    @FXML public VBox searchFieldsContainer;
+    @FXML public JFXTextField nameFilterTF;
+    @FXML public JFXTextField workIdTF;
+    @FXML public JFXDatePicker fromDateFilterDatePicker;
+    @FXML public JFXDatePicker toDateFilterDatePicker;
+    @FXML public JFXComboBox<String> genderFilterComboBox;
+    @FXML public JFXComboBox<String> fingerprintFilterComboBox;
+    @FXML public JFXComboBox<Relationship> relationshipFilterComboBox;
+    @FXML public JFXComboBox<String> isActiveFilterComboBox;
 
     private ObjectProperty<Subscriber> selectedSubscriber = new SimpleObjectProperty<>();
 
@@ -168,36 +148,40 @@ public class IdentificationWindowController implements Controllable {
             String isActive = isActiveFilterComboBox.getValue();
             String hasFingerprint = fingerprintFilterComboBox.getValue();
 
-            if (!name.isEmpty()) {
-                for (String namePart : name.split(" ")) {
-                    if (subscriber.getFullName().contains(namePart)) {
-                        return true;
-                    }
-                }
-            }
-            if (!workId.isEmpty() && subscriber.getWorkId().contains(workId))
+            if (name.isEmpty() && workId.isEmpty())
                 return true;
-            if (fromBirthday != null && toBirthday != null) {
-                if (subscriber.getBirthday().isAfter(fromBirthday) && subscriber.getBirthday().isBefore(toBirthday))
-                    return true;
-            }
-            if (gender != null) {
-                if (gender.equals("BOTH") || gender.equals(subscriber.getGender().toString()))
-                    return true;
-            }
 
-            if (hasFingerprint != null) {
-                if ((subscriber.hasFingerprint() && hasFingerprint.equals(Utils.getI18nString("UNFILLED"))) ||
-                        (!subscriber.hasFingerprint() && hasFingerprint.equals(Utils.getI18nString("FILLED"))))
+            boolean isSubscriberMatch = subscriber.getWorkId().equalsIgnoreCase(workId);
+            if (!isSubscriberMatch)
+                return false;
+
+            for (String namePart : name.split(" ")) {
+                isSubscriberMatch = subscriber.getFullName().toUpperCase().contains(namePart.toUpperCase());
+                if (!isSubscriberMatch)
                     return false;
             }
-
-            if (isActive != null) {
-                if ((subscriber.isActive() && isActive.equals(Utils.getI18nString("NOT_ACTIVE"))) ||
-                        (!subscriber.isActive() && isActive.equals(Utils.getI18nString("ACTIVE"))))
-                    return false;
-            }
-            return name.isEmpty() && workId.isEmpty();
+//            if (fromBirthday != null) {
+//                isSubscriberMatch = subscriber.getBirthday().isAfter(fromBirthday);
+//            }
+//            if (fromBirthday != null) {
+//                isSubscriberMatch = subscriber.getBirthday().isBefore(toBirthday);
+//            }
+//            if (gender != null) {
+//                isSubscriberMatch = gender.equals("BOTH") || gender.equals(subscriber.getGender().toString());
+//            }
+//
+//            if (hasFingerprint != null) {
+//                isSubscriberMatch =
+//                        ( subscriber.hasFingerprint() && hasFingerprint.equals(Utils.getI18nString("FILLED"))) ||
+//                        (!subscriber.hasFingerprint() && hasFingerprint.equals(Utils.getI18nString("UNFILLED")));
+//            }
+//
+//            if (isActive != null) {
+//                isSubscriberMatch =
+//                        ( subscriber.isActive() && isActive.equals(Utils.getI18nString("ACTIVE"))) ||
+//                        (!subscriber.isActive() && isActive.equals(Utils.getI18nString("NOT_ACTIVE")));
+//            }
+            return isSubscriberMatch;
         };
 
         filteredList.setPredicate(subscriberPredicate);
@@ -228,8 +212,7 @@ public class IdentificationWindowController implements Controllable {
         setToTableView(subscribers);
     }
 
-    @FXML
-    public void onFingerprintBtnClicked(ActionEvent actionEvent) {
+    @FXML public void onFingerprintBtnClicked(ActionEvent actionEvent) {
 
         Subscriber subscriber = selectedSubscriber.get();
         if (subscriber == null) {
@@ -240,7 +223,6 @@ public class IdentificationWindowController implements Controllable {
         Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
 
         openDeviceTask.addOnSucceeded(event -> {
-
             long identificationId;
             try {
                 identificationId = DAO.insertSubscriberIdentification(subscriber);
@@ -257,7 +239,6 @@ public class IdentificationWindowController implements Controllable {
             };
 
             captureFingerTask.addOnSucceeded(event1 -> {
-
                 Finger scannedFinger = captureFingerTask.getValue();
                 // if the user cancels capturing null finger is returned
                 if (scannedFinger == null || scannedFinger.isEmpty()) {
@@ -280,51 +261,53 @@ public class IdentificationWindowController implements Controllable {
                     if (alertAction.isPresent()) {
                         if (alertAction.get().equals(AlertAction.YES)) {
                             // TODO: Add new subscriber depend on current data
-                            System.out.println("Yes");
+                            System.out.println("Edit Subscriber ... not implemented yet.");
                         }
                     }
                     return;
                 }
 
-            Task<Boolean> matchFingerprintsTemplateTask = new Task<Boolean>() {
+                Task<Boolean> matchFingerprintsTemplateTask = new Task<Boolean>() {
 
-                @Override
-                protected Boolean call() throws Exception {
-                    String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
-                    String scannedFingerprint = scannedFinger.getFingerprintTemplate();
-                    return FingerprintManager.device().matchFingerprintTemplate(scannedFingerprint, subscriberFingerprint);
-                }
-            };
+                    @Override
+                    protected Boolean call() throws Exception {
+                        String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
+                        String scannedFingerprint = scannedFinger.getFingerprintTemplate();
+                        return FingerprintManager.device().matchFingerprintTemplate(scannedFingerprint, subscriberFingerprint);
+                    }
+                };
 
-            matchFingerprintsTemplateTask.addOnSucceeded(e -> {
-                boolean match = (Boolean) e.getSource().getValue();
-                String notes = match ? null : Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED");
-                Task<Void> updateSubscriberIdentificationTask = DAO.updateSubscriberIdentification(identificationId, subscriber, match, notes);
-                updateSubscriberIdentificationTask.addOnSucceeded(event2 -> showIdentificationState(match, subscriber, identificationId));
-                updateSubscriberIdentificationTask.addOnFailed(event2 -> {
-                    Throwable t = updateSubscriberIdentificationTask.getException();
-                    showUpdateIdentificationErrorAlert(t);
+                matchFingerprintsTemplateTask.addOnSucceeded(e -> {
+                    boolean match = (Boolean) e.getSource().getValue();
+                    String notes = match ? null : Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED");
+                    Task<Void> updateSubscriberIdentificationTask = DAO.updateSubscriberIdentification(identificationId, subscriber, match, notes);
+                    updateSubscriberIdentificationTask.addOnSucceeded(event2 -> showIdentificationState(match, subscriber, identificationId));
+                    updateSubscriberIdentificationTask.addOnFailed(event2 -> {
+                        Throwable t = updateSubscriberIdentificationTask.getException();
+                        showUpdateIdentificationErrorAlert(t);
+                    });
+
+                    Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
                 });
 
-                Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
+                matchFingerprintsTemplateTask.addOnFailed(e -> {
+                    Throwable t = matchFingerprintsTemplateTask.getException();
+                    showFailMatchFingerprintsAlert(t);
+                });
+                Threading.MAIN_EXECUTOR_SERVICE.submit(matchFingerprintsTemplateTask);
             });
 
-            matchFingerprintsTemplateTask.addOnFailed(e -> {
-                Throwable t = matchFingerprintsTemplateTask.getException();
-                showFailMatchFingerprintsAlert(t);
-            });
-            Threading.MAIN_EXECUTOR_SERVICE.submit(matchFingerprintsTemplateTask);
+            captureFingerTask.addOnFailed(event1 -> showFailCaptureFingerprintsAlert(captureFingerTask.getException()));
+
+            Threading.MAIN_EXECUTOR_SERVICE.submit(captureFingerTask);
         });
-
-        openDeviceTask.addOnFailed(event1 -> {
+        openDeviceTask.addOnFailed(event -> {
             Optional<AlertAction> result = Windows.showFingerprintDeviceError(event.getSource().getException());
             if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN) {
                 onFingerprintBtnClicked(null);
             }
         });
-
         Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
-        });
     }
 
     private void showIdentificationState(boolean state, @Nullable Subscriber subscriber, long identificationId) {
@@ -349,6 +332,14 @@ public class IdentificationWindowController implements Controllable {
                     body,
                     AlertAction.OK);
         }
+    }
+
+    private void showFailCaptureFingerprintsAlert(Throwable t) {
+        Windows.errorAlert(
+                Utils.getI18nString("ERROR"),
+                Utils.getI18nString("CAPTURE_FINGERPRINTS_TEMPLATE_FAILED"),
+                t,
+                AlertAction.OK);
     }
 
     private void showFailMatchFingerprintsAlert(Throwable t) {

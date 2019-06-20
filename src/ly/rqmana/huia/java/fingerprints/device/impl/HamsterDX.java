@@ -2,17 +2,16 @@ package ly.rqmana.huia.java.fingerprints.device.impl;
 
 import com.nitgen.SDK.BSP.NBioBSPJNI;
 import com.nitgen.SDK.BSP.NBioBSPJNI.FIR_TEXTENCODE;
-import javafx.util.Pair;
-import ly.rqmana.huia.java.fingerprints.*;
+import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
+import ly.rqmana.huia.java.fingerprints.FingerprintUtils;
+import ly.rqmana.huia.java.fingerprints.SecurityLevel;
 import ly.rqmana.huia.java.fingerprints.activity.FingerScanTimoutException;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintException;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDevice;
-import ly.rqmana.huia.java.fingerprints.SecurityLevel;
 import ly.rqmana.huia.java.fingerprints.hand.Finger;
 import ly.rqmana.huia.java.fingerprints.hand.FingerID;
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.fingerprints.hand.HandType;
-import ly.rqmana.huia.java.util.Triplet;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -30,7 +29,6 @@ public class HamsterDX extends FingerprintDevice {
     private final NBioBSPJNI.Export exportEngine;
 
     public HamsterDX(long timeoutMillis, SecurityLevel securityLevel) {
-
         super(timeoutMillis, securityLevel);
         this.BSP = new NBioBSPJNI();
         this.exportEngine = BSP.new Export();
