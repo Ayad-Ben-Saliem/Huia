@@ -96,7 +96,8 @@ public class PersonalImageLoaderController implements Controllable {
         webcamContainer.setAlignment(Pos.CENTER_LEFT);
 
         Webcam defaultWebcam = Webcam.getDefault();
-        Platform.runLater(() -> defaultWebcamBtn.setText(defaultWebcam.getName()));
+        if (defaultWebcam != null)
+            Platform.runLater(() -> defaultWebcamBtn.setText(defaultWebcam.getName()));
         defaultWebcamBtn.setOnAction(webcamBtnAction);
         for (Webcam webcam : Webcam.getWebcams()) {
             if (!webcam.equals(defaultWebcam)) {

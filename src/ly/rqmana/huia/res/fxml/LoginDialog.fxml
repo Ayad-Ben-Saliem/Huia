@@ -44,8 +44,8 @@
          <VBox.margin>
             <Insets />
          </VBox.margin>
-         <JFXButton fx:id="loginBtn" buttonType="RAISED" maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="50.0" prefWidth="100.0" styleClass="common-button" text="%LOGIN" HBox.hgrow="ALWAYS" />
-         <JFXButton fx:id="cancelBtn" buttonType="RAISED" maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="50.0" prefWidth="100.0" styleClass="common-button" text="%CANCEL" HBox.hgrow="ALWAYS" />
+         <JFXButton fx:id="loginBtn" buttonType="RAISED" maxWidth="Infinity" mnemonicParsing="false" prefHeight="50.0" prefWidth="100.0" styleClass="common-button" text="%LOGIN" HBox.hgrow="ALWAYS" />
+         <JFXButton fx:id="cancelBtn" buttonType="RAISED" maxWidth="Infinity" mnemonicParsing="false" prefHeight="50.0" prefWidth="100.0" styleClass="common-button" text="%CANCEL" HBox.hgrow="ALWAYS" />
       </HBox>
    </VBox>
    <ProgressIndicator fx:id="progress" visible="false">

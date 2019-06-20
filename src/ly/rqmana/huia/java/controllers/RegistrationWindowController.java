@@ -146,7 +146,8 @@ public class RegistrationWindowController implements Controllable {
                 personalPictures = personalChooser.getResult();
                 Image personalPicture = personalPictures.get(0);
 
-                personalPictureIV.setImage(personalPicture);
+                if (personalPicture != null)
+                    personalPictureIV.setImage(personalPicture);
             });
 
             Windows.LOAD_PERSONAL_PICTURE_DIALOG.show();

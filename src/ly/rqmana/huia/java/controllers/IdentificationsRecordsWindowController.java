@@ -12,6 +12,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
@@ -28,6 +29,7 @@ import java.util.ResourceBundle;
 
 public class IdentificationsRecordsWindowController implements Controllable {
 
+    @FXML public GridPane headerDetailsPane;
     @FXML private Label subscriberNameLabel;
     @FXML private Label subscriberWorkIdLabel;
     @FXML private Label identificationIdLabel;
@@ -58,6 +60,8 @@ public class IdentificationsRecordsWindowController implements Controllable {
     public void initialize(URL location, ResourceBundle resources) {
         initComponents();
         initListeners();
+
+        onSelectedItemChanged(null, null);
 
         lowerBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
         upperBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
@@ -112,7 +116,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
         });
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("subscriberName"));
-        workIdColumn.setCellValueFactory(new PropertyValueFactory<>("subscriberWorkIdLabel"));
+        workIdColumn.setCellValueFactory(new PropertyValueFactory<>("subscriberWorkId"));
         userColumn.setCellValueFactory(new PropertyValueFactory<>("providingUserName"));
 
     }
@@ -139,7 +143,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
     private void loadFromDatabase(){
 
         //TODO: check if you want to load identified only or not
-        Task<ObservableList<SubscriberIdentification>> loadTask = DAO.getSubscribersIdentifications(true);
+        Task<ObservableList<SubscriberIdentification>> loadTask = DAO.getSubscribersIdentifications(false);
 
         loadTask.addOnSucceeded(event -> {
             ObservableList<SubscriberIdentification> loadedData = loadTask.getValue();
@@ -164,7 +168,15 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
 
     private void onSelectedItemChanged(SubscriberIdentification oldId, SubscriberIdentification newId){
+        headerDetailsPane.setVisible(newId != null);
 
+        if (newId != null) {
+            identificationIdLabel.setText(Long.toHexString(newId.getId()));
+            subscriberNameLabel.setText(newId.getSubscriberName());
+            subscriberWorkIdLabel.setText(newId.getSubscriberWorkId());
+
+            // TODO: remaining Time
+        }
     }
 
     /* ***************************************** *

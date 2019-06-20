@@ -2,11 +2,15 @@ package ly.rqmana.huia.java.models;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import javafx.geometry.NodeOrientation;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
+import ly.rqmana.huia.java.fingerprints.hand.Finger;
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.fingerprints.hand.HandType;
 
+import javax.swing.*;
 import java.time.LocalDate;
 
 public class Subscriber extends Person {
@@ -47,30 +51,6 @@ public class Subscriber extends Person {
 
     public void setRelationship(Relationship relationship) {
         this.relationship = relationship;
-    }
-
-    public void setRelationship(String relationship) {
-        relationship = relationship.toUpperCase();
-        switch (relationship) {
-            case "المشترك":
-                this.relationship = Relationship.SUBSCRIBER;
-                break;
-            case "والد الموظف":
-                this.relationship = Relationship.FATHER;
-                break;
-            case "والدة الموظف":
-                this.relationship = Relationship.MOTHER;
-                break;
-            case "الإبن":
-                this.relationship = Relationship.SON;
-                break;
-            case "الإبنة":
-                this.relationship = Relationship.DAUGHTER;
-                break;
-            case "الزوجة":
-                this.relationship = Relationship.WIFE;
-                break;
-        }
     }
 
     public String getBeneficiaryName() {
@@ -224,35 +204,39 @@ public class Subscriber extends Person {
     // This method is used for TableView
     public Node getFingerprintsNodes() {
         HBox result = new HBox();
+        result.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+        result.setAlignment(Pos.CENTER);
 
-        result.getChildren().add(getFingerprintNode(getRightThumbFingerprint()));
-        result.getChildren().add(getFingerprintNode(getRightIndexFingerprint()));
-        result.getChildren().add(getFingerprintNode(getRightMiddleFingerprint()));
-        result.getChildren().add(getFingerprintNode(getRightRingFingerprint()));
-        result.getChildren().add(getFingerprintNode(getRightLittleFingerprint()));
+        if (hasFingerprint() && !isFingerprintsDetailed()) {
+            result.getChildren().add(getFingerprintNode(getAllFingerprintsTemplate()));
+        } else {
+            result.getChildren().add(getFingerprintNode(getRightLittleFingerprint()));
+            result.getChildren().add(getFingerprintNode(getRightRingFingerprint()));
+            result.getChildren().add(getFingerprintNode(getRightMiddleFingerprint()));
+            result.getChildren().add(getFingerprintNode(getRightIndexFingerprint()));
+            result.getChildren().add(getFingerprintNode(getRightThumbFingerprint()));
 
-        result.getChildren().add(getFingerprintNode(getLeftThumbFingerprint()));
-        result.getChildren().add(getFingerprintNode(getLeftIndexFingerprint()));
-        result.getChildren().add(getFingerprintNode(getLeftMiddleFingerprint()));
-        result.getChildren().add(getFingerprintNode(getLeftRingFingerprint()));
-        result.getChildren().add(getFingerprintNode(getLeftLittleFingerprint()));
-
-        boolean isThereFP = false;
-        for (Node child : result.getChildren()) {
-            FontAwesomeIconView fontAwesomeIconView = (FontAwesomeIconView) child;
-            if (FontAwesomeIcon.CHECK_CIRCLE.name().equals(fontAwesomeIconView.getDefaultGlyph().name())) {
-                isThereFP = true;
-                break;
-            }
+            result.getChildren().add(getFingerprintNode(getLeftThumbFingerprint()));
+            result.getChildren().add(getFingerprintNode(getLeftIndexFingerprint()));
+            result.getChildren().add(getFingerprintNode(getLeftMiddleFingerprint()));
+            result.getChildren().add(getFingerprintNode(getLeftRingFingerprint()));
+            result.getChildren().add(getFingerprintNode(getLeftLittleFingerprint()));
         }
-        if (!isThereFP) {
-            if (getAllFingerprintsTemplate() != null && !getAllFingerprintsTemplate().isEmpty()) {
-                FontAwesomeIconView fontAwesomeIconView = (FontAwesomeIconView) result.getChildren().get(0);
-                fontAwesomeIconView.setIcon(FontAwesomeIcon.CHECK_CIRCLE);
-            }
-        }
-
         return result;
+    }
+
+    public boolean isFingerprintsDetailed() {
+        boolean isDetailed = false;
+        for (Finger finger1 : getRightHand().getFingersUnmodifiable()) {
+            isDetailed |= !finger1.isEmpty();
+        }
+
+        if (isDetailed) return true;
+
+        for (Finger finger : getLeftHand().getFingersUnmodifiable()) {
+            isDetailed |= !finger.isEmpty();
+        }
+        return isDetailed;
     }
 
     private Node getFingerprintNode(String fingerprint) {

@@ -52,7 +52,7 @@
 
                 <JFXTextField fx:id="newEmployeeWorkIdTextField" labelFloat="true" maxWidth="-Infinity" minWidth="-Infinity" promptText="%WORK_ID" />
                 <CustomComboBox fx:id="employeesWorkIdComboBox" labelFloat="true" managed="false" prefWidth="217.0" promptText="%WORK_ID" visible="false" />
-                <CustomComboBox fx:id="relationshipComboBox" labelFloat="true" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="217.0" promptText="%EMPLOYEE_RELATIONSHIP" />
+                <CustomComboBox fx:id="relationshipComboBox" labelFloat="true" maxWidth="Infinity" minWidth="0.0" prefWidth="217.0" promptText="%EMPLOYEE_RELATIONSHIP" />
                 <padding>
                     <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
                 </padding>
@@ -73,7 +73,7 @@
          <JFXTextArea labelFloat="true" maxHeight="200.0" maxWidth="1000.0" minHeight="200.0" promptText="%NOTES" style="-fx-background-color: white;" />
          <JFXButton id="fingerprintBtn" buttonType="RAISED" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#onFingerprintBtnClicked" style="-fx-background-radius: 64;">
             <graphic>
-                <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true">
+                <ImageView fitHeight="100.0" fitWidth="100.0" pickOnBounds="true" preserveRatio="true" styleClass="ui-colored-image-view">
                     <Image url="@../images/huia_logo.png" />
                 </ImageView>
             </graphic>

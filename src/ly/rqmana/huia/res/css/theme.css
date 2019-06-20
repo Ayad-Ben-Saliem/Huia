@@ -65,6 +65,7 @@
 }
 
 .jfx-combo-box,
+.jfx-text-area,
 .jfx-text-field,
 .jfx-date-picker,
 .jfx-password-field {
@@ -150,4 +151,8 @@
 
 .header-pane .glyph-icon{
     -fx-fill: -rq-text-background;
+}
+
+.ui-colored-image-view {
+    -fx-effect: innershadow(gaussian, -rq-accent-unfocus, 127, 1, 0, 0);
 }

@@ -21,7 +21,7 @@
         <URL value="@../../css/theme.css"/>
     </stylesheets>
     <HBox fx:id="headingPane" spacing="15.0" styleClass="heading">
-        <Label fx:id="headingLabel" maxWidth="1.7976931348623157E308" text="Alert Title" wrapText="true" HBox.hgrow="ALWAYS"/>
+        <Label fx:id="headingLabel" maxWidth="Infinity" text="Alert Title" wrapText="true" HBox.hgrow="ALWAYS"/>
         <FontAwesomeIconView fx:id="graphicView" glyphName="QUESTION_CIRCLE" size="32"/>
     </HBox>
     <StackPane fx:id="bodyPane" styleClass="body">
@@ -32,7 +32,7 @@
             <VBox.margin>
                 <Insets bottom="5.0"/>
             </VBox.margin>
-            <FlowPane fx:id="actionsFlow" alignment="CENTER_RIGHT" hgap="8.0" maxWidth="1.7976931348623157E308" styleClass="flow-pane" HBox.hgrow="ALWAYS"/>
+            <FlowPane fx:id="actionsFlow" alignment="CENTER_RIGHT" hgap="8.0" maxWidth="Infinity" styleClass="flow-pane" HBox.hgrow="ALWAYS"/>
         </HBox>
     </VBox>
 </fx:root>

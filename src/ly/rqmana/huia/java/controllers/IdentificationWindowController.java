@@ -131,10 +131,9 @@ public class IdentificationWindowController implements Controllable {
 
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
 
-        subscribers.addAll(DAO.getOldSubscribers());
-
         subscribers.addAll(DAO.getSubscribers());
 
+        // TODO: This should remove
         subscribers.addAll(DAO.getNewSubscribers());
 
         setToTableView(subscribers);

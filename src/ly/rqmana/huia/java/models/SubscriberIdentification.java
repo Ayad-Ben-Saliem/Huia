@@ -58,8 +58,6 @@ public class SubscriberIdentification {
         this.user = user;
     }
 
-
-
     public String getSubscriberName(){
         if (subscriber != null)
             return this.subscriber.getFullName();

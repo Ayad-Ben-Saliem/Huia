@@ -1,6 +1,5 @@
 package ly.rqmana.huia.java.db;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import ly.rqmana.huia.java.concurrent.Task;
@@ -10,8 +9,8 @@ import ly.rqmana.huia.java.models.User;
 import ly.rqmana.huia.java.models.*;
 import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.storage.DataStorage;
+import ly.rqmana.huia.java.util.SQLUtils;
 import ly.rqmana.huia.java.util.Utils;
-import org.sqlite.core.DB;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -42,7 +41,6 @@ public class DAO {
     public static void initializeDB() throws SQLException {
         createTables();
 
-
         if (countRecords("Users").runAndGet() == 0) {
             insertAdminUser().runAndGet();
         }
@@ -56,15 +54,12 @@ public class DAO {
         }
     }
 
-    private static Task<Boolean> migrateOldData() throws SQLException {
+    private static Task<Boolean> migrateOldData() {
 
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-
-                Connection oldConnection = DriverManager.getConnection(getDataDBUrl());
-
-                ResultSet oldDataSet = oldConnection.createStatement().executeQuery("SELECT * FROM Fingerprint where company_id ='02';");
+                ResultSet oldDataSet = OLD_DB_CONNECTION.createStatement().executeQuery("SELECT * FROM Fingerprint where company_id ='02';");
 
                 String insertQuery = "INSERT INTO People("
                                     + "firstName        ,"
@@ -83,7 +78,7 @@ public class DAO {
                                     + "notes"
                                     + ") "
                                     + "Values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(insertQuery);
+                PreparedStatement pStatement = HUIA_DB_CONNECTION.prepareStatement(insertQuery);
 
                 System.out.println(System.currentTimeMillis());
                 while (oldDataSet.next()) {
@@ -142,10 +137,10 @@ public class DAO {
                 }
                 System.out.println(System.currentTimeMillis());
 
-                DB_CONNECTION.setAutoCommit(false);
+                HUIA_DB_CONNECTION.setAutoCommit(false);
                 pStatement.executeBatch();
-                DB_CONNECTION.commit();
-                DB_CONNECTION.setAutoCommit(true);
+                HUIA_DB_CONNECTION.commit();
+                HUIA_DB_CONNECTION.setAutoCommit(true);
                 return true;
             }
         };
@@ -329,7 +324,7 @@ public class DAO {
         return new Task<Long>() {
             @Override
             protected Long call() throws Exception {
-                Statement statement = DB_CONNECTION.createStatement();
+                Statement statement = HUIA_DB_CONNECTION.createStatement();
                 ResultSet resultSet = statement.executeQuery("SELECT Count(*) FROM " + tableName);
                 long count = -1;
                 while (resultSet.next()) {
@@ -421,7 +416,7 @@ public class DAO {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                Statement statement = DB_CONNECTION.createStatement();
+                Statement statement = HUIA_DB_CONNECTION.createStatement();
                 ResultSet resultSet = statement.executeQuery(String.format("SELECT id FROM Users WHERE username = '%s'", username));
                 return resultSet.next();
             }
@@ -562,55 +557,15 @@ public class DAO {
         };
     }
 
-    public static ObservableList<Subscriber> getOldSubscribers() throws SQLException {
-        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
-        String query = "SELECT " +
-                "id," +
-                "first_name," +
-                "father_name," +
-                "last_name," +
-                "birthday," +
-                "national_id," +
-                "sex," +
-                "fingerprint_template," +
-                "work_id," +
-                "relationship," +
-                "is_active FROM Fingerprint";
-        try (Statement statement = OLD_DB_CONNECTION.createStatement()) {
-            ResultSet resultSet = statement.executeQuery(query);
-
-            while (resultSet.next()) {
-                Subscriber subscriber = new Subscriber();
-
-                subscriber.setId(resultSet.getLong("id"));
-
-                subscriber.setFirstName(resultSet.getString("first_name"));
-                subscriber.setFatherName(resultSet.getString("father_name"));
-                subscriber.setFamilyName(resultSet.getString("last_name"));
-
-                subscriber.setBirthday(LocalDate.parse(resultSet.getString("birthday")));
-                subscriber.setNationalId(resultSet.getString("national_id"));
-                subscriber.setGender("M".equals(resultSet.getString("sex")) ? Gender.MALE : Gender.FEMALE);
-                subscriber.setAllFingerprintsTemplate(resultSet.getString("fingerprint_template"));
-                subscriber.setWorkId(resultSet.getString("work_id"));
-                subscriber.setRelationship(resultSet.getString("relationship"));
-                subscriber.setActive(resultSet.getString("is_active").equals("True"));
-
-                subscribers.add(subscriber);
-            }
-        }
-        return subscribers;
-    }
-
     public static ObservableList<Subscriber> getSubscribers() throws SQLException {
-        return getHuiaSubscribers("People");
+        return getSubscribers("People");
     }
 
     public static ObservableList<Subscriber> getNewSubscribers() throws SQLException {
-        return getHuiaSubscribers("NewRegistrations");
+        return getSubscribers("NewRegistrations");
     }
 
-    private static ObservableList<Subscriber> getHuiaSubscribers(String tableName) throws SQLException {
+    private static ObservableList<Subscriber> getSubscribers(String tableName) throws SQLException {
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
 
         String query = "SELECT " +
@@ -659,7 +614,7 @@ public class DAO {
             subscriber.setGender(Gender.valueOf(resultSet.getString("gender")));
 
             subscriber.setWorkId(resultSet.getString("workId"));
-            subscriber.setRelationship(resultSet.getString("relationship"));
+            subscriber.setRelationship(Relationship.parse(resultSet.getString("relationship")));
 
             if (tableName.equals("People"))
                 subscriber.setActive(resultSet.getBoolean("isActive"));
@@ -685,19 +640,19 @@ public class DAO {
         return subscribers;
     }
 
-    public static Task<Subscriber> getOldSubscriberById(long subscriberId)  {
+    public static Task<Subscriber> getSubscriberById(long subscriberId)  {
         return new Task<Subscriber>() {
             @Override
             protected Subscriber call() throws Exception {
-                PreparedStatement pStatement = OLD_DB_CONNECTION.prepareStatement("SELECT * FROM Fingerprint WHERE id=?;");
+                PreparedStatement pStatement = HUIA_DB_CONNECTION.prepareStatement("SELECT * FROM People WHERE id=?;");
                 pStatement.setLong(1, subscriberId);
                 ResultSet resultSet = pStatement.executeQuery();
                 if (resultSet.next()) {
                     Subscriber subscriber = new Subscriber();
 
                     subscriber.setId(subscriberId);
-                    subscriber.setFirstName(resultSet.getString("first_name"));
-                    subscriber.setFirstName(resultSet.getString("work_id"));
+                    subscriber.setFirstName(resultSet.getString("firstName"));
+                    subscriber.setFirstName(resultSet.getString("workId"));
 
                     return subscriber;
                 }
@@ -712,7 +667,7 @@ public class DAO {
             protected ObservableList<Subscriber> call() throws Exception {
                 final ObservableList<Subscriber> result = FXCollections.observableArrayList();
                 subscribersByIdes.forEach(subscriberById -> {
-                    result.add(getOldSubscriberById(subscriberById).runAndGet());
+                    result.add(getSubscriberById(subscriberById).runAndGet());
                 });
                 return result;
             }
@@ -903,78 +858,87 @@ public class DAO {
 
     public static Task<ObservableList<SubscriberIdentification>> getSubscribersIdentifications(boolean identifiedOnly) {
 
-//        String query = "SELECT "
-//                + "Identifications.id,"
-//                + "NewRegistrations.firstName AS subFirstName,"
-//                + "NewRegistrations.fatherName AS subFatherName,"
-//                + "NewRegistrations.grandfatherName AS subGrandfatherName,"
-//                + "NewRegistrations.familyName AS subFamilyName,"
-//                + "workId,"
-//                + "datetime,"
-//                + "isIdentified,"
-//                + "Identifications.username,"
-//                + "Users.firstName AS userFirstName,"
-//                + "Users.fatherName AS userFatherName,"
-//                + "Users.grandfatherName AS userGrandfatherName,"
-//                + "Users.familyName AS userFamilyName"
-//                + " FROM Identifications "
-//                + " INNER JOIN NewRegistrations ON NewRegistrations.id = Identifications.subscriberId"
-//                + " INNER JOIN Users ON Users.username = Identifications.username";
-//
-//        if (identifiedOnly)
-//            query += " WHERE isIdentified = 1;";
-//
-//        Statement statement = HUIA_DB_CONNECTION.createStatement();
-//        ResultSet resultSet = statement.executeQuery(query);
-//
-//        while (resultSet.next()) {
-//
-//            SubscriberIdentification identification = new SubscriberIdentification();
-//
-//            identification.setId(resultSet.getLong("id"));
-//            identification.setDateTime(SQLUtils.timestampToDateTime(resultSet.getLong("datetime")));
-//            identification.setIdentified(resultSet.getBoolean("isIdentified"));
-//
-//            Subscriber subscriber = new Subscriber();
-//            subscriber.setFirstName(resultSet.getString("subFirstName"));
-//            subscriber.setFatherName(resultSet.getString("subFatherName"));
-//            subscriber.setGrandfatherName(resultSet.getString("subGrandfatherName"));
-//            subscriber.setFamilyName(resultSet.getString("subFamilyName"));
-//            subscriber.setWorkId(resultSet.getString("workId"));
-//            subscriber.setWorkId(resultSet.getString("workId"));
-//
-//
-//            User user = new User();
-//            user.setFirstName(resultSet.getString("userFirstName"));
-//            user.setFatherName(resultSet.getString("userFatherName"));
-//            user.setGrandfatherName(resultSet.getString("userGrandfatherName"));
-//            user.setFamilyName(resultSet.getString("userFamilyName"));
-//
-//            identification.setSubscriber(subscriber);
-//            identification.setUser(user);
-//
-//            identifications.add(identification);
-//        }
-
         return new Task<ObservableList<SubscriberIdentification>>() {
             @Override
             protected ObservableList<SubscriberIdentification> call() throws Exception {
                 ObservableList<SubscriberIdentification> identifications = FXCollections.observableArrayList();
 
-                ResultSet resultSet = HUIA_DB_CONNECTION.createStatement().executeQuery("SELECT * FROM Identifications;");
+                String query = "SELECT "
+                        + "Identifications.id,"
+                        + "People.firstName AS subFirstName,"
+                        + "People.fatherName AS subFatherName,"
+                        + "People.grandfatherName AS subGrandfatherName,"
+                        + "People.familyName AS subFamilyName,"
+                        + "workId,"
+                        + "datetime,"
+                        + "isIdentified,"
+                        + "Identifications.username,"
+                        + "Users.firstName AS userFirstName,"
+                        + "Users.fatherName AS userFatherName,"
+                        + "Users.grandfatherName AS userGrandfatherName,"
+                        + "Users.familyName AS userFamilyName"
+                        + " FROM Identifications "
+                        + " INNER JOIN People ON People.id = Identifications.subscriberId"
+                        + " INNER JOIN Users ON Users.username = Identifications.username";
+
+                if (identifiedOnly)
+                    query += " WHERE isIdentified = 1;";
+
+                System.out.println("query = " + query);
+
+                Statement statement = HUIA_DB_CONNECTION.createStatement();
+                ResultSet resultSet = statement.executeQuery(query);
+
                 while (resultSet.next()) {
-                    Subscriber subscriber = getOldSubscriberById(resultSet.getLong("subscriberId")).runAndGet();
-                    SubscriberIdentification subscriberIdentification = new SubscriberIdentification();
-                    subscriberIdentification.setId(resultSet.getLong("id"));
-                    subscriberIdentification.setSubscriber(subscriber);
-                    subscriberIdentification.setDateTime(LocalDateTime.parse(resultSet.getString("id")));
-                    subscriberIdentification.setIdentified(resultSet.getBoolean("isIdentified"));
-//                    subscriberIdentification.setUser(resultSet.getBoolean("isIdentified"));
-                    identifications.add(subscriberIdentification);
+                    System.out.println("resultSet");
+                    SubscriberIdentification identification = new SubscriberIdentification();
+
+                    identification.setId(resultSet.getLong("id"));
+                    identification.setDateTime(SQLUtils.timestampToDateTime(resultSet.getLong("datetime")));
+                    identification.setIdentified(resultSet.getBoolean("isIdentified"));
+
+                    Subscriber subscriber = new Subscriber();
+                    subscriber.setFirstName(resultSet.getString("subFirstName"));
+                    subscriber.setFatherName(resultSet.getString("subFatherName"));
+                    subscriber.setGrandfatherName(resultSet.getString("subGrandfatherName"));
+                    subscriber.setFamilyName(resultSet.getString("subFamilyName"));
+                    subscriber.setWorkId(resultSet.getString("workId"));
+
+
+                    User user = new User();
+                    user.setFirstName(resultSet.getString("userFirstName"));
+                    user.setFatherName(resultSet.getString("userFatherName"));
+                    user.setGrandfatherName(resultSet.getString("userGrandfatherName"));
+                    user.setFamilyName(resultSet.getString("userFamilyName"));
+
+                    identification.setSubscriber(subscriber);
+                    identification.setUser(user);
+
+                    identifications.add(identification);
                 }
                 return identifications;
             }
         };
+
+//        return new Task<ObservableList<SubscriberIdentification>>() {
+//            @Override
+//            protected ObservableList<SubscriberIdentification> call() throws Exception {
+//                ObservableList<SubscriberIdentification> identifications = FXCollections.observableArrayList();
+//
+//                ResultSet resultSet = HUIA_DB_CONNECTION.createStatement().executeQuery("SELECT * FROM Identifications;");
+//                while (resultSet.next()) {
+//                    Subscriber subscriber = getOldSubscriberById(resultSet.getLong("subscriberId")).runAndGet();
+//                    SubscriberIdentification subscriberIdentification = new SubscriberIdentification();
+//                    subscriberIdentification.setId(resultSet.getLong("id"));
+//                    subscriberIdentification.setSubscriber(subscriber);
+//                    subscriberIdentification.setDateTime(LocalDateTime.parse(resultSet.getString("id")));
+//                    subscriberIdentification.setIdentified(resultSet.getBoolean("isIdentified"));
+////                    subscriberIdentification.setUser(resultSet.getBoolean("isIdentified"));
+//                    identifications.add(subscriberIdentification);
+//                }
+//                return identifications;
+//            }
+//        };
     }
 
     private static PreparedStatement setUpdateMap(String tableName, Map<String, Object> updateMap, Map<String, Object> filterMap) throws SQLException {

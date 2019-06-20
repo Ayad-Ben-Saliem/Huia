@@ -14,21 +14,21 @@
      </center>
      <bottom>
          <HBox BorderPane.alignment="CENTER">
-             <JFXButton fx:id="registrationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%REGISTRATION_PAGE" HBox.hgrow="ALWAYS">
+             <JFXButton fx:id="registrationBtn" maxWidth="Infinity" mnemonicParsing="false" styleClass="main-button" text="%REGISTRATION_PAGE" HBox.hgrow="ALWAYS">
             <HBox.margin>
                 <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
             </HBox.margin>
          </JFXButton>
-             <JFXButton fx:id="identificationBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%IDENTIFICATION_PAGE" HBox.hgrow="ALWAYS">
+             <JFXButton fx:id="identificationBtn" maxWidth="Infinity" mnemonicParsing="false" styleClass="main-button" text="%IDENTIFICATION_PAGE" HBox.hgrow="ALWAYS">
             <HBox.margin>
                 <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
             </HBox.margin>
          </JFXButton>
-         <JFXButton fx:id="identificationsRecordsBtn" layoutX="275.0" layoutY="11.0" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%IDENTIFICATIONS_RECORDS_PAGE" HBox.hgrow="ALWAYS">
+         <JFXButton fx:id="identificationsRecordsBtn" layoutX="275.0" layoutY="11.0" maxWidth="Infinity" mnemonicParsing="false" styleClass="main-button" text="%IDENTIFICATIONS_RECORDS_PAGE" HBox.hgrow="ALWAYS">
             <HBox.margin>
                <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
             </HBox.margin></JFXButton>
-         <JFXButton fx:id="settingsBtn" maxWidth="1.7976931348623157E308" mnemonicParsing="false" styleClass="main-button" text="%SETTINGS" HBox.hgrow="ALWAYS">
+         <JFXButton fx:id="settingsBtn" maxWidth="Infinity" mnemonicParsing="false" styleClass="main-button" text="%SETTINGS" HBox.hgrow="ALWAYS">
             <HBox.margin>
                 <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
             </HBox.margin>

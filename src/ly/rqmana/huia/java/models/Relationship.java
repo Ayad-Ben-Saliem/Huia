@@ -25,8 +25,17 @@ public enum Relationship {
         return name;
     }
 
+    public static Relationship parse(String relationshipString) {
+        if (relationshipString == null) return null;
 
-    public static Relationship parseArabic(String relationshipString){
+        if (relationshipString.equals("خاص") || relationshipString.equals("لا يوجد")) {
+            return null;
+        } else {
+            return valueOf(relationshipString);
+        }
+    }
+
+    public static Relationship parseArabic(String relationshipString) {
 
          switch(relationshipString){
                 case "المشترك":
