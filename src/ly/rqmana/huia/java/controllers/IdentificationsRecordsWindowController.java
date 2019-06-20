@@ -55,7 +55,6 @@ public class IdentificationsRecordsWindowController implements Controllable {
     private final ObservableList<SubscriberIdentification> cachedData = FXCollections.observableArrayList();
     private final FilteredList<SubscriberIdentification> filteredList = new FilteredList<SubscriberIdentification>(cachedData);
 
-    @Override
     public void initialize(URL location, ResourceBundle resources) {
         initComponents();
         initListeners();

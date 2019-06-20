@@ -1,5 +1,6 @@
 package ly.rqmana.huia.java.db;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import ly.rqmana.huia.java.concurrent.Task;
@@ -10,10 +11,12 @@ import ly.rqmana.huia.java.models.*;
 import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.storage.DataStorage;
 import ly.rqmana.huia.java.util.Utils;
+import org.sqlite.core.DB;
 
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,7 +33,7 @@ public class DAO {
             HUIA_DB_CONNECTION = DriverManager.getConnection(getDBUrl());
             OLD_DB_CONNECTION = DriverManager.getConnection(DAO.getDataDBUrl());
 
-//            initializeDB();
+            initializeDB();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -39,9 +42,113 @@ public class DAO {
     public static void initializeDB() throws SQLException {
         createTables();
 
-        insertAdminUser().runAndGet();
 
-        insertInstitute("الحديد").runAndGet();
+        if (countRecords("Users").runAndGet() == 0) {
+            insertAdminUser().runAndGet();
+        }
+
+        if (countRecords("Institutes").runAndGet() == 0) {
+            insertInstitute("الشركة الليبية للحديد والصلب").runAndGet();
+        }
+
+        if (countRecords("People").runAndGet() == 0) {
+            migrateOldData().runAndGet();
+        }
+    }
+
+    private static Task<Boolean> migrateOldData() throws SQLException {
+
+        return new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+
+                Connection oldConnection = DriverManager.getConnection(getDataDBUrl());
+
+                ResultSet oldDataSet = oldConnection.createStatement().executeQuery("SELECT * FROM Fingerprint where company_id ='02';");
+
+                String insertQuery = "INSERT INTO People("
+                                    + "firstName        ,"
+                                    + "fatherName           ,"
+                                    + "familyName           ,"
+                                    + "nationalId           ,"
+                                    + "birthday             ,"
+                                    + "gender               ,"
+                                    + "instituteId          ,"
+                                    + "workId               ,"
+                                    + "relationship         ,"
+                                    + "isActive             ,"
+                                    + "allFingerprintTemplates ,"
+                                    + "dateAdded ,"
+                                    + "user,"
+                                    + "notes"
+                                    + ") "
+                                    + "Values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(insertQuery);
+
+                System.out.println(System.currentTimeMillis());
+                while (oldDataSet.next()) {
+
+                    String firstName = oldDataSet.getString("first_name");
+                    String fatherName = oldDataSet.getString("father_name");
+                    String familyName = oldDataSet.getString("last_name");
+                    String nationalId = oldDataSet.getString("national_id");
+
+                    String birthdayString = oldDataSet.getString("birthday");
+                    LocalDate birthday = LocalDate.parse(birthdayString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+                    String genderString = oldDataSet.getString("sex");
+
+                    Gender gender;
+                    gender = genderString.equals("M") ? Gender.MALE: Gender.FEMALE;
+
+                    String allFingerprintsTemplates = oldDataSet.getString("fingerprint_template");
+                    String workId = oldDataSet.getString("work_id");
+
+                    String relationshipRawString = oldDataSet.getString("relationship");
+
+                    String relationship;
+                    if (relationshipRawString.equals("خاص") || relationshipRawString.equals("لا يوجد")){
+                        relationship = relationshipRawString;
+                    }
+                    else{
+                        relationship = Relationship.parseArabic(relationshipRawString).name();
+                    }
+
+                    String dateAdded = oldDataSet.getString("start_date");
+
+                    boolean isActive = SQLUtils.getBoolean(oldDataSet.getString("is_active"));
+                    String notes = oldDataSet.getString("notes");
+
+                    //TODo; sett institute id to 1
+
+                    pStatement.setString(1, firstName);
+                    pStatement.setString(2, fatherName);
+                    pStatement.setString(3, familyName);
+
+                    pStatement.setString(4, nationalId);
+                    pStatement.setString(5, birthday.toString());
+                    pStatement.setString(6, gender.name());
+                    pStatement.setLong(7, 1);
+                    pStatement.setString(8, workId);
+                    pStatement.setString(9, relationship);
+                    pStatement.setBoolean(10, isActive);
+                    pStatement.setString(11, allFingerprintsTemplates);
+                    pStatement.setString(12, dateAdded);
+
+                    pStatement.setLong(13, 1);
+                    pStatement.setString(14, notes);
+                    pStatement.addBatch();
+        //            "select * from Fingerprint where relationship!='الزوجةالإبن' and relationship!='المشترك' and relationship!='الإبنة' and relationship!='والدة الموظف' and relationship!='والد الموظف' and relationship!='لا يوجد'";
+                }
+                System.out.println(System.currentTimeMillis());
+
+                DB_CONNECTION.setAutoCommit(false);
+                pStatement.executeBatch();
+                DB_CONNECTION.commit();
+                DB_CONNECTION.setAutoCommit(true);
+                return true;
+            }
+        };
     }
 
     private static void createTables() throws SQLException {
@@ -218,21 +325,47 @@ public class DAO {
         statement.close();
     }
 
-    private static Task<Void> insertAdminUser() {
-        User adminUser = new User();
-        adminUser.setUsername("Admin");
-        adminUser.setPassword("Admin");
-        adminUser.setFirstName("Admin");
-        adminUser.setSuperuser(true);
-        adminUser.setStaff(true);
-        adminUser.setActive(true);
-        return insertUser(adminUser);
+    public static Task<Long> countRecords(String tableName){
+        return new Task<Long>() {
+            @Override
+            protected Long call() throws Exception {
+                Statement statement = DB_CONNECTION.createStatement();
+                ResultSet resultSet = statement.executeQuery("SELECT Count(*) FROM " + tableName);
+                long count = -1;
+                while (resultSet.next()) {
+                    count = resultSet.getLong(1);
+                }
+                return count;
+            }
+        };
     }
 
-    public static Task<Void> insertUser(User user) {
-        return new Task<Void>() {
+    private static Task<Boolean> insertAdminUser() {
+        return new Task<Boolean>(){
             @Override
-            protected Void call() throws Exception {
+            protected Boolean call() throws Exception {
+
+                    User adminUser = new User();
+                    adminUser.setUsername("Admin");
+                    adminUser.setPassword("Admin");
+                    adminUser.setFirstName("Admin");
+                    adminUser.setSuperuser(true);
+                    adminUser.setStaff(true);
+                    adminUser.setActive(true);
+
+                    if (! userExits(adminUser.getUsername()).runAndGet()) {
+                        return insertUser(adminUser).runAndGet();
+                    }
+                    return false;
+                };
+            };
+    }
+
+    public static Task<Boolean> insertUser(User user) {
+        return new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+
                 String insertQuery = "INSERT INTO Users (" +
                         "username," +
                         "password," +
@@ -279,7 +412,18 @@ public class DAO {
 
                 pStatement.execute();
                 pStatement.close();
-                return null;
+                return true;
+            }
+        };
+    }
+
+    public static Task<Boolean> userExits(String username){
+        return new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+                Statement statement = DB_CONNECTION.createStatement();
+                ResultSet resultSet = statement.executeQuery(String.format("SELECT id FROM Users WHERE username = '%s'", username));
+                return resultSet.next();
             }
         };
     }
@@ -360,7 +504,7 @@ public class DAO {
         return user;
     }
 
-    public static Task<Void> updateUser(User user, String field, Object value) throws SQLException {
+    public static Task<Boolean> updateUser(User user, String field, Object value) throws SQLException {
         if (user.getId() > 0)
             return updateUserById(user.getId(), field, value);
         else if (user.getUsername() != null && !user.getUsername().isEmpty())
@@ -369,7 +513,7 @@ public class DAO {
             throw new RuntimeException("Wrong User");
     }
 
-    public static Task<Void> updateUser(User user, Map<String, Object> updateMap)  {
+    public static Task<Boolean> updateUser(User user, Map<String, Object> updateMap)  {
         if (user.getId() > 0)
             return updateUserById(user.getId(), updateMap);
         else if (user.getUsername() != null && !user.getUsername().isEmpty())
@@ -378,42 +522,42 @@ public class DAO {
             throw new RuntimeException("Wrong User");
     }
 
-    public static Task<Void> updateUserById(long userId, String field, Object value) {
+    public static Task<Boolean> updateUserById(long userId, String field, Object value) {
         Map<String, Object> updateMap = new HashMap<>();
         updateMap.put(field, value);
         return updateUserById(userId, updateMap);
     }
 
-    public static Task<Void> updateUserById(long userId, Map<String, Object> updateMap) {
-        return new Task<Void>() {
+    public static Task<Boolean> updateUserById(long userId, Map<String, Object> updateMap) {
+        return new Task<Boolean>() {
             @Override
-            protected Void call() throws Exception {
+            protected Boolean call() throws Exception {
                 Map<String, Object> filterMap = new HashMap<>();
                 filterMap.put("id", userId);
                 PreparedStatement pStatement = setUpdateMap("Users", updateMap, filterMap);
                 pStatement.execute();
 
-                return null;
+                return true;
             }
         };
     }
 
-    public static Task<Void> updateUserByUsername(String username, String field, Object value) throws SQLException {
+    public static Task<Boolean> updateUserByUsername(String username, String field, Object value) throws SQLException {
         Map<String, Object> updateMap = new HashMap<>();
         updateMap.put(field, value);
         return updateUserByUsername(username, updateMap);
     }
 
-    public static Task<Void> updateUserByUsername(String username, Map<String, Object> updateMap) {
-        return new Task<Void>() {
+    public static Task<Boolean> updateUserByUsername(String username, Map<String, Object> updateMap) {
+        return new Task<Boolean>() {
             @Override
-            protected Void call() throws Exception {
+            protected Boolean call() throws Exception {
                 Map<String, Object> filterMap = new HashMap<>();
                 filterMap.put("username", username);
                 PreparedStatement pStatement = setUpdateMap("Users", updateMap, filterMap);
                 pStatement.execute();
 
-                return null;
+                return true;
             }
         };
     }
@@ -683,10 +827,10 @@ public class DAO {
         return generatedKeys.getLong(1);
     }
 
-    public static Task<Void> updateSubscriberIdentification(long identificationId, Subscriber subscriber, boolean isIdentified, String notes) {
-        return new Task<Void>() {
+    public static Task<Boolean> updateSubscriberIdentification(long identificationId, Subscriber subscriber, boolean isIdentified, String notes) {
+        return new Task<Boolean>() {
             @Override
-            protected Void call() throws Exception {
+            protected Boolean call() throws Exception {
                 String selectQuery = "SELECT notes FROM Identifications WHERE id=? AND subscriberId=?;";
                 PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(selectQuery);
                 pStatement.setLong(1, identificationId);
@@ -711,7 +855,7 @@ public class DAO {
 
                 pStatement.execute();
 
-                return null;
+                return true;
             }
         };
     }
