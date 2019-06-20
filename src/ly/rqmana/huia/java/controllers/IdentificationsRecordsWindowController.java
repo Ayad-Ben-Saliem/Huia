@@ -53,7 +53,6 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
     private final ObservableList<SubscriberIdentification> cachedData = FXCollections.observableArrayList();
 
-    @Override
     public void initialize(URL location, ResourceBundle resources) {
         initComponents();
         initListeners();

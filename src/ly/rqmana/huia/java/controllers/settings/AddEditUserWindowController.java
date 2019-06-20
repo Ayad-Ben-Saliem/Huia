@@ -140,7 +140,7 @@ public class AddEditUserWindowController implements Controllable {
             if (alertAction.get().equals(AlertAction.CANCEL))
                 return;
 
-            Task<Void> insertUpdateUserTask;
+            Task<Boolean> insertUpdateUserTask;
             if (editMode) {
                 // Register User
                 insertUpdateUserTask = DAO.updateUser(user, getUpdateMap());

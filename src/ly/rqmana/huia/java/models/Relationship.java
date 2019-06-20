@@ -1,15 +1,16 @@
 package ly.rqmana.huia.java.models;
 
+import com.sun.istack.internal.Nullable;
 import ly.rqmana.huia.java.util.Utils;
 
 public enum Relationship {
 
-    EMPLOYEE(Utils.getI18nString("THE_EMPLOYEE")),
-    FATHER(Utils.getI18nString("THE_FATHER")),
-    MOTHER(Utils.getI18nString("THE_MOTHER")),
-    SUN(Utils.getI18nString("SUN")),
+    SUBSCRIBER(Utils.getI18nString("SUBSCRIBER")),
+    FATHER(Utils.getI18nString("FATHER")),
+    MOTHER(Utils.getI18nString("MOTHER")),
+    SON(Utils.getI18nString("SON")),
     DAUGHTER(Utils.getI18nString("DAUGHTER")),
-    HUSBAND(Utils.getI18nString("THE_HUSBAND")),
+    HUSBAND(Utils.getI18nString("HUSBAND")),
     WIFE(Utils.getI18nString("WIFE")),
     ;
 
@@ -22,5 +23,27 @@ public enum Relationship {
     @Override
     public String toString() {
         return name;
+    }
+
+
+    public static Relationship parseArabic(String relationshipString){
+
+         switch(relationshipString){
+                case "المشترك":
+                    return SUBSCRIBER;
+                case "الزوجة":
+                    return WIFE;
+                case "الزوج":
+                    return HUSBAND;
+                case "الإبن":
+                    return SON;
+                case "الإبنة":
+                    return DAUGHTER;
+                case "والدة الموظف":
+                    return MOTHER;
+                case "والد الموظف":
+                    return FATHER;
+         }
+         throw new IllegalArgumentException("Couldn't determine relationship from arabic text: "+ relationshipString);
     }
 }

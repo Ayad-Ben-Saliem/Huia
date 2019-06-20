@@ -53,7 +53,7 @@ public class Subscriber extends Person {
         relationship = relationship.toUpperCase();
         switch (relationship) {
             case "المشترك":
-                this.relationship = Relationship.EMPLOYEE;
+                this.relationship = Relationship.SUBSCRIBER;
                 break;
             case "والد الموظف":
                 this.relationship = Relationship.FATHER;
@@ -62,7 +62,7 @@ public class Subscriber extends Person {
                 this.relationship = Relationship.MOTHER;
                 break;
             case "الإبن":
-                this.relationship = Relationship.SUN;
+                this.relationship = Relationship.SON;
                 break;
             case "الإبنة":
                 this.relationship = Relationship.DAUGHTER;

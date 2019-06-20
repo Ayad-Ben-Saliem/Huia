@@ -7,7 +7,6 @@ import com.jfoenix.validation.base.ValidatorBase;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
-import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -25,7 +24,6 @@ import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
-import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
@@ -34,7 +32,6 @@ import ly.rqmana.huia.java.models.Gender;
 import ly.rqmana.huia.java.models.Institute;
 import ly.rqmana.huia.java.models.Relationship;
 import ly.rqmana.huia.java.models.Subscriber;
-import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.storage.DataStorage;
 import ly.rqmana.huia.java.util.*;
 
@@ -75,9 +72,9 @@ public class RegistrationWindowController implements Controllable {
     public void initialize(URL location, ResourceBundle resources) {
 
         relationshipComboBox.setItems(FXCollections.observableArrayList(Relationship.values()));
-        relationshipComboBox.setValue(Relationship.EMPLOYEE);
+        relationshipComboBox.setValue(Relationship.SUBSCRIBER);
         relationshipComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-            boolean status = newValue.equals(Relationship.EMPLOYEE);
+            boolean status = newValue.equals(Relationship.SUBSCRIBER);
             newEmployeeWorkIdTextField.setVisible(status);
             newEmployeeWorkIdTextField.setManaged(status);
             employeesWorkIdComboBox.setVisible(!status);
@@ -303,7 +300,7 @@ public class RegistrationWindowController implements Controllable {
         validate &= nationalIdTextField.validate();
         validate &= nationalityTextField.validate();
 
-        if (relationshipComboBox.getValue().equals(Relationship.EMPLOYEE)) {
+        if (relationshipComboBox.getValue().equals(Relationship.SUBSCRIBER)) {
             validate &= newEmployeeWorkIdTextField.validate();
         } else {
             validate &= employeesWorkIdComboBox.validate();
@@ -392,7 +389,7 @@ public class RegistrationWindowController implements Controllable {
         subscriber.getPassport().setNumber(passport);
         subscriber.setResidence(residenceTextField.getText());
 
-        String workId = relationshipComboBox.getValue().equals(Relationship.EMPLOYEE)? newEmployeeWorkIdTextField.getText() : employeesWorkIdComboBox.getValue();
+        String workId = relationshipComboBox.getValue().equals(Relationship.SUBSCRIBER)? newEmployeeWorkIdTextField.getText() : employeesWorkIdComboBox.getValue();
         subscriber.setWorkId(workId);
         subscriber.setRelationship(relationshipComboBox.getValue());
 
