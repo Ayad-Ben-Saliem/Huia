@@ -141,7 +141,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
                 if (! empty && item != null){
                     long idInDecimal = item;
-                    String hexId = Long.toHexString(idInDecimal);
+                    String hexId = Long.toHexString(idInDecimal).toUpperCase();
                     setText(hexId);
                 }
                 else{
