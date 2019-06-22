@@ -2,22 +2,22 @@ package ly.rqmana.huia.java.models;
 
 public class Institute {
 
-    private final int id;
+    private final long id;
     private String name;
     private String description;
 
-    public Institute(int id, String name) {
+    public Institute(long id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public Institute(int id, String name, String description) {
+    public Institute(long id, String name, String description) {
         this.id = id;
         this.name = name;
         this.description = description;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 

@@ -20,6 +20,7 @@ import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.db.DAO;
+import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
 import ly.rqmana.huia.java.fingerprints.hand.Finger;
@@ -29,6 +30,7 @@ import ly.rqmana.huia.java.models.IdentificationRecord;
 import ly.rqmana.huia.java.models.Relationship;
 import ly.rqmana.huia.java.models.Subscriber;
 import ly.rqmana.huia.java.security.Auth;
+import ly.rqmana.huia.java.storage.DataStorage;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
@@ -37,9 +39,7 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class IdentificationWindowController implements Controllable {
@@ -242,8 +242,10 @@ public class IdentificationWindowController implements Controllable {
 
             captureFingerTask.addOnSucceeded(event1 -> {
                 Finger scannedFinger = captureFingerTask.getValue();
+
                 // if the user cancels capturing null finger is returned
                 if (scannedFinger == null || scannedFinger.isEmpty()) {
+
                     String notes =  Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED");
                     Task<Boolean> updateSubscriberIdentificationTask = DAO.updateIdentificationRecord(identificationId, subscriber,false, notes);
                     updateSubscriberIdentificationTask.addOnSucceeded(event2 -> showIdentificationProcessCanceledAlert());
@@ -263,7 +265,84 @@ public class IdentificationWindowController implements Controllable {
                     if (alertAction.isPresent()) {
                         if (alertAction.get().equals(AlertAction.YES)) {
                             // TODO: Add fingerprint to the current subscriber.
-                            System.out.println("Edit Subscriber ... not implemented yet.");
+
+                            // in case we want to register fingerprint for a subscriber
+
+                            Task<FingerprintCaptureResult> addFingerprintToSubscriberTask = new Task<FingerprintCaptureResult>() {
+                                @Override
+                                protected FingerprintCaptureResult call() throws Exception {
+                                    return FingerprintManager.device().captureHands();
+                                }
+                            };
+
+                            addFingerprintToSubscriberTask.addOnSucceeded(event2 ->{
+
+                                FingerprintCaptureResult captureResult = addFingerprintToSubscriberTask.getValue();
+
+                                if (captureResult == null || captureResult.isEmpty()) {
+                                    Windows.warningAlert(
+                                                        Utils.getI18nString("WARNING"),
+                                                        Utils.getI18nString("SCAN_FINGERPRINT_WARNING"),
+                                                        AlertAction.OK);
+                                }
+                                else{
+
+                                    subscriber.fillRightHand(captureResult.getRightHand());
+                                    subscriber.fillLeftHand(captureResult.getLeftHand());
+                                    subscriber.setAllFingerprintsTemplate(captureResult.getFingerprintsTemplate());
+
+                                    Task<Boolean> updateTask = new Task<Boolean>() {
+                                        @Override
+                                        protected Boolean call() throws Exception {
+
+                                            String dataPath = DataStorage.saveSubscriberData(subscriber).toString();
+                                            subscriber.setDataPath(dataPath);
+
+                                            Map<String, Object> updateMap = new HashMap<>();
+                                            updateMap.put("dataPath", dataPath);
+
+                                            updateMap.put("rightThumbFingerprint", subscriber.getRightThumbFingerprint());
+                                            updateMap.put("rightIndexFingerprint", subscriber.getRightIndexFingerprint());
+                                            updateMap.put("rightMiddleFingerprint", subscriber.getRightMiddleFingerprint());
+                                            updateMap.put("rightRingFingerprint", subscriber.getRightRingFingerprint());
+                                            updateMap.put("rightLittleFingerprint", subscriber.getRightLittleFingerprint());
+
+                                            updateMap.put("leftThumbFingerprint", subscriber.getLeftThumbFingerprint());
+                                            updateMap.put("leftIndexFingerprint", subscriber.getLeftIndexFingerprint());
+                                            updateMap.put("leftMiddleFingerprint", subscriber.getLeftMiddleFingerprint());
+                                            updateMap.put("leftRingFingerprint", subscriber.getLeftRingFingerprint());
+                                            updateMap.put("leftLittleFingerprint", subscriber.getLeftLittleFingerprint());
+
+                                            updateMap.put("allFingerprintTemplates", subscriber.getAllFingerprintsTemplate());
+                                            updateMap.put("user", Auth.getCurrentUser().getUsername());
+
+                                            DAO.updateSubscriberById(subscriber.getId(), updateMap).runAndGet();
+
+                                            return true;
+                                        }
+                                    };
+
+                                    updateTask.addOnSucceeded(event3 -> {
+                                        showFingerprintRegisterAddedSuccessfully(subscriber);
+                                        refreshTable();
+                                    });
+
+                                    updateTask.addOnFailed(event3 -> {
+                                        showFingerprintRegisterErrorAlert(event3.getSource().getException());
+                                    });
+
+                                    updateTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
+
+                                    Threading.MAIN_EXECUTOR_SERVICE.submit(updateTask);
+                                }
+
+                            });
+
+                            addFingerprintToSubscriberTask.addOnFailed(event2 -> {
+                                showFingerprintRegisterErrorAlert(event2.getSource().getException());
+                            });
+
+                            Threading.MAIN_EXECUTOR_SERVICE.submit(addFingerprintToSubscriberTask);
                         }
                     }
                     return;
@@ -404,6 +483,24 @@ public class IdentificationWindowController implements Controllable {
                 Utils.getI18nString("ERROR"),
                 Utils.getI18nString("SELECT_SUBSCRIBER_FIRST"),
                 null,
+                AlertAction.OK
+        );
+    }
+
+    private void showFingerprintRegisterErrorAlert(Throwable throwable){
+
+        Windows.errorAlert(
+                Utils.getI18nString("FINGERPRINT_REGISTER_FAILED_HEADING"),
+                Utils.getI18nString("FINGERPRINT_REGISTER_FAILED_BODY"),
+                throwable,
+                AlertAction.OK
+        );
+    }
+
+    private void showFingerprintRegisterAddedSuccessfully(Subscriber subscriber){
+         Windows.infoAlert(
+                Utils.getI18nString("FINGERPRINT_REGISTER_SUCCESS_HEADING"),
+                Utils.getI18nString("FINGERPRINT_REGISTER_SUCCESS_BODY").replace("{0}", subscriber.getFullName()),
                 AlertAction.OK
         );
     }

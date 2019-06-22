@@ -530,7 +530,7 @@ public class DAO {
             protected Boolean call() throws Exception {
                 Map<String, Object> filterMap = new HashMap<>();
                 filterMap.put("id", userId);
-                PreparedStatement pStatement = setUpdateMap("Users", updateMap, filterMap);
+                PreparedStatement pStatement = prepareUpdateStatement("Users", updateMap, filterMap);
                 pStatement.execute();
 
                 return true;
@@ -550,7 +550,7 @@ public class DAO {
             protected Boolean call() throws Exception {
                 Map<String, Object> filterMap = new HashMap<>();
                 filterMap.put("username", username);
-                PreparedStatement pStatement = setUpdateMap("Users", updateMap, filterMap);
+                PreparedStatement pStatement = prepareUpdateStatement("Users", updateMap, filterMap);
                 pStatement.execute();
 
                 return true;
@@ -569,11 +569,14 @@ public class DAO {
     private static ObservableList<Subscriber> getSubscribers(String tableName) throws SQLException {
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
 
+//        @SuppressWarnings("SqlResolve")
         String query = "SELECT " +
-                "id," +
+                 tableName + ".id," +
                 "firstName," +
                 "fatherName," +
                 "grandfatherName," +
+                "instituteId, " +
+                "Institutes.name AS instituteName, "+
                 "familyName," +
                 "birthday," +
                 "nationalId," +
@@ -581,8 +584,10 @@ public class DAO {
                 "gender," +
                 "workId," +
                 "relationship,";
+
         if (tableName.equals("People"))
-                query += "isActive,";
+            query += "isActive,";
+
         query += "allFingerprintTemplates," +
                  "rightThumbFingerprint," +
                  "rightIndexFingerprint," +
@@ -595,6 +600,8 @@ public class DAO {
                  "leftRingFingerprint," +
                  "leftLittleFingerprint" +
                  " FROM " + tableName;
+
+        query += " INNER JOIN Institutes ON Institutes.id = "+ tableName +".instituteId ";
 
         Statement statement = HUIA_DB_CONNECTION.createStatement();
         ResultSet resultSet = statement.executeQuery(query);
@@ -613,6 +620,11 @@ public class DAO {
             subscriber.setBirthday(birthday==null? null : LocalDate.parse(birthday));
             subscriber.setNationalId(resultSet.getString("nationalId"));
             subscriber.setGender(Gender.valueOf(resultSet.getString("gender")));
+
+
+            long instituteId = resultSet.getLong("instituteId");
+            String instituteName = resultSet.getString("instituteName");
+            subscriber.setInstitute(new Institute(instituteId, instituteName));
 
             subscriber.setWorkId(resultSet.getString("workId"));
             subscriber.setRelationship(Relationship.parse(resultSet.getString("relationship")));
@@ -717,7 +729,7 @@ public class DAO {
         LocalDate birthday = subscriber.getBirthday();
         pStatement.setString(7, birthday==null? null : birthday.toString());
         pStatement.setString(8, subscriber.getGender().name());
-        pStatement.setInt(9, subscriber.getInstitute().getId());
+        pStatement.setLong(9, subscriber.getInstitute().getId());
 
         pStatement.setString(10, subscriber.getFamilyId());
         pStatement.setString(11, subscriber.getResidence());
@@ -748,6 +760,20 @@ public class DAO {
         return generatedKeys.getLong(1);
     }
 
+    public static Task<Boolean> updateSubscriberById(long subscriberId, Map<String, Object> updateMap){
+        return new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+                Map<String, Object> filterMap = new HashMap<>();
+                filterMap.put("id", subscriberId);
+
+                PreparedStatement preparedStatement = prepareUpdateStatement("People", updateMap, filterMap);
+
+                preparedStatement.execute();
+                return true;
+            }
+        };
+    }
     public static void updateSubscriberDataPath(Subscriber subscriber) throws SQLException {
         PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement("UPDATE NewRegistrations SET dataPath= ? WHERE id= ?");
         pStatement.setString(1, subscriber.getDataPath());
@@ -919,8 +945,8 @@ public class DAO {
         };
     }
 
-    private static PreparedStatement setUpdateMap(String tableName, Map<String, Object> updateMap, Map<String, Object> filterMap) throws SQLException {
-        StringBuilder query = new StringBuilder("UPDATE Users SET ");
+    private static PreparedStatement prepareUpdateStatement(String tableName, Map<String, Object> updateMap, Map<String, Object> filterMap) throws SQLException {
+        StringBuilder query = new StringBuilder("UPDATE "+ tableName +" SET ");
         updateMap.keySet().forEach(key -> query.append(String.format("%s=?,", key)));
         query.deleteCharAt(query.length() - 1);
 
