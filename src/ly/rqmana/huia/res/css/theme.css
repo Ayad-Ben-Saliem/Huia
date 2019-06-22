@@ -156,3 +156,20 @@
 .ui-colored-image-view {
     -fx-effect: innershadow(gaussian, -rq-accent-unfocus, 127, 1, 0, 0);
 }
+
+
+/*********** count down {type: GridPange} ***********/
+/*
+    structure:
+    - header                 (VBox)
+        - label              (Label)
+*/
+
+.count-down .header{
+    -fx-background-color: -rq-background-alt, -rq-background, -rq-background-alt;
+    -fx-background-insets: 0 0 0 0, 0 0 1 0, 0 0 2 0;
+}
+
+.count-down .header .label{
+    -fx-text-fill: -rq-text-background-alt;
+}

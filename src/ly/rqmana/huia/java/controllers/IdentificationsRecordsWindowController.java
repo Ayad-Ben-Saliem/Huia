@@ -4,6 +4,7 @@ import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXCheckBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -14,7 +15,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
@@ -27,11 +27,16 @@ import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
 
 import java.net.URL;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class IdentificationsRecordsWindowController implements Controllable {
 
@@ -76,9 +81,12 @@ public class IdentificationsRecordsWindowController implements Controllable {
     @FXML private Label subscriberNameLabel;
     @FXML private Label subscriberWorkIdLabel;
     @FXML private Label identificationIdLabel;
-    @FXML private Label remainingTimeLabel;
 
-    @FXML private VBox searchFieldsContainer;
+    @FXML private Label hoursCountLabel;
+    @FXML private Label minutesCountLabel;
+    @FXML private Label secondsCountLabel;
+
+    @FXML private TitledPane filtersBox;
     @FXML private JFXTextField nameFilterField;
     @FXML private JFXTextField workIdFilterField;
     @FXML private JFXDatePicker lowerBoundDatePicker;
@@ -99,6 +107,8 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
     private final ObservableList<IdentificationRecord> cachedData = FXCollections.observableArrayList();
     private final FilteredList<IdentificationRecord> filteredList = new FilteredList<>(cachedData);
+
+    private final static Long IDENTIFICATION_VALIDITY = 24L;
 
     public void initialize(URL location, ResourceBundle resources) {
 
@@ -161,7 +171,6 @@ public class IdentificationsRecordsWindowController implements Controllable {
                 setLowerDateTimeBound(LocalDateTime.of(newValue, LocalTime.MIN));
         });
 
-
         upperDateTimeBoundProperty().addListener((observable, oldValue, newValue) -> {
             upperBoundDatePicker.setValue(newValue.toLocalDate());
         });
@@ -170,7 +179,6 @@ public class IdentificationsRecordsWindowController implements Controllable {
             lowerBoundDatePicker.setValue(newValue.toLocalDate());
         });
 
-
         lowerBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
         upperBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
 
@@ -178,7 +186,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
         tableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> onSelectedItemChanged(oldValue, newValue));
 
-        // *** filtering-related listeners...
+        // *** filtering-related listeners *****
         searchButton.addEventFilter(ActionEvent.ACTION, event -> applyFilters());
 
         searchByHoursCheck.selectedProperty().addListener((observable, oldValue, newValue) -> applyFilters());
@@ -190,6 +198,41 @@ public class IdentificationsRecordsWindowController implements Controllable {
         upperDateTimeBoundProperty().addListener((observable, oldValue, newValue) -> applyFilters());
 
         lastHoursSpinner.valueProperty().addListener((observable, oldValue, newValue) -> applyFilters());
+
+        // ================== remaining time service ===================== //
+        Threading.TIME_COUNT_SERVICE.scheduleAtFixedRate(() -> {
+            Platform.runLater(() -> {
+
+                if (isEmptySelection())
+                    return;
+
+                LocalDateTime startDate = getSelectedRecord().getDateTime();
+                LocalDateTime endDate = startDate.plusHours(IDENTIFICATION_VALIDITY);
+                LocalDateTime now = LocalDateTime.now();
+
+
+                long hours = now.until( endDate, ChronoUnit.HOURS);
+                now = now.plusHours( hours );
+
+                long minutes = now.until( endDate, ChronoUnit.MINUTES);
+                now = now.plusMinutes( minutes );
+
+                long seconds = now.until( endDate, ChronoUnit.SECONDS);
+
+                if (now.isAfter(endDate)){
+                    hours = 0;
+                    minutes = 0;
+                    seconds = 0;
+                }
+
+                String format = "%02d";
+
+                hoursCountLabel.setText(String.format(format, hours));
+                minutesCountLabel.setText(String.format(format, minutes));
+                secondsCountLabel.setText(String.format(format, seconds));
+
+            });
+        }, 0, 1000, TimeUnit.MILLISECONDS);
     }
 
     private void loadFromDatabase(){

@@ -86,6 +86,22 @@
 }
 
 
+/*********** count down {type: GridPange} ***********/
+/*
+    structure:
+    - header                 (VBox)
+        - label              (Label)
+*/
+.count-down .label{
+    -fx-font-size: 20pt;
+}
+
+.count-down .header{
+    -fx-alignment: center;
+    -fx-background-radius: 10;
+    -fx-padding: 0;
+}
+
 /*********** info alert {type: CustomAlert} ***********/
 /*
     structure:
@@ -144,6 +160,10 @@
     -fx-font-size: 10pt;
 }
 
+
+
 .centred-column {
     -fx-alignment: CENTER;
 }
+
+
