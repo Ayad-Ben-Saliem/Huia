@@ -38,13 +38,16 @@ public final class SQLUtils {
         return epochSeconds;
     }
 
-    public static LocalDate timestampToDate(long timestamp){
-        return timestampToDateTime(timestamp).toLocalDate();
-    }
-
     public static LocalDateTime timestampToDateTime(long timestamp){
         long epochMillis = TimeUnit.MILLISECONDS.convert(timestamp, TimeUnit.SECONDS);
         return new Timestamp(epochMillis).toLocalDateTime();
     }
 
+    public static LocalDateTime sqlDateTimeToLocalDateTime(String SQLDateTime){
+        return LocalDateTime.parse(SQLDateTime, DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss"));
+    }
+
+    public static String localDateTimetoSQLDateTime(LocalDateTime localDateTime){
+        return DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss").format(localDateTime);
+    }
 }
