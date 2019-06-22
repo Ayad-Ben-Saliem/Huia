@@ -2,7 +2,7 @@ package ly.rqmana.huia.java.models;
 
 import java.time.LocalDateTime;
 
-public class SubscriberIdentification {
+public class IdentificationRecord {
 
     private long id;
     private LocalDateTime dateTime;

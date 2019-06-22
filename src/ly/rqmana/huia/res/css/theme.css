@@ -120,7 +120,7 @@
 
 .jfx-check-box {
     -jfx-checked-color: -rq-accent-unfocus;
-    -jfx-unchecked-color: -rq-accent-focus;
+    -jfx-unchecked-color: lightgrey;
 }
 
 .jfx-text-area {

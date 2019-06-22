@@ -9,6 +9,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -18,16 +19,59 @@ import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.db.DAO;
-import ly.rqmana.huia.java.models.SubscriberIdentification;
+import ly.rqmana.huia.java.models.IdentificationRecord;
+import ly.rqmana.huia.java.models.Subscriber;
+import ly.rqmana.huia.java.models.User;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
 
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class IdentificationsRecordsWindowController implements Controllable {
+
+    /* ************************************************* *
+     *
+     *
+     *                  Test & Dev
+     *
+     *  ************************************************ */
+
+    private void addTestRecords(int count){
+
+        for (int i = 0; i < count; i++){
+
+            Subscriber subscriber = new Subscriber();
+            subscriber.setWorkId("TWorker" + i);
+
+            subscriber.setFirstName("Test" + i);
+            subscriber.setFatherName("Test");
+            subscriber.setGrandfatherName("Test");
+            subscriber.setFamilyName("Test");
+
+            User user = new User();
+            user.setFirstName("Test " + i);
+            user.setFamilyName("User");
+
+            IdentificationRecord identification = new IdentificationRecord();
+            identification.setIdentified(true);
+            identification.setDateTime(LocalDateTime.now());
+            identification.setSubscriber(subscriber);
+            identification.setUser(user);
+
+            identification.setId((long) (Math.random() * 1000 + i));
+
+            tableView.getItems().add(identification);
+        }
+    }
+
+
+    // ********************** ******************************** //
 
     @FXML public GridPane headerDetailsPane;
     @FXML private Label subscriberNameLabel;
@@ -36,70 +80,52 @@ public class IdentificationsRecordsWindowController implements Controllable {
     @FXML private Label remainingTimeLabel;
 
     @FXML private VBox searchFieldsContainer;
-    @FXML private JFXTextField nameFilterTF;
-    @FXML private JFXTextField workIdTF;
+    @FXML private JFXTextField nameFilterField;
+    @FXML private JFXTextField workIdFilterField;
     @FXML private JFXDatePicker lowerBoundDatePicker;
     @FXML private JFXDatePicker upperBoundDatePicker;
 
     @FXML private JFXCheckBox searchByHoursCheck;
-    @FXML private Spinner lastHoursSpinner;
+    @FXML private Spinner<Integer> lastHoursSpinner;
     @FXML private JFXButton searchButton;
     
-    @FXML private TableView<SubscriberIdentification> tableView;
-    @FXML private TableColumn<SubscriberIdentification, Long> identificationId;
-    @FXML private TableColumn<SubscriberIdentification, String> nameColumn;
-    @FXML private TableColumn<SubscriberIdentification, String> workIdColumn;
-    @FXML private TableColumn<SubscriberIdentification, String> userColumn;
+    @FXML private TableView<IdentificationRecord> tableView;
+    @FXML private TableColumn<IdentificationRecord, Long> identificationId;
+    @FXML private TableColumn<IdentificationRecord, String> nameColumn;
+    @FXML private TableColumn<IdentificationRecord, String> workIdColumn;
+    @FXML private TableColumn<IdentificationRecord, String> userColumn;
 
     private final ObjectProperty<LocalDateTime> upperDateTimeBound = new SimpleObjectProperty<>();
     private final ObjectProperty<LocalDateTime> lowerDateTimeBound = new SimpleObjectProperty<>();
 
-    private final ObservableList<SubscriberIdentification> cachedData = FXCollections.observableArrayList();
-    private final FilteredList<SubscriberIdentification> filteredList = new FilteredList<SubscriberIdentification>(cachedData);
+    private final ObservableList<IdentificationRecord> cachedData = FXCollections.observableArrayList();
+    private final FilteredList<IdentificationRecord> filteredList = new FilteredList<>(cachedData);
 
     public void initialize(URL location, ResourceBundle resources) {
+
         initComponents();
         initListeners();
 
         onSelectedItemChanged(null, null);
+        searchByHoursCheck.setSelected(true);
 
-        lowerBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
-        upperBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
-
-//        for (int i = 0; i < 4; i++){
-//
-//            Subscriber subscriber = new Subscriber();
-//            subscriber.setWorkId("TWorker" + i);
-//
-//            subscriber.setFirstName("Test" + i);
-//            subscriber.setFatherName("Test");
-//            subscriber.setGrandfatherName("Test");
-//            subscriber.setFamilyName("Test");
-//
-//            User user = new User();
-//            user.setFirstName("Test " + i);
-//            user.setFamilyName("User");
-//
-//            SubscriberIdentification identification = new SubscriberIdentification();
-//            identification.setIdentified(true);
-//            identification.setDateTime(LocalDateTime.now());
-//            identification.setSubscriber(subscriber);
-//            identification.setUser(user);
-//
-//            identification.setId((long) (Math.random() * 1000 + i));
-//
-//            tableView.getItems().add(identification);
-//        }
+        lowerBoundDatePicker.setValue(LocalDate.now().minusDays(1));
+        upperBoundDatePicker.setValue(LocalDate.now());
 
         loadFromDatabase();
-        tableView.setItems(filteredList);
     }
 
     private void initComponents(){
 
+        // set the source of the data of the table from the filtered list
+
+        tableView.setItems(filteredList);
+
+        lastHoursSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, 12));
+
         identificationId.setCellValueFactory(new PropertyValueFactory<>("id"));
 
-        identificationId.setCellFactory(param -> new TableCell<SubscriberIdentification, Long>(){
+        identificationId.setCellFactory(param -> new TableCell<IdentificationRecord, Long>(){
             @Override
             protected void updateItem(Long item, boolean empty) {
                 super.updateItem(item, empty);
@@ -118,38 +144,64 @@ public class IdentificationsRecordsWindowController implements Controllable {
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("subscriberName"));
         workIdColumn.setCellValueFactory(new PropertyValueFactory<>("subscriberWorkId"));
         userColumn.setCellValueFactory(new PropertyValueFactory<>("providingUserName"));
-
     }
 
     private void initListeners(){
 
+        upperBoundDatePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue == null)
+                setUpperDateTimeBound(null);
+            else
+                setUpperDateTimeBound(LocalDateTime.of(newValue, LocalTime.MAX));
+        });
+
+        lowerBoundDatePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue == null)
+                setLowerDateTimeBound(null);
+            else
+                setLowerDateTimeBound(LocalDateTime.of(newValue, LocalTime.MIN));
+        });
+
+
         upperDateTimeBoundProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == null) {
-                throw new IllegalArgumentException("DateTime bound cannot be null");
-            }
             upperBoundDatePicker.setValue(newValue.toLocalDate());
         });
 
         lowerDateTimeBoundProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == null) {
-                throw new IllegalArgumentException("DateTime bound cannot be null");
-            }
             lowerBoundDatePicker.setValue(newValue.toLocalDate());
         });
 
+
+        lowerBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
+        upperBoundDatePicker.disableProperty().bind(searchByHoursCheck.selectedProperty());
+
+        searchByHoursCheck.selectedProperty().addListener((observable, oldValue, newValue) -> lastHoursSpinner.setDisable(! newValue));
+
         tableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> onSelectedItemChanged(oldValue, newValue));
+
+        // *** filtering-related listeners...
+        searchButton.addEventFilter(ActionEvent.ACTION, event -> applyFilters());
+
+        searchByHoursCheck.selectedProperty().addListener((observable, oldValue, newValue) -> applyFilters());
+
+        nameFilterField.textProperty().addListener((observable, oldValue, newValue) -> applyFilters());
+        workIdFilterField.textProperty().addListener((observable, oldValue, newValue) -> applyFilters());
+
+        lowerDateTimeBoundProperty().addListener((observable, oldValue, newValue) -> applyFilters());
+        upperDateTimeBoundProperty().addListener((observable, oldValue, newValue) -> applyFilters());
+
+        lastHoursSpinner.valueProperty().addListener((observable, oldValue, newValue) -> applyFilters());
     }
 
     private void loadFromDatabase(){
 
         //TODO: check if you want to load identified only or not
-        Task<ObservableList<SubscriberIdentification>> loadTask = DAO.getSubscribersIdentifications(false);
+        Task<ObservableList<IdentificationRecord>> loadTask = DAO.getIdentificationRecords(false);
 
         loadTask.addOnSucceeded(event -> {
-            ObservableList<SubscriberIdentification> loadedData = loadTask.getValue();
+            ObservableList<IdentificationRecord> loadedData = loadTask.getValue();
             cachedData.setAll(loadedData);
-            System.out.println("loadedData = " + loadedData);
-//            syncTableData();
+            applyFilters();
         });
 
         loadTask.addOnFailed(event -> {
@@ -166,8 +218,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
         Threading.MAIN_EXECUTOR_SERVICE.submit(loadTask);
     }
 
-
-    private void onSelectedItemChanged(SubscriberIdentification oldId, SubscriberIdentification newId){
+    private void onSelectedItemChanged(IdentificationRecord oldId, IdentificationRecord newId){
         headerDetailsPane.setVisible(newId != null);
 
         if (newId != null) {
@@ -185,25 +236,66 @@ public class IdentificationsRecordsWindowController implements Controllable {
      *
      * ***************************************** */
 
-    private void syncTableData(){
-        getIdentifications().setAll(cachedData);
-        System.out.println(cachedData.size());
-//        getIdentifications().removeIf(identification -> {
-//
-//        });
+    private void applyFilters(){
+
+        String nameFilter = nameFilterField.getText();
+        String wordIdFilter = workIdFilterField.getText();
+
+        boolean isSearchByHours = searchByHoursCheck.isSelected();
+
+        LocalDateTime lowerBound = getLowerDateTimeBound();
+        LocalDateTime upperBound = getUpperDateTimeBound();
+
+        filteredList.setPredicate(record -> {
+            boolean match = true;
+
+            if (! nameFilter.isEmpty())
+                match = record.getSubscriberName().contains(nameFilter);
+
+            if (! wordIdFilter.isEmpty())
+                match = match && record.getSubscriberWorkId().contains(wordIdFilter);
+
+            LocalDateTime dateTime = record.getDateTime();
+
+            if (! isSearchByHours){
+
+                if (lowerBound != null)
+                    match = match && (dateTime.isAfter(lowerBound) || dateTime.isEqual(lowerBound));
+
+                if (upperBound != null)
+                    match = match && (dateTime.isBefore(upperBound) || dateTime.isEqual(upperBound));
+            }
+            else{
+                LocalDateTime hoursFilter = LocalDateTime.now().minusHours(lastHoursSpinner.getValue());
+                match = match && (dateTime.isAfter(hoursFilter) || dateTime.isEqual(hoursFilter));
+            }
+
+            return match;
+        });
     }
 
-    public ObservableList<SubscriberIdentification> getIdentifications(){
+    private ObservableList<IdentificationRecord> getVisibleRecords(){
         return tableView.getItems();
     }
 
-    public SubscriberIdentification getSelectedIdentification(){
+    private IdentificationRecord getSelectedRecord(){
         return tableView.getSelectionModel().getSelectedItem();
     }
 
     public boolean isEmptySelection(){
-        return getSelectedIdentification() == null;
+        return getSelectedRecord() == null;
     }
+
+    public void addIdentificationRecord(IdentificationRecord record){
+        cachedData.add(record);
+        applyFilters();
+    }
+
+    public void addIdentificationRecords(List<IdentificationRecord> records){
+        cachedData.addAll(records);
+        applyFilters();
+    }
+
     /* ***************************************** *
      *
      *             Setters && Getters

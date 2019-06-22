@@ -34,6 +34,7 @@ public class DAO {
 
             initializeDB();
         } catch (SQLException e) {
+            
             throw new RuntimeException(e);
         }
     }
@@ -755,7 +756,7 @@ public class DAO {
         pStatement.executeUpdate();
     }
 
-    public static long insertSubscriberIdentification(Subscriber subscriber) throws SQLException {
+    public static long insertIdentificationRecord(Subscriber subscriber) throws SQLException {
         final String insertQuery
                         = "INSERT INTO Identifications ("
                         + "subscriberId,"
@@ -782,7 +783,7 @@ public class DAO {
         return generatedKeys.getLong(1);
     }
 
-    public static Task<Boolean> updateSubscriberIdentification(long identificationId, Subscriber subscriber, boolean isIdentified, String notes) {
+    public static Task<Boolean> updateIdentificationRecord(long identificationId, Subscriber subscriber, boolean isIdentified, String notes) {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
@@ -856,12 +857,12 @@ public class DAO {
         };
     }
 
-    public static Task<ObservableList<SubscriberIdentification>> getSubscribersIdentifications(boolean identifiedOnly) {
+    public static Task<ObservableList<IdentificationRecord>> getIdentificationRecords(boolean identifiedOnly) {
 
-        return new Task<ObservableList<SubscriberIdentification>>() {
+        return new Task<ObservableList<IdentificationRecord>>() {
             @Override
-            protected ObservableList<SubscriberIdentification> call() throws Exception {
-                ObservableList<SubscriberIdentification> identifications = FXCollections.observableArrayList();
+            protected ObservableList<IdentificationRecord> call() throws Exception {
+                ObservableList<IdentificationRecord> identifications = FXCollections.observableArrayList();
 
                 String query = "SELECT "
                         + "Identifications.id,"
@@ -884,14 +885,11 @@ public class DAO {
                 if (identifiedOnly)
                     query += " WHERE isIdentified = 1;";
 
-                System.out.println("query = " + query);
-
                 Statement statement = HUIA_DB_CONNECTION.createStatement();
                 ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
-                    System.out.println("resultSet");
-                    SubscriberIdentification identification = new SubscriberIdentification();
+                    IdentificationRecord identification = new IdentificationRecord();
 
                     identification.setId(resultSet.getLong("id"));
                     identification.setDateTime(SQLUtils.timestampToDateTime(resultSet.getLong("datetime")));
@@ -919,26 +917,6 @@ public class DAO {
                 return identifications;
             }
         };
-
-//        return new Task<ObservableList<SubscriberIdentification>>() {
-//            @Override
-//            protected ObservableList<SubscriberIdentification> call() throws Exception {
-//                ObservableList<SubscriberIdentification> identifications = FXCollections.observableArrayList();
-//
-//                ResultSet resultSet = HUIA_DB_CONNECTION.createStatement().executeQuery("SELECT * FROM Identifications;");
-//                while (resultSet.next()) {
-//                    Subscriber subscriber = getOldSubscriberById(resultSet.getLong("subscriberId")).runAndGet();
-//                    SubscriberIdentification subscriberIdentification = new SubscriberIdentification();
-//                    subscriberIdentification.setId(resultSet.getLong("id"));
-//                    subscriberIdentification.setSubscriber(subscriber);
-//                    subscriberIdentification.setDateTime(LocalDateTime.parse(resultSet.getString("id")));
-//                    subscriberIdentification.setIdentified(resultSet.getBoolean("isIdentified"));
-////                    subscriberIdentification.setUser(resultSet.getBoolean("isIdentified"));
-//                    identifications.add(subscriberIdentification);
-//                }
-//                return identifications;
-//            }
-//        };
     }
 
     private static PreparedStatement setUpdateMap(String tableName, Map<String, Object> updateMap, Map<String, Object> filterMap) throws SQLException {

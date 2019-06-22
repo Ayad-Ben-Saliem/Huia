@@ -71,6 +71,7 @@ public class IdentificationWindowController implements Controllable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
         Task<Boolean> loadTask = new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
@@ -224,7 +225,7 @@ public class IdentificationWindowController implements Controllable {
         openDeviceTask.addOnSucceeded(event -> {
             long identificationId;
             try {
-                identificationId = DAO.insertSubscriberIdentification(subscriber);
+                identificationId = DAO.insertIdentificationRecord(subscriber);
             } catch (SQLException e) {
                 showInsertIdentificationErrorAlert(e);
                 return;
@@ -242,7 +243,7 @@ public class IdentificationWindowController implements Controllable {
                 // if the user cancels capturing null finger is returned
                 if (scannedFinger == null || scannedFinger.isEmpty()) {
                     String notes =  Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED");
-                    Task<Boolean> updateSubscriberIdentificationTask = DAO.updateSubscriberIdentification(identificationId, subscriber,false, notes);
+                    Task<Boolean> updateSubscriberIdentificationTask = DAO.updateIdentificationRecord(identificationId, subscriber,false, notes);
                     updateSubscriberIdentificationTask.addOnSucceeded(event2 -> showIdentificationProcessCanceledAlert());
                     updateSubscriberIdentificationTask.addOnFailed(event2 -> showUpdateIdentificationErrorAlert(updateSubscriberIdentificationTask.getException()));
                     Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
@@ -279,7 +280,7 @@ public class IdentificationWindowController implements Controllable {
                 matchFingerprintsTemplateTask.addOnSucceeded(e -> {
                     boolean match = (Boolean) e.getSource().getValue();
                     String notes = match ? null : Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED");
-                    Task<Boolean> updateSubscriberIdentificationTask = DAO.updateSubscriberIdentification(identificationId, subscriber, match, notes);
+                    Task<Boolean> updateSubscriberIdentificationTask = DAO.updateIdentificationRecord(identificationId, subscriber, match, notes);
                     updateSubscriberIdentificationTask.addOnSucceeded(event2 -> showIdentificationState(match, subscriber, identificationId));
                     updateSubscriberIdentificationTask.addOnFailed(event2 -> {
                         Throwable t = updateSubscriberIdentificationTask.getException();
