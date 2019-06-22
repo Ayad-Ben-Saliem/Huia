@@ -150,12 +150,15 @@ public class IdentificationWindowController implements Controllable {
             String isActive = isActiveFilterComboBox.getValue();
             String hasFingerprint = fingerprintFilterComboBox.getValue();
 
+
             if (name.isEmpty() && workId.isEmpty())
                 return true;
 
             boolean isSubscriberMatch = subscriber.getWorkId().equalsIgnoreCase(workId);
-            if (!isSubscriberMatch)
-                return false;
+            if (! workId.isEmpty()) {
+                if (!isSubscriberMatch)
+                    return false;
+            }
 
             for (String namePart : name.split(" ")) {
                 isSubscriberMatch = subscriber.getFullName().toUpperCase().contains(namePart.toUpperCase());

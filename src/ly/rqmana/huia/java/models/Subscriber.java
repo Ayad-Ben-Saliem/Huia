@@ -207,7 +207,7 @@ public class Subscriber extends Person {
         result.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
         result.setAlignment(Pos.CENTER);
 
-        if (hasFingerprint() && !isFingerprintsDetailed()) {
+        if (hasFingerprint() && ! isFingerprintsDetailed()) {
             result.getChildren().add(getFingerprintNode(getAllFingerprintsTemplate()));
         } else {
             result.getChildren().add(getFingerprintNode(getRightLittleFingerprint()));
@@ -227,8 +227,8 @@ public class Subscriber extends Person {
 
     public boolean isFingerprintsDetailed() {
         boolean isDetailed = false;
-        for (Finger finger1 : getRightHand().getFingersUnmodifiable()) {
-            isDetailed |= !finger1.isEmpty();
+        for (Finger finger : getRightHand().getFingersUnmodifiable()) {
+            isDetailed |= ! finger.isEmpty();
         }
 
         if (isDetailed) return true;

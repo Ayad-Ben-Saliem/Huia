@@ -56,8 +56,11 @@ public class Finger {
     }
 
     public boolean isEmpty(){
-        return (fingerprintTemplate == null || fingerprintImages.isEmpty())
-                && fingerprintImages.isEmpty();
+
+        if (fingerprintTemplate != null && ! fingerprintTemplate.isEmpty())
+            return false;
+
+        return fingerprintImages.isEmpty();
     }
 
     public boolean isThumb(){
