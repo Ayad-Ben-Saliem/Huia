@@ -137,9 +137,9 @@
                </columnResizePolicy>
            </TableView>
           <HBox spacing="40.0" VBox.vgrow="NEVER">
-<Label text="Total Count: 100" />
-           <Label layoutX="10.0" layoutY="10.0" text="Identified: 67" />
-           <Label layoutX="117.0" layoutY="10.0" text="Failed: 23" />
+<Label text="Total Count: 100" visible="false" />
+           <Label layoutX="10.0" layoutY="10.0" text="Identified: 67" visible="false" />
+           <Label layoutX="117.0" layoutY="10.0" text="Failed: 23" visible="false" />
            <padding>
                <Insets left="5.0" right="5.0" />
            </padding>
