@@ -724,7 +724,7 @@ public class DAO {
         pStatement.setString(12, subscriber.getPassport().getNumber());
 
         pStatement.setString(13, subscriber.getWorkId());
-        pStatement.setString(14, subscriber.getRelationship().toString());
+        pStatement.setString(14, subscriber.getRelationship().name());
 
         pStatement.setString(15, subscriber.getRightThumbFingerprint());
         pStatement.setString(16, subscriber.getRightIndexFingerprint());
@@ -892,7 +892,7 @@ public class DAO {
                     IdentificationRecord identification = new IdentificationRecord();
 
                     identification.setId(resultSet.getLong("id"));
-                    identification.setDateTime(SQLUtils.timestampToDateTime(resultSet.getLong("datetime")));
+                    identification.setDateTime(SQLUtils.sqlDateTimeToLocalDateTime(resultSet.getString("datetime")));
                     identification.setIdentified(resultSet.getBoolean("isIdentified"));
 
                     Subscriber subscriber = new Subscriber();

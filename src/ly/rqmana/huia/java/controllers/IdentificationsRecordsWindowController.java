@@ -70,7 +70,6 @@ public class IdentificationsRecordsWindowController implements Controllable {
         }
     }
 
-
     // ********************** ******************************** //
 
     @FXML public GridPane headerDetailsPane;
@@ -121,7 +120,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
         tableView.setItems(filteredList);
 
-        lastHoursSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, 12));
+        lastHoursSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, 24));
 
         identificationId.setCellValueFactory(new PropertyValueFactory<>("id"));
 
