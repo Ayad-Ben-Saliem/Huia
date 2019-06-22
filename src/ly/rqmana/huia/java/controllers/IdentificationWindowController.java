@@ -25,8 +25,10 @@ import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
 import ly.rqmana.huia.java.fingerprints.hand.Finger;
 import ly.rqmana.huia.java.fingerprints.hand.FingerID;
 import ly.rqmana.huia.java.models.Gender;
+import ly.rqmana.huia.java.models.IdentificationRecord;
 import ly.rqmana.huia.java.models.Relationship;
 import ly.rqmana.huia.java.models.Subscriber;
+import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
@@ -34,6 +36,7 @@ import ly.rqmana.huia.java.util.Windows;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -66,8 +69,8 @@ public class IdentificationWindowController implements Controllable {
 
     private ObjectProperty<Subscriber> selectedSubscriber = new SimpleObjectProperty<>();
 
-    private FilteredList<Subscriber> filteredList;
     private Predicate<Subscriber> subscriberPredicate;
+    private FilteredList<Subscriber> filteredList ;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -125,7 +128,6 @@ public class IdentificationWindowController implements Controllable {
         relationshipFilterComboBox.setVisible(false);
         fingerprintFilterComboBox.setVisible(false);
         isActiveFilterComboBox.setVisible(false);
-
     }
 
     private void loadDataFromDatabase() throws SQLException {
@@ -260,7 +262,7 @@ public class IdentificationWindowController implements Controllable {
 
                     if (alertAction.isPresent()) {
                         if (alertAction.get().equals(AlertAction.YES)) {
-                            // TODO: Add new subscriber depend on current data
+                            // TODO: Add fingerprint to the current subscriber.
                             System.out.println("Edit Subscriber ... not implemented yet.");
                         }
                     }
@@ -312,26 +314,30 @@ public class IdentificationWindowController implements Controllable {
 
     private void showIdentificationState(boolean state, @Nullable Subscriber subscriber, long identificationId) {
 
+        String heading;
+        String body;
         if (state) {
-            String heading = Utils.getI18nString("IDENTIFICATION_FOUND_HEADING");
-            String body = Utils.getI18nString("IDENTIFICATION_FOUND_BODY");
+            heading = Utils.getI18nString("IDENTIFICATION_FOUND_HEADING");
+            body = Utils.getI18nString("IDENTIFICATION_FOUND_BODY");
             body = body.replace("{0}", subscriber.getFullName());
-            body = body.replace("{1}", String.valueOf(identificationId));
-
-            Windows.infoAlert(
-                    heading,
-                    body,
-                    AlertAction.OK);
+            body = body.replace("{1}", Long.toHexString(identificationId).toUpperCase());
         } else {
-
-            String heading = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_HEADING");
-            String body = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_BODY");
-
-            Windows.infoAlert(
-                    heading,
-                    body,
-                    AlertAction.OK);
+            heading = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_HEADING");
+            body = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_BODY");
         }
+        Windows.infoAlert(
+                heading,
+                body,
+                AlertAction.OK);
+
+        IdentificationRecord identificationRecord = new IdentificationRecord();
+        identificationRecord.setIdentified(state);
+        identificationRecord.setSubscriber(subscriber);
+        identificationRecord.setId(identificationId);
+        identificationRecord.setUser(Auth.getCurrentUser());
+        identificationRecord.setDateTime(LocalDateTime.now());
+
+        getIdentificationsRecordsWindowController().addIdentificationRecord(identificationRecord);
     }
 
     private void showFailCaptureFingerprintsAlert(Throwable t) {

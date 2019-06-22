@@ -222,7 +222,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
         headerDetailsPane.setVisible(newId != null);
 
         if (newId != null) {
-            identificationIdLabel.setText(Long.toHexString(newId.getId()));
+            identificationIdLabel.setText(Long.toHexString(newId.getId()).toUpperCase());
             subscriberNameLabel.setText(newId.getSubscriberName());
             subscriberWorkIdLabel.setText(newId.getSubscriberWorkId());
 

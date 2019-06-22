@@ -38,7 +38,7 @@ public class Name {
             case FIRST_FAMILY:
                 return getTwoSegmentName(firstName, familyName);
             case FULL_NAME:
-                String fullName = getTwoSegmentName(firstName, familyName);
+                String fullName = getTwoSegmentName(firstName, fatherName);
 //                if (fullName==null) return null;
                 fullName = getTwoSegmentName(fullName, grandfatherName);
 //                if (fullName==null) return null;
