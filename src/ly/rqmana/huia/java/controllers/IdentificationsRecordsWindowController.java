@@ -291,6 +291,9 @@ public class IdentificationsRecordsWindowController implements Controllable {
         filteredList.setPredicate(record -> {
             boolean match = true;
 
+            if (!record.isIdentified())
+                return false;
+
             if (! nameFilter.isEmpty())
                 match = record.getSubscriberName().contains(nameFilter);
 

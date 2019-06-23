@@ -150,6 +150,9 @@ public class IdentificationWindowController implements Controllable {
             String isActive = isActiveFilterComboBox.getValue();
             String hasFingerprint = fingerprintFilterComboBox.getValue();
 
+            // TODO: this should depend on settings
+            if (!subscriber.isActive())
+                return false;
 
             if (name.isEmpty() && workId.isEmpty())
                 return true;
