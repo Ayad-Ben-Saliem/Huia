@@ -12,10 +12,12 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
@@ -40,6 +42,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 public class IdentificationWindowController implements Controllable {
@@ -118,6 +121,15 @@ public class IdentificationWindowController implements Controllable {
             if (nameLabel != null && newValue != null) {
                 selectedSubscriber.setValue(newValue);
                 nameLabel.setText(newValue.getFullName());
+            }
+        });
+
+        tableView.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2) {
+                Node node = ((Node) event.getTarget()).getParent();
+                if (node instanceof TableRow || node.getParent() instanceof TableRow) {
+                    onFingerprintBtnClicked(null);
+                }
             }
         });
 
@@ -228,184 +240,172 @@ public class IdentificationWindowController implements Controllable {
             return;
         }
 
-        Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
+        IdentificationRecord identificationRecord = new IdentificationRecord();
+        identificationRecord.setSubscriber(subscriber);
+        identificationRecord.setUser(Auth.getCurrentUser());
+        identificationRecord.setDateTime(LocalDateTime.now());
+        identificationRecord.setIdentified(false);
 
-        openDeviceTask.addOnSucceeded(event -> {
-            long identificationId;
-            try {
-                identificationId = DAO.insertIdentificationRecord(subscriber);
-            } catch (SQLException e) {
-                showInsertIdentificationErrorAlert(e);
+        Task<Long> insertIdentificationRecordTask = DAO.insertIdentificationRecord(identificationRecord);
+        insertIdentificationRecordTask.addOnSucceeded(event -> {
+            if (!subscriber.isActive()) {
+                showSubscriberNotActiveAlert();
                 return;
             }
 
-            Task<Finger> captureFingerTask = new Task<Finger>() {
-                @Override
-                protected Finger call() throws Exception {
-                    return FingerprintManager.device().captureFinger(FingerID.UNKNOWN);
+            Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
+            openDeviceTask.addOnFailed(event1 -> {
+                Optional<AlertAction> result = Windows.showFingerprintDeviceError(event1.getSource().getException());
+                if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN) {
+                    onFingerprintBtnClicked(null);
                 }
-            };
-
-            captureFingerTask.addOnSucceeded(event1 -> {
-                Finger scannedFinger = captureFingerTask.getValue();
-
-                // if the user cancels capturing null finger is returned
-                if (scannedFinger == null || scannedFinger.isEmpty()) {
-
-                    String notes =  Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED");
-                    Task<Boolean> updateSubscriberIdentificationTask = DAO.updateIdentificationRecord(identificationId, subscriber,false, notes);
-                    updateSubscriberIdentificationTask.addOnSucceeded(event2 -> showIdentificationProcessCanceledAlert());
-                    updateSubscriberIdentificationTask.addOnFailed(event2 -> showUpdateIdentificationErrorAlert(updateSubscriberIdentificationTask.getException()));
-                    Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
-                    return;
-                }
-
-                if (!subscriber.isActive()) {
-                    showSubscriberNotActiveAlert();
-                    return;
-                }
-
-                if (!subscriber.hasFingerprint()) {
-                    Optional<AlertAction> alertAction = showAddMissingFingerprintAlert();
-
-                    if (alertAction.isPresent()) {
-                        if (alertAction.get().equals(AlertAction.YES)) {
-                            // TODO: Add fingerprint to the current subscriber.
-
-                            // in case we want to register fingerprint for a subscriber
-
-                            Task<FingerprintCaptureResult> addFingerprintToSubscriberTask = new Task<FingerprintCaptureResult>() {
-                                @Override
-                                protected FingerprintCaptureResult call() throws Exception {
-                                    return FingerprintManager.device().captureHands();
-                                }
-                            };
-
-                            addFingerprintToSubscriberTask.addOnSucceeded(event2 ->{
-
-                                FingerprintCaptureResult captureResult = addFingerprintToSubscriberTask.getValue();
-
-                                if (captureResult == null || captureResult.isEmpty()) {
-                                    Windows.warningAlert(
-                                                        Utils.getI18nString("WARNING"),
-                                                        Utils.getI18nString("SCAN_FINGERPRINT_WARNING"),
-                                                        AlertAction.OK);
-                                }
-                                else{
-
-                                    subscriber.fillRightHand(captureResult.getRightHand());
-                                    subscriber.fillLeftHand(captureResult.getLeftHand());
-                                    subscriber.setAllFingerprintsTemplate(captureResult.getFingerprintsTemplate());
-
-                                    Task<Boolean> updateTask = new Task<Boolean>() {
-                                        @Override
-                                        protected Boolean call() throws Exception {
-
-                                            String dataPath = DataStorage.saveSubscriberData(subscriber).toString();
-                                            subscriber.setDataPath(dataPath);
-
-                                            Map<String, Object> updateMap = new HashMap<>();
-                                            updateMap.put("dataPath", dataPath);
-
-                                            updateMap.put("rightThumbFingerprint", subscriber.getRightThumbFingerprint());
-                                            updateMap.put("rightIndexFingerprint", subscriber.getRightIndexFingerprint());
-                                            updateMap.put("rightMiddleFingerprint", subscriber.getRightMiddleFingerprint());
-                                            updateMap.put("rightRingFingerprint", subscriber.getRightRingFingerprint());
-                                            updateMap.put("rightLittleFingerprint", subscriber.getRightLittleFingerprint());
-
-                                            updateMap.put("leftThumbFingerprint", subscriber.getLeftThumbFingerprint());
-                                            updateMap.put("leftIndexFingerprint", subscriber.getLeftIndexFingerprint());
-                                            updateMap.put("leftMiddleFingerprint", subscriber.getLeftMiddleFingerprint());
-                                            updateMap.put("leftRingFingerprint", subscriber.getLeftRingFingerprint());
-                                            updateMap.put("leftLittleFingerprint", subscriber.getLeftLittleFingerprint());
-
-                                            updateMap.put("allFingerprintTemplates", subscriber.getAllFingerprintsTemplate());
-                                            updateMap.put("user", Auth.getCurrentUser().getUsername());
-
-                                            DAO.updateSubscriberById(subscriber.getId(), updateMap).runAndGet();
-
-                                            return true;
-                                        }
-                                    };
-
-                                    updateTask.addOnSucceeded(event3 -> {
-                                        showFingerprintRegisterAddedSuccessfully(subscriber);
-                                        refreshTable();
-                                    });
-
-                                    updateTask.addOnFailed(event3 -> {
-                                        showFingerprintRegisterErrorAlert(event3.getSource().getException());
-                                    });
-
-                                    updateTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
-
-                                    Threading.MAIN_EXECUTOR_SERVICE.submit(updateTask);
-                                }
-
-                            });
-
-                            addFingerprintToSubscriberTask.addOnFailed(event2 -> {
-                                showFingerprintRegisterErrorAlert(event2.getSource().getException());
-                            });
-
-                            Threading.MAIN_EXECUTOR_SERVICE.submit(addFingerprintToSubscriberTask);
-                        }
-                    }
-                    return;
-                }
-
-                Task<Boolean> matchFingerprintsTemplateTask = new Task<Boolean>() {
-
-                    @Override
-                    protected Boolean call() throws Exception {
-                        String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
-                        String scannedFingerprint = scannedFinger.getFingerprintTemplate();
-                        return FingerprintManager.device().matchFingerprintTemplate(scannedFingerprint, subscriberFingerprint);
-                    }
-                };
-
-                matchFingerprintsTemplateTask.addOnSucceeded(e -> {
-                    boolean match = (Boolean) e.getSource().getValue();
-                    String notes = match ? null : Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED");
-                    Task<Boolean> updateSubscriberIdentificationTask = DAO.updateIdentificationRecord(identificationId, subscriber, match, notes);
-                    updateSubscriberIdentificationTask.addOnSucceeded(event2 -> showIdentificationState(match, subscriber, identificationId));
-                    updateSubscriberIdentificationTask.addOnFailed(event2 -> {
-                        Throwable t = updateSubscriberIdentificationTask.getException();
-                        showUpdateIdentificationErrorAlert(t);
-                    });
-
-                    Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
-                });
-
-                matchFingerprintsTemplateTask.addOnFailed(e -> {
-                    Throwable t = matchFingerprintsTemplateTask.getException();
-                    showFailMatchFingerprintsAlert(t);
-                });
-                Threading.MAIN_EXECUTOR_SERVICE.submit(matchFingerprintsTemplateTask);
             });
+            if (subscriber.hasFingerprint()) {
+                openDeviceTask.addOnSucceeded(event1 -> {
+                    Task<Finger> captureFingerTask = new Task<Finger>() {
+                        @Override
+                        protected Finger call() throws Exception {
+                            return FingerprintManager.device().captureFinger(FingerID.UNKNOWN);
+                        }
+                    };
 
-            captureFingerTask.addOnFailed(event1 -> showFailCaptureFingerprintsAlert(captureFingerTask.getException()));
+                    captureFingerTask.addOnSucceeded(event2 -> {
+                        Finger scannedFinger = captureFingerTask.getValue();
 
-            Threading.MAIN_EXECUTOR_SERVICE.submit(captureFingerTask);
-        });
-        openDeviceTask.addOnFailed(event -> {
-            Optional<AlertAction> result = Windows.showFingerprintDeviceError(event.getSource().getException());
-            if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN) {
-                onFingerprintBtnClicked(null);
+                        // if the user cancels capturing, null finger will return
+                        if (scannedFinger == null || scannedFinger.isEmpty()) {
+                            identificationRecord.addNote(Utils.getI18nString("IDENTIFICATION_CANCELLED_ERROR_HEADING"));
+                            Task<Boolean> updateSubscriberIdentificationTask = DAO.updateIdentificationRecord(identificationRecord, "notes");
+                            updateSubscriberIdentificationTask.addOnFailed(event3 -> showUpdateIdentificationErrorAlert(updateSubscriberIdentificationTask.getException()));
+                            Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
+                            return;
+                        }
+
+                        Task<Boolean> matchFingerprintsTemplateTask = new Task<Boolean>() {
+
+                            @Override
+                            protected Boolean call() throws Exception {
+                                String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
+                                String scannedFingerprint = scannedFinger.getFingerprintTemplate();
+                                return FingerprintManager.device().matchFingerprintTemplate(scannedFingerprint, subscriberFingerprint);
+                            }
+                        };
+
+                        matchFingerprintsTemplateTask.addOnSucceeded(e -> {
+                            boolean match = (Boolean) e.getSource().getValue();
+                            if (match)
+                                identificationRecord.addNote(Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED"));
+                            Task<Boolean> updateSubscriberIdentificationTask = DAO.updateIdentificationRecord(identificationRecord, "notes");
+                            updateSubscriberIdentificationTask.addOnSucceeded(event3 -> showIdentificationState(match, identificationRecord));
+                            updateSubscriberIdentificationTask.addOnFailed(event3 -> {
+                                Throwable t = updateSubscriberIdentificationTask.getException();
+                                showUpdateIdentificationErrorAlert(t);
+                            });
+
+                            Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
+                        });
+
+                        matchFingerprintsTemplateTask.addOnFailed(e -> {
+                            Throwable t = matchFingerprintsTemplateTask.getException();
+                            showFailMatchFingerprintsAlert(t);
+                        });
+                        Threading.MAIN_EXECUTOR_SERVICE.submit(matchFingerprintsTemplateTask);
+                    });
+                    captureFingerTask.addOnFailed(event2 -> showFailCaptureFingerprintsAlert(captureFingerTask.getException()));
+
+                    Threading.MAIN_EXECUTOR_SERVICE.submit(captureFingerTask);
+                });
+                Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
+            } else {
+                Optional<AlertAction> alertAction = showAddMissingFingerprintAlert();
+                if (alertAction.isPresent() && AlertAction.YES.equals(alertAction.get())) {
+                    // in case we want to register fingerprint for a subscriber
+                    openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
+                    openDeviceTask.addOnSucceeded(event1 -> {
+                        Task<FingerprintCaptureResult> addFingerprintToSubscriberTask = new Task<FingerprintCaptureResult>() {
+                            @Override
+                            protected FingerprintCaptureResult call() throws Exception {
+                                return FingerprintManager.device().captureHands();
+                            }
+                        };
+
+                        addFingerprintToSubscriberTask.addOnSucceeded(event3 ->{
+                            FingerprintCaptureResult captureResult = addFingerprintToSubscriberTask.getValue();
+
+                            if (captureResult == null || captureResult.isEmpty()) {
+                                Windows.warningAlert(
+                                        Utils.getI18nString("WARNING"),
+                                        Utils.getI18nString("SCAN_FINGERPRINT_WARNING"),
+                                        AlertAction.OK);
+                            } else {
+                                subscriber.fillRightHand(captureResult.getRightHand());
+                                subscriber.fillLeftHand(captureResult.getLeftHand());
+                                subscriber.setAllFingerprintsTemplate(captureResult.getFingerprintsTemplate());
+
+                                Task<Boolean> updateTask = new Task<Boolean>() {
+                                    @Override
+                                    protected Boolean call() throws Exception {
+                                        String dataPath = DataStorage.saveSubscriberData(subscriber).toString();
+                                        subscriber.setDataPath(dataPath);
+
+                                        Map<String, Object> updateMap = new HashMap<>();
+                                        updateMap.put("dataPath", dataPath);
+
+                                        updateMap.put("rightThumbFingerprint", subscriber.getRightThumbFingerprint());
+                                        updateMap.put("rightIndexFingerprint", subscriber.getRightIndexFingerprint());
+                                        updateMap.put("rightMiddleFingerprint", subscriber.getRightMiddleFingerprint());
+                                        updateMap.put("rightRingFingerprint", subscriber.getRightRingFingerprint());
+                                        updateMap.put("rightLittleFingerprint", subscriber.getRightLittleFingerprint());
+
+                                        updateMap.put("leftThumbFingerprint", subscriber.getLeftThumbFingerprint());
+                                        updateMap.put("leftIndexFingerprint", subscriber.getLeftIndexFingerprint());
+                                        updateMap.put("leftMiddleFingerprint", subscriber.getLeftMiddleFingerprint());
+                                        updateMap.put("leftRingFingerprint", subscriber.getLeftRingFingerprint());
+                                        updateMap.put("leftLittleFingerprint", subscriber.getLeftLittleFingerprint());
+
+                                        updateMap.put("allFingerprintTemplates", subscriber.getAllFingerprintsTemplate());
+                                        updateMap.put("user", Auth.getCurrentUser().getUsername());
+
+                                        DAO.updateSubscriberById(subscriber.getId(), updateMap).runAndGet();
+
+                                        return true;
+                                    }
+                                };
+
+                                updateTask.addOnSucceeded(event4 -> {
+                                    showFingerprintRegisterAddedSuccessfully(subscriber);
+                                    refreshTable();
+                                });
+
+                                updateTask.addOnFailed(event4 -> showFingerprintRegisterErrorAlert(event4.getSource().getException()));
+
+                                updateTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
+
+                                Threading.MAIN_EXECUTOR_SERVICE.submit(updateTask);
+                            }
+                        });
+
+                        addFingerprintToSubscriberTask.addOnFailed(event3 -> showFingerprintRegisterErrorAlert(event3.getSource().getException()));
+
+                        Threading.MAIN_EXECUTOR_SERVICE.submit(addFingerprintToSubscriberTask);
+                    });
+                    Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
+                }
             }
         });
-        Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
+        insertIdentificationRecordTask.addOnFailed(event -> showInsertIdentificationErrorAlert(insertIdentificationRecordTask.getException()));
+        Threading.MAIN_EXECUTOR_SERVICE.submit(insertIdentificationRecordTask);
     }
 
-    private void showIdentificationState(boolean state, @Nullable Subscriber subscriber, long identificationId) {
+    private void showIdentificationState(boolean state, @Nullable IdentificationRecord record) {
 
         String heading;
         String body;
         if (state) {
             heading = Utils.getI18nString("IDENTIFICATION_FOUND_HEADING");
             body = Utils.getI18nString("IDENTIFICATION_FOUND_BODY");
-            body = body.replace("{0}", subscriber.getFullName());
-            body = body.replace("{1}", Long.toHexString(identificationId).toUpperCase());
+            body = body.replace("{0}", record.getSubscriber().getFullName());
+            body = body.replace("{1}", Long.toHexString(record.getId()).toUpperCase());
         } else {
             heading = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_HEADING");
             body = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_BODY");
@@ -415,14 +415,7 @@ public class IdentificationWindowController implements Controllable {
                 body,
                 AlertAction.OK);
 
-        IdentificationRecord identificationRecord = new IdentificationRecord();
-        identificationRecord.setIdentified(state);
-        identificationRecord.setSubscriber(subscriber);
-        identificationRecord.setId(identificationId);
-        identificationRecord.setUser(Auth.getCurrentUser());
-        identificationRecord.setDateTime(LocalDateTime.now());
-
-        getIdentificationsRecordsWindowController().addIdentificationRecord(identificationRecord);
+        getIdentificationsRecordsWindowController().addIdentificationRecord(record);
     }
 
     private void showFailCaptureFingerprintsAlert(Throwable t) {

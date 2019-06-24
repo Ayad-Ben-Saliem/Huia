@@ -238,7 +238,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
     private void loadFromDatabase(){
 
         //TODO: check if you want to load identified only or not
-        Task<ObservableList<IdentificationRecord>> loadTask = DAO.getIdentificationRecords(true);
+        Task<ObservableList<IdentificationRecord>> loadTask = DAO.getIdentificationRecords(false);
 
         loadTask.addOnSucceeded(event -> {
             ObservableList<IdentificationRecord> loadedData = loadTask.getValue();

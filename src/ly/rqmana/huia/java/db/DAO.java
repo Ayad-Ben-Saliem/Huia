@@ -569,7 +569,7 @@ public class DAO {
     private static ObservableList<Subscriber> getSubscribers(String tableName) throws SQLException {
         ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
 
-//        @SuppressWarnings("SqlResolve")
+        @SuppressWarnings("SqlResolve")
         String query = "SELECT " +
                  tableName + ".id," +
                 "firstName," +
@@ -782,58 +782,67 @@ public class DAO {
         pStatement.executeUpdate();
     }
 
-    public static long insertIdentificationRecord(Subscriber subscriber) throws SQLException {
-        final String insertQuery
+    public static Task<Long> insertIdentificationRecord(IdentificationRecord record) {
+        return new Task<Long>() {
+            @Override
+            protected Long call() throws Exception {
+                final String insertQuery
                         = "INSERT INTO Identifications ("
                         + "subscriberId,"
                         + "username,"
                         + "isIdentified,"
+                        + "datetime,"
                         + "notes"
-                        + ") VALUES (?,?,?,?)";
+                        + ") VALUES (?,?,?,?,?)";
 
-        PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
 
-        pStatement.setLong(1, subscriber.getId());
-        pStatement.setString(2, Auth.getCurrentUser().getUsername());
-        pStatement.setBoolean(3, false);
-        String notes = "";
-        if (!subscriber.isActive())
-            notes += Utils.getI18nString("SUBSCRIBER_NOT_ACTIVE");
-        if (!subscriber.hasFingerprint())
-            notes += Utils.getI18nString("FINGERPRINT_NOT_REGISTERED");
-        pStatement.setString(4, notes);
+                pStatement.setLong(1, record.getSubscriber().getId());
+                pStatement.setString(2, record.getUser().getUsername());
+                pStatement.setBoolean(3, record.isIdentified());
+                pStatement.setString(4, record.getDateTime().toString());
+                String notes = "";
+                if (!record.getSubscriber().isActive())
+                    notes += Utils.getI18nString("SUBSCRIBER_NOT_ACTIVE");
+                if (!record.getSubscriber().hasFingerprint())
+                    notes += Utils.getI18nString("FINGERPRINT_NOT_REGISTERED");
+                pStatement.setString(5, notes);
 
-        pStatement.execute();
+                pStatement.execute();
 
-        ResultSet generatedKeys = pStatement.getGeneratedKeys();
-        return generatedKeys.getLong(1);
+                ResultSet generatedKeys = pStatement.getGeneratedKeys();
+                record.setId(generatedKeys.getLong(1));
+                return record.getId();
+            }
+        };
     }
 
-    public static Task<Boolean> updateIdentificationRecord(long identificationId, Subscriber subscriber, boolean isIdentified, String notes) {
+    public static Task<Boolean> updateIdentificationRecord(IdentificationRecord record, String ... fields) {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                String selectQuery = "SELECT notes FROM Identifications WHERE id=? AND subscriberId=?;";
-                PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(selectQuery);
-                pStatement.setLong(1, identificationId);
-                pStatement.setLong(2, subscriber.getId());
-                ResultSet resultSet = pStatement.executeQuery();
 
-                String _notes = "";
-                if (resultSet.next()) {
-                    _notes = resultSet.getString("notes");
+                Map<String, Object> updateMap = new HashMap<>();
+                if (fields.length == 0) {
+                    updateMap.put("isIdentified", record.isIdentified());
+                    updateMap.put("notes", record.getNotes());
+                } else {
+                    for (String field : fields) {
+                        switch (field) {
+                            case "isIdentified":
+                                updateMap.put(field, record.isIdentified());
+                                break;
+                            case "notes":
+                                updateMap.put(field, record.getNotes());
+                                break;
+                        }
+                    }
                 }
-                if (notes != null)
-                    _notes += ":\n:" + notes;
 
-                final String insertQuery = "UPDATE Identifications SET isIdentified=?, notes=? WHERE id=? AND subscriberId=?;";
+                Map<String, Object> filterMap = new HashMap<>();
+                filterMap.put("id", record.getId());
 
-                pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(insertQuery);
-
-                pStatement.setBoolean(1, isIdentified);
-                pStatement.setString(2, _notes);
-                pStatement.setLong(3, identificationId);
-                pStatement.setLong(4, subscriber.getId());
+                PreparedStatement pStatement = prepareUpdateStatement("Identifications", updateMap, filterMap);
 
                 pStatement.execute();
 
@@ -953,6 +962,8 @@ public class DAO {
         query.append(" WHERE ");
         filterMap.keySet().forEach(key -> query.append(String.format("%s=? AND ", key)));
         query.delete(query.length() - 5, query.length()).append(";");
+
+        System.out.println("query = " + query);
 
         PreparedStatement pStatement = HUIA_DB_CONNECTION.prepareStatement(query.toString());
         int i = 1;

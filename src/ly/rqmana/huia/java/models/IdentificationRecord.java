@@ -11,6 +11,8 @@ public class IdentificationRecord {
     private User user;
     private Subscriber subscriber;
 
+    private String notes;
+
     public long getId() {
         return id;
     }
@@ -79,4 +81,17 @@ public class IdentificationRecord {
             return "";
     }
 
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public void addNote(String note) {
+        if (getNotes() != null)
+            note = getNotes().concat("\n").concat(note);
+        setNotes(note);
+    }
 }
