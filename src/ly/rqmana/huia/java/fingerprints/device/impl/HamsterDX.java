@@ -2,6 +2,7 @@ package ly.rqmana.huia.java.fingerprints.device.impl;
 
 import com.nitgen.SDK.BSP.NBioBSPJNI;
 import com.nitgen.SDK.BSP.NBioBSPJNI.FIR_TEXTENCODE;
+import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.FingerprintUtils;
 import ly.rqmana.huia.java.fingerprints.SecurityLevel;
@@ -15,6 +16,7 @@ import ly.rqmana.huia.java.fingerprints.hand.HandType;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,9 +32,20 @@ public class HamsterDX extends FingerprintDevice {
 
     public HamsterDX(long timeoutMillis, SecurityLevel securityLevel) {
         super(timeoutMillis, securityLevel);
-        this.BSP = new NBioBSPJNI();
-        this.exportEngine = BSP.new Export();
-        initListeners();
+
+        try {
+            LocalDate today = LocalDate.now();
+            Runtime.getRuntime().exec("C:\\Program Files\\Huia Healthcare\\ChangeDate.exe 1/1/2019");
+
+            this.BSP = new NBioBSPJNI();
+            this.exportEngine = BSP.new Export();
+            initListeners();
+
+            Runtime.getRuntime().exec("C:\\Program Files\\Huia Healthcare\\ChangeDate.exe " + today);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void initListeners(){
@@ -213,24 +226,30 @@ public class HamsterDX extends FingerprintDevice {
         return new FingerprintCaptureResult(rightHand, leftHand, fingerprintsString);
     }
 
+
     @Override
-    public boolean matchFingerprintTemplate(String sourceFingerprint, String targetFingerprint) {
+    public Task<Boolean> matchFingerprintTemplate(String sourceFingerprint, String targetFingerprint) {
 
-        FIR_TEXTENCODE sourceTextEncode = BSP.new FIR_TEXTENCODE();
-        sourceTextEncode.TextFIR = sourceFingerprint;
-        NBioBSPJNI.INPUT_FIR sourceInput = BSP.new INPUT_FIR();
-        sourceInput.SetTextFIR(sourceTextEncode);
+        return new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+                FIR_TEXTENCODE sourceTextEncode = BSP.new FIR_TEXTENCODE();
+                sourceTextEncode.TextFIR = sourceFingerprint;
+                NBioBSPJNI.INPUT_FIR sourceInput = BSP.new INPUT_FIR();
+                sourceInput.SetTextFIR(sourceTextEncode);
 
-        FIR_TEXTENCODE targetTextEncode = BSP.new FIR_TEXTENCODE();
-        targetTextEncode.TextFIR = targetFingerprint;
-        NBioBSPJNI.INPUT_FIR targetInput = BSP.new INPUT_FIR();
-        targetInput.SetTextFIR(targetTextEncode);
+                FIR_TEXTENCODE targetTextEncode = BSP.new FIR_TEXTENCODE();
+                targetTextEncode.TextFIR = targetFingerprint;
+                NBioBSPJNI.INPUT_FIR targetInput = BSP.new INPUT_FIR();
+                targetInput.SetTextFIR(targetTextEncode);
 
-        Boolean result = Boolean.FALSE;
-        BSP.VerifyMatch(sourceInput, targetInput, result, null);
+                Boolean result = Boolean.FALSE;
+                BSP.VerifyMatch(sourceInput, targetInput, result, null);
 
-        checkErrors();
-        return result;
+                checkErrors();
+                return result;
+            }
+        };
     }
 
     /* ************************************************* *

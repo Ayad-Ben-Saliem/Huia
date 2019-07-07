@@ -5,6 +5,7 @@ import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
 import com.sun.istack.internal.Nullable;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -17,7 +18,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
@@ -42,7 +42,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 public class IdentificationWindowController implements Controllable {
@@ -62,7 +61,7 @@ public class IdentificationWindowController implements Controllable {
 
     @FXML public VBox searchFieldsContainer;
     @FXML public JFXTextField nameFilterTF;
-    @FXML public JFXTextField workIdTF;
+    @FXML public JFXTextField workIdFilterTF;
     @FXML public JFXDatePicker fromDateFilterDatePicker;
     @FXML public JFXDatePicker toDateFilterDatePicker;
     @FXML public JFXComboBox<String> genderFilterComboBox;
@@ -133,13 +132,39 @@ public class IdentificationWindowController implements Controllable {
             }
         });
 
+        trackTableColumns();
+
         //FIXME: fix make these fields available again to the user
-        fromDateFilterDatePicker.setVisible(false);
-        toDateFilterDatePicker.setVisible(false);
-        genderFilterComboBox.setVisible(false);
-        relationshipFilterComboBox.setVisible(false);
-        fingerprintFilterComboBox.setVisible(false);
-        isActiveFilterComboBox.setVisible(false);
+//        fromDateFilterDatePicker.setVisible(false);
+//        toDateFilterDatePicker.setVisible(false);
+//        genderFilterComboBox.setVisible(false);
+//        relationshipFilterComboBox.setVisible(false);
+//        fingerprintFilterComboBox.setVisible(false);
+//        isActiveFilterComboBox.setVisible(false);
+    }
+
+    private void trackTableColumns() {
+        nameColumn.widthProperty().addListener((observable, oldValue, newValue) -> nameFilterTF.setPrefWidth(newValue.doubleValue()));
+        workIdColumn.widthProperty().addListener((observable, oldValue, newValue) -> workIdFilterTF.setPrefWidth(newValue.doubleValue()));
+        birthdayColumn.widthProperty().addListener((observable, oldValue, newValue) -> {
+            fromDateFilterDatePicker.setPrefWidth(Math.ceil(newValue.doubleValue()/2));
+            toDateFilterDatePicker.setPrefWidth(Math.ceil(newValue.doubleValue()/2));
+        });
+        genderColumn.widthProperty().addListener((observable, oldValue, newValue) -> genderFilterComboBox.setPrefWidth(newValue.doubleValue()));
+        relationshipColumn.widthProperty().addListener((observable, oldValue, newValue) -> relationshipColumn.setPrefWidth(newValue.doubleValue()));
+        fingerprintColumn.widthProperty().addListener((observable, oldValue, newValue) -> fingerprintFilterComboBox.setPrefWidth(newValue.doubleValue()));
+        isActiveColumn.widthProperty().addListener((observable, oldValue, newValue) -> isActiveFilterComboBox.setPrefWidth(newValue.doubleValue()));
+
+        Platform.runLater(() -> {
+            nameFilterTF.setPrefWidth(nameColumn.getWidth());
+            workIdFilterTF.setPrefWidth(workIdColumn.getWidth());
+            fromDateFilterDatePicker.setPrefWidth(Math.ceil(birthdayColumn.getWidth()/2));
+            toDateFilterDatePicker.setPrefWidth(Math.ceil(birthdayColumn.getWidth()/2));
+            genderFilterComboBox.setPrefWidth(genderColumn.getWidth());
+            relationshipFilterComboBox.setPrefWidth(relationshipColumn.getWidth());
+            fingerprintFilterComboBox.setPrefWidth(fingerprintColumn.getWidth());
+            isActiveFilterComboBox.setPrefWidth(isActiveColumn.getWidth());
+        });
     }
 
     private void loadDataFromDatabase() throws SQLException {
@@ -155,7 +180,7 @@ public class IdentificationWindowController implements Controllable {
 
         subscriberPredicate = subscriber -> {
             String name = nameFilterTF.getText();
-            String workId = workIdTF.getText();
+            String workId = workIdFilterTF.getText();
             LocalDate fromBirthday = fromDateFilterDatePicker.getValue();
             LocalDate toBirthday = toDateFilterDatePicker.getValue();
             String gender = genderFilterComboBox.getValue();
@@ -207,7 +232,7 @@ public class IdentificationWindowController implements Controllable {
         filteredList.setPredicate(subscriberPredicate);
 
         nameFilterTF.textProperty().addListener(observable -> refreshTable());
-        workIdTF.textProperty().addListener(observable -> refreshTable());
+        workIdFilterTF.textProperty().addListener(observable -> refreshTable());
         fromDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
         toDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
         genderFilterComboBox.valueProperty().addListener(observable -> refreshTable());
@@ -281,26 +306,20 @@ public class IdentificationWindowController implements Controllable {
                             return;
                         }
 
-                        Task<Boolean> matchFingerprintsTemplateTask = new Task<Boolean>() {
-
-                            @Override
-                            protected Boolean call() throws Exception {
-                                String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
-                                String scannedFingerprint = scannedFinger.getFingerprintTemplate();
-                                return FingerprintManager.device().matchFingerprintTemplate(scannedFingerprint, subscriberFingerprint);
-                            }
-                        };
+                        String subscriberFingerprint = subscriber.getAllFingerprintsTemplate();
+                        String scannedFingerprint = scannedFinger.getFingerprintTemplate();
+                        Task<Boolean> matchFingerprintsTemplateTask = FingerprintManager.matchFingerprintTemplate(scannedFingerprint, subscriberFingerprint);
 
                         matchFingerprintsTemplateTask.addOnSucceeded(e -> {
                             boolean match = (Boolean) e.getSource().getValue();
-                            if (match)
+                            identificationRecord.setIdentified(match);
+                            if (!match)
                                 identificationRecord.addNote(Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED"));
-                            Task<Boolean> updateSubscriberIdentificationTask = DAO.updateIdentificationRecord(identificationRecord, "notes");
+
+                            Task<Boolean> updateSubscriberIdentificationTask = DAO.updateIdentificationRecord(identificationRecord, "isIdentified", "notes");
                             updateSubscriberIdentificationTask.addOnSucceeded(event3 -> showIdentificationState(match, identificationRecord));
-                            updateSubscriberIdentificationTask.addOnFailed(event3 -> {
-                                Throwable t = updateSubscriberIdentificationTask.getException();
-                                showUpdateIdentificationErrorAlert(t);
-                            });
+                            updateSubscriberIdentificationTask.addOnFailed(event3 -> showUpdateIdentificationErrorAlert(updateSubscriberIdentificationTask.getException()));
+                            updateSubscriberIdentificationTask.addOnComplete(event3 -> getIdentificationsRecordsWindowController().addIdentificationRecord(identificationRecord));
 
                             Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
                         });
@@ -414,8 +433,6 @@ public class IdentificationWindowController implements Controllable {
                 heading,
                 body,
                 AlertAction.OK);
-
-        getIdentificationsRecordsWindowController().addIdentificationRecord(record);
     }
 
     private void showFailCaptureFingerprintsAlert(Throwable t) {

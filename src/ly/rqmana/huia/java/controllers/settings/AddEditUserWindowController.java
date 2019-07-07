@@ -53,9 +53,9 @@ public class AddEditUserWindowController implements Controllable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         Utils.setFieldRequired(usernameTF);
-        Utils.setFieldRequired(passwordTF);
+//        Utils.setFieldRequired(passwordTF);
         Utils.setFieldRequired(firstNameTF);
-        passwordTF.setValidators(new PasswordValidator());
+//        passwordTF.setValidators(new PasswordValidator());
 
         gender.getItems().addAll(Gender.values());
         gender.setValue(Gender.MALE);
@@ -105,19 +105,23 @@ public class AddEditUserWindowController implements Controllable {
     @FXML
     public void onOkBtnClicked(ActionEvent actionEvent) throws IOException {
         if (validate()) {
-            FXMLLoader fxmlLoader = new FXMLLoader(Res.Fxml.PASSWORD_REENTER_VALIDATOR_DIALOG.getUrl(), Utils.getBundle());
-            Region content = fxmlLoader.load();
-            PasswordReenterValidationDialogController controller = fxmlLoader.getController();
-            JFXDialog dialog = new JFXDialog(getRootStack(), content, JFXDialog.DialogTransition.CENTER);
-            controller.cancelBtn.setOnAction(event1 -> dialog.close());
-            controller.okBtn.setOnAction(event -> {
-                if (controller.validate(passwordTF.getText())) {
-                    // Password valid
-                    dialog.close();
-                    insetUpdateUser();
-                }
-            });
-            dialog.show();
+            if (passwordTF.getText().isEmpty()) {
+                insetUpdateUser();
+            } else {
+                FXMLLoader fxmlLoader = new FXMLLoader(Res.Fxml.PASSWORD_REENTER_VALIDATOR_DIALOG.getUrl(), Utils.getBundle());
+                Region content = fxmlLoader.load();
+                PasswordReenterValidationDialogController controller = fxmlLoader.getController();
+                JFXDialog dialog = new JFXDialog(getRootStack(), content, JFXDialog.DialogTransition.CENTER);
+                controller.cancelBtn.setOnAction(event1 -> dialog.close());
+                controller.okBtn.setOnAction(event -> {
+                    if (controller.validate(passwordTF.getText())) {
+                        // Password valid
+                        dialog.close();
+                        insetUpdateUser();
+                    }
+                });
+                dialog.show();
+            }
 
         }
 //        else {

@@ -35,11 +35,13 @@ public class Windows {
 
     static {
 
+        System.out.println("static :: Windows");
         ROOT_WINDOW.getIcons().addAll(Res.Image.PERSON.getImage());
 
-        ROOT_WINDOW.setTitle(getI18nString("APP_NAME"));
+        ROOT_WINDOW.setTitle(Utils.APP_NAME);
         ROOT_WINDOW.setMinWidth(1000);
         ROOT_WINDOW.setMinHeight(700);
+        ROOT_WINDOW.setMaximized(true);
 
         NETWORK_ERROR_ALERT = null;
 //        NETWORK_ERROR_ALERT = Alerts.createErrorAlert(Windows.MAIN_WINDOW,

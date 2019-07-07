@@ -21,7 +21,7 @@ import java.util.ResourceBundle;
 
 public class Utils {
 
-    public static final String APP_NAME = "Huia Health Care";
+    public static final String APP_NAME = "Huia Healthcare";
 
     public static ResourceBundle getBundle() {
         return ResourceBundle.getBundle(Res.LANGUAGE_PATH, new Locale("ar", "SA"));

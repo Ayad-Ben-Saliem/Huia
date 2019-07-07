@@ -823,21 +823,18 @@ public class DAO {
             protected Boolean call() throws Exception {
 
                 Map<String, Object> updateMap = new HashMap<>();
-                if (fields.length == 0) {
-                    updateMap.put("isIdentified", record.isIdentified());
-                    updateMap.put("notes", record.getNotes());
-                } else {
-                    for (String field : fields) {
-                        switch (field) {
-                            case "isIdentified":
-                                updateMap.put(field, record.isIdentified());
-                                break;
-                            case "notes":
-                                updateMap.put(field, record.getNotes());
-                                break;
-                        }
+                for (String field : fields) {
+                    switch (field) {
+                        case "isIdentified":
+                            updateMap.put(field, record.isIdentified());
+                            break;
+                        case "notes":
+                            updateMap.put(field, record.getNotes());
+                            break;
                     }
                 }
+
+                System.out.println("updateMap = " + updateMap);
 
                 Map<String, Object> filterMap = new HashMap<>();
                 filterMap.put("id", record.getId());
@@ -891,6 +888,9 @@ public class DAO {
             }
         };
     }
+    public static Task<ObservableList<IdentificationRecord>> getIdentificationRecords() {
+        return getIdentificationRecords(false);
+    }
 
     public static Task<ObservableList<IdentificationRecord>> getIdentificationRecords(boolean identifiedOnly) {
 
@@ -927,7 +927,7 @@ public class DAO {
                     IdentificationRecord identification = new IdentificationRecord();
 
                     identification.setId(resultSet.getLong("id"));
-                    identification.setDateTime(SQLUtils.sqlDateTimeToLocalDateTime(resultSet.getString("datetime")));
+                    identification.setDateTime(SQLUtils.sqlDateTime2LocalDateTime(resultSet.getString("datetime")));
                     identification.setIdentified(resultSet.getBoolean("isIdentified"));
 
                     Subscriber subscriber = new Subscriber();

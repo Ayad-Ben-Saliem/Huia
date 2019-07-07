@@ -49,7 +49,9 @@ public abstract class Task<V> extends javafx.concurrent.Task<V> {
     }
 
     public Task<V> addOnComplete(EventHandler<WorkerStateEvent> event) {
-        addEventHandler(WorkerStateEvent.ANY, event);
+        addOnSucceeded(event);
+        addOnCanceled(event);
+        addOnFailed(event);
         return this;
     }
 }

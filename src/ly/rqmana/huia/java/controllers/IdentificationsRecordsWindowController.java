@@ -238,11 +238,10 @@ public class IdentificationsRecordsWindowController implements Controllable {
     private void loadFromDatabase(){
 
         //TODO: check if you want to load identified only or not
-        Task<ObservableList<IdentificationRecord>> loadTask = DAO.getIdentificationRecords(false);
+        Task<ObservableList<IdentificationRecord>> loadTask = DAO.getIdentificationRecords();
 
         loadTask.addOnSucceeded(event -> {
-            ObservableList<IdentificationRecord> loadedData = loadTask.getValue();
-            cachedData.setAll(loadedData);
+            cachedData.setAll(loadTask.getValue());
             applyFilters();
         });
 
@@ -333,12 +332,10 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
     public void addIdentificationRecord(IdentificationRecord record){
         cachedData.add(record);
-        applyFilters();
     }
 
     public void addIdentificationRecords(List<IdentificationRecord> records){
         cachedData.addAll(records);
-        applyFilters();
     }
 
     /* ***************************************** *

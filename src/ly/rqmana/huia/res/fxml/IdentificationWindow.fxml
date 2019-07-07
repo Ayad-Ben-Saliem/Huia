@@ -41,48 +41,57 @@
         </VBox.margin>
     </Label>
     <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="Infinity" VBox.vgrow="ALWAYS">
-        <VBox fx:id="searchFieldsContainer" style="-fx-background-color: red;">
+        <VBox fx:id="searchFieldsContainer" style="-fx-background-color: -rq-background-alt;">
             <HBox alignment="BOTTOM_LEFT" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="75.0" style="-fx-background-color: -rq-background-alt;">
                 <JFXTextField fx:id="nameFilterTF" labelFloat="true" maxWidth="Infinity" minWidth="0.0" prefWidth="250.0" promptText="%FILTER_BY_NAME" HBox.hgrow="ALWAYS">
                     <HBox.margin>
                         <Insets />
                     </HBox.margin>
                 </JFXTextField>
-                <JFXTextField fx:id="workIdTF" labelFloat="true" layoutX="10.0" layoutY="10.0" maxWidth="Infinity" minWidth="0.0" prefWidth="240.0" promptText="%FILTER_BY_WORK_ID" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 1 0 1;" HBox.hgrow="ALWAYS">
+                <JFXTextField fx:id="workIdFilterTF" labelFloat="true" layoutX="10.0" layoutY="10.0" maxWidth="Infinity" minWidth="0.0" prefWidth="240.0" promptText="%FILTER_BY_WORK_ID" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;" HBox.hgrow="ALWAYS">
                     <HBox.margin>
                         <Insets />
                     </HBox.margin>
                 </JFXTextField>
-                <JFXDatePicker fx:id="fromDateFilterDatePicker" maxWidth="Infinity" minWidth="0.0" prefWidth="75.0" promptText="%FROM" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;" HBox.hgrow="ALWAYS">
+                <JFXDatePicker fx:id="fromDateFilterDatePicker" disable="true" maxWidth="Infinity" minWidth="0.0" prefWidth="75.0" promptText="%FROM" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;" HBox.hgrow="ALWAYS">
                     <HBox.margin>
                         <Insets />
                     </HBox.margin>
+               <padding>
+                  <Insets left="8.0" />
+               </padding>
                 </JFXDatePicker>
-                <JFXDatePicker fx:id="toDateFilterDatePicker" maxWidth="Infinity" minWidth="0.0" prefWidth="75.0" promptText="%TO" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;" HBox.hgrow="ALWAYS">
+                <JFXDatePicker fx:id="toDateFilterDatePicker" disable="true" maxWidth="Infinity" minWidth="0.0" prefWidth="75.0" promptText="%TO" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;" HBox.hgrow="ALWAYS">
                     <HBox.margin>
                         <Insets />
                     </HBox.margin>
+               <padding>
+                  <Insets left="8.0" />
+               </padding>
                 </JFXDatePicker>
-                <JFXComboBox fx:id="genderFilterComboBox" labelFloat="true" maxWidth="Infinity" minWidth="0.0" prefWidth="150.0" promptText="%FILTER_BY_GENDER" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;" HBox.hgrow="ALWAYS">
+                <JFXComboBox fx:id="genderFilterComboBox" disable="true" labelFloat="true" maxWidth="Infinity" minWidth="0.0" prefWidth="150.0" promptText="%FILTER_BY_GENDER" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;" HBox.hgrow="ALWAYS">
                     <HBox.margin>
                         <Insets />
                     </HBox.margin>
                 </JFXComboBox>
-                <JFXComboBox fx:id="relationshipFilterComboBox" labelFloat="true" maxHeight="27.0" maxWidth="Infinity" minWidth="0.0" prefWidth="150.0" promptText="%FILTER_BY_RELATIONSHIP" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;" HBox.hgrow="ALWAYS">
+                <JFXComboBox fx:id="relationshipFilterComboBox" disable="true" labelFloat="true" maxHeight="27.0" maxWidth="Infinity" minWidth="0.0" prefWidth="150.0" promptText="%FILTER_BY_RELATIONSHIP" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;" HBox.hgrow="ALWAYS">
                     <HBox.margin>
                         <Insets />
                     </HBox.margin>
                 </JFXComboBox>
-                <JFXComboBox fx:id="fingerprintFilterComboBox" labelFloat="true" layoutX="921.0" layoutY="33.0" maxHeight="27.0" maxWidth="Infinity" minWidth="0.0" prefWidth="250.0" promptText="%FILTER_BY_FINGERPRINT" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;">
+                <JFXComboBox fx:id="fingerprintFilterComboBox" disable="true" labelFloat="true" layoutX="921.0" layoutY="33.0" maxHeight="27.0" maxWidth="Infinity" minWidth="0.0" prefWidth="250.0" promptText="%FILTER_BY_FINGERPRINT" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;">
                     <HBox.margin>
                         <Insets />
                     </HBox.margin>
                 </JFXComboBox>
-                <JFXComboBox fx:id="isActiveFilterComboBox" labelFloat="true" layoutX="944.0" layoutY="33.0" maxHeight="27.0" maxWidth="Infinity" minWidth="0.0" prefWidth="150.0" promptText="%FILTER_BY_ACTIVATION" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;">
+                <JFXComboBox fx:id="isActiveFilterComboBox" disable="true" labelFloat="true" layoutX="944.0" layoutY="33.0" maxHeight="27.0" maxWidth="Infinity" minWidth="0.0" prefWidth="150.0" promptText="%FILTER_BY_ACTIVATION" style="-fx-border-color: -rq-accent-focus; -fx-border-width: 0 0 0 1;">
                     <HBox.margin>
                         <Insets />
                     </HBox.margin>
                 </JFXComboBox>
+            <VBox.margin>
+               <Insets right="15.0" />
+            </VBox.margin>
             </HBox>
 
 

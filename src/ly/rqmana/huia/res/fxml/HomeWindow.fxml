@@ -25,7 +25,7 @@
           <RowConstraints minHeight="10.0" percentHeight="50.0" prefHeight="30.0" vgrow="SOMETIMES" />
       </rowConstraints>
       <Pane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: -rq-background;" GridPane.rowSpan="2" />
-   <Label fx:id="shopPlace2" style="-fx-text-fill: -rq-text-background;" styleClass="font50" text="%APP_NAME">
+   <Label style="-fx-text-fill: -rq-text-background;" styleClass="font50" text="%APP_NAME">
       <font>
          <Font name="System Bold" size="13.0" />
       </font>

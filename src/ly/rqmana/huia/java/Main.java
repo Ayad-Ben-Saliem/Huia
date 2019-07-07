@@ -11,11 +11,26 @@ import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
 import ly.rqmana.huia.java.util.Res;
 import ly.rqmana.huia.java.util.Windows;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Main extends Application {
+    private final static String CHANGE_DATE_EXE = "cmd /c \"C:\\Program Files\\Huia Healthcare\\ChangeDate.exe\" ";
+    private final static LocalDate TODAY = LocalDate.now();
+
+    private static Process fingerprintBackgroundServer;
+
+    static {
+//        try {
+//            Runtime.getRuntime().exec(CHANGE_DATE_EXE + "1/1/2019");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+    }
 
     private void establishFingerprintDevice(){
 
@@ -34,14 +49,25 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        Logger.getLogger("org.apache.catalina.core").setLevel(Level.OFF);
 
-        System.setProperty("prism.lcdtext", "false");
+        try {
+            System.out.println(CHANGE_DATE_EXE + TODAY.format(DateTimeFormatter.ofPattern("MM/dd/YYYY")));
+//            Runtime.getRuntime().exec(CHANGE_DATE_EXE + TODAY.format(DateTimeFormatter.ofPattern("MM/dd/YYYY")));
 
-        Font.loadFont(getClass().getResource(Res.Font.CAIRO_SEMI_BOLD.getUrl()).toExternalForm(), 14);
+            fingerprintBackgroundServer = Runtime.getRuntime().exec("java -jar \"C:\\Program Files\\Huia Healthcare\\FingerprintBackgroundServer.jar\"");
 
-        Windows.ROOT_WINDOW.open();
-        establishFingerprintDevice();
+            Logger.getLogger("org.apache.catalina.core").setLevel(Level.OFF);
+
+            System.setProperty("prism.lcdtext", "false");
+
+            Font.loadFont(getClass().getResource(Res.Font.CAIRO_SEMI_BOLD.getUrl()).toExternalForm(), 14);
+
+            Windows.ROOT_WINDOW.open();
+            establishFingerprintDevice();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -51,6 +77,8 @@ public class Main extends Application {
             FingerprintManager.closeDevice();
 
         Threading.shutdown();
+
+        fingerprintBackgroundServer.destroy();
     }
 
     public static void main(String[] args) {

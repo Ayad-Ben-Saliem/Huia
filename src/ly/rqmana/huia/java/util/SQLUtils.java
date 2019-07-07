@@ -9,6 +9,13 @@ import java.util.concurrent.TimeUnit;
 
 public final class SQLUtils {
 
+    private static final String DATE_TIME_FORMAT
+            = "[yyyy-MM-dd HH:mm:ss[.SSS[SSS]][ Z]]"
+            + "[ddMMMyyyy HH:mm:ss[.SSS[SSS]][ Z]]"
+            + "[yyyy-MM-dd'T'HH:mm:ss[.SSS[SSS]][ Z]]"
+            + "[ddMMMyyyy'T'HH:mm:ss[.SSS[SSS]][ Z]]"
+            + "[ddMMMyyyy:HH:mm:ss[.SSS[SSS]][ Z]]";
+
     private SQLUtils(){}
 
     public String stringToBoolean(boolean bool){
@@ -29,25 +36,24 @@ public final class SQLUtils {
         return booleanInt != 0;
     }
 
-    public static long dateToTimestamp(LocalDate localDate){
+    public static long localDate2Timestamp(LocalDate localDate){
         LocalDateTime birthday = LocalDateTime.of(localDate, LocalTime.MIN);
-        String dateString = DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss").format(birthday);
+        String dateString = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT).format(birthday);
 
         long epochMillis = Timestamp.valueOf(dateString).getTime();
-        long epochSeconds = TimeUnit.SECONDS.convert(epochMillis, TimeUnit.MILLISECONDS);
-        return epochSeconds;
+        return TimeUnit.SECONDS.convert(epochMillis, TimeUnit.MILLISECONDS);
     }
 
-    public static LocalDateTime timestampToDateTime(long timestamp){
+    public static LocalDateTime timestamp2DateTime(long timestamp){
         long epochMillis = TimeUnit.MILLISECONDS.convert(timestamp, TimeUnit.SECONDS);
         return new Timestamp(epochMillis).toLocalDateTime();
     }
 
-    public static LocalDateTime sqlDateTimeToLocalDateTime(String SQLDateTime){
-        return LocalDateTime.parse(SQLDateTime, DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss"));
+    public static LocalDateTime sqlDateTime2LocalDateTime(String SQLDateTime){
+        return LocalDateTime.parse(SQLDateTime, DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
     }
 
-    public static String localDateTimetoSQLDateTime(LocalDateTime localDateTime){
-        return DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss").format(localDateTime);
+    public static String localDateTime2SQLDateTime(LocalDateTime localDateTime){
+        return DateTimeFormatter.ofPattern(DATE_TIME_FORMAT).format(localDateTime);
     }
 }

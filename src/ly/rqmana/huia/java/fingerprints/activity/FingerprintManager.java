@@ -8,7 +8,11 @@ import ly.rqmana.huia.java.fingerprints.SecurityLevel;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDevice;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.Socket;
 
 public class FingerprintManager {
 
@@ -71,6 +75,33 @@ public class FingerprintManager {
         catch (Exception ex){
             return false;
         }
+    }
+
+    public static Task<Boolean> matchFingerprintTemplate(String sourceFingerprint, String targetFingerprint) {
+//        return device().matchFingerprintTemplate(sourceFingerprint, targetFingerprint);
+        return new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+                Socket socket = new Socket("localhost", 60000);
+
+                PrintStream printStream = new PrintStream(socket.getOutputStream());
+                InputStreamReader inReader = new InputStreamReader(socket.getInputStream());
+                BufferedReader reader = new BufferedReader(inReader);
+
+                printStream.println("VERIFY_MATCH");
+                printStream.println(sourceFingerprint);
+                printStream.println(targetFingerprint);
+
+                String responseCommand = reader.readLine();
+                String match = reader.readLine();
+                System.out.println("responseCommand = " + responseCommand);
+                System.out.println("match = " + match);
+
+                socket.close();
+
+                return responseCommand.equals("VERIFY_MATCH") && match.equals(Boolean.TRUE.toString());
+            }
+        };
     }
 
     public static void closeDevice() throws IOException{

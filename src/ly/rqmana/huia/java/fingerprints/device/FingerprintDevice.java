@@ -4,6 +4,7 @@ import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.device.impl.HamsterDX;
 import ly.rqmana.huia.java.fingerprints.hand.Finger;
@@ -43,16 +44,16 @@ public abstract class FingerprintDevice implements Closeable {
     /**
      * captures a new finger using the device and then matches it with the supplied {@code target}
      */
-    public boolean matchFinger(Finger target){
+    public Task<Boolean> matchFinger(Finger target){
         Finger sourceFinger = captureFinger(target.getId());
         return matchFingerprintTemplate(sourceFinger.getFingerprintTemplate(), target.getFingerprintTemplate());
     }
 
-    public boolean matchFinger(Finger source, Finger target){
+    public Task<Boolean> matchFinger(Finger source, Finger target){
         return matchFingerprintTemplate(source.getFingerprintTemplate(), target.getFingerprintTemplate());
     }
 
-    public abstract boolean matchFingerprintTemplate(String source, String target);
+    public abstract Task<Boolean> matchFingerprintTemplate(String source, String target);
 
     public abstract void open() throws IOException;
 
