@@ -23,7 +23,10 @@ import ly.rqmana.huia.java.storage.DataStorage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -32,6 +35,13 @@ import java.util.concurrent.TimeUnit;
 public class Utils {
 
     public static final String APP_NAME = "Huia Healthcare";
+
+    private static final String DATE_TIME_FORMAT
+            = "[yyyy-MM-dd[ HH:mm:ss[.S[SS[SSS]][ Z]]]]"
+            + "[ddMMMyyyy[ HH:mm:ss[.S[SS[SSS]][ Z]]]]"
+            + "[yyyy-MM-dd['T'HH:mm:ss[.S[SS[SSS]][ Z]]]]"
+            + "[ddMMMyyyy['T'HH:mm:ss[.S[SS[SSS]][ Z]]]]"
+            + "[ddMMMyyyy[:HH:mm:ss[.S[SS[SSS]][ Z]]]]";
 
     private static Process fingerprintBackgroundServer;
 
@@ -201,4 +211,42 @@ public class Utils {
         fingerprintBackgroundServer.destroy();
     }
 
+    public static LocalDateTime toLocalDateTime(String datetimeString) {
+        if (datetimeString == null) return null;
+        return LocalDateTime.parse(datetimeString, DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
+    }
+
+    public static LocalDate toLocalDate(String datetimeString) {
+        if (datetimeString == null) return null;
+        return LocalDate.parse(datetimeString, DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
+    }
+
+    public static LocalTime toLocalTime(String datetimeString) {
+        if (datetimeString == null) return null;
+        return LocalTime.parse(datetimeString, DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
+    }
+
+    public static long toTimestamp(LocalDateTime localDate){
+        String dateString = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT).format(localDate);
+
+        long epochMillis = Timestamp.valueOf(dateString).getTime();
+        return TimeUnit.SECONDS.convert(epochMillis, TimeUnit.MILLISECONDS);
+    }
+
+    public static long toTimestamp(LocalDate localDate){
+        return toTimestamp(LocalDateTime.of(localDate, LocalTime.MIN));
+    }
+
+    public static LocalDateTime toLocalDateTime(long timestamp){
+        long epochMillis = TimeUnit.MILLISECONDS.convert(timestamp, TimeUnit.SECONDS);
+        return new Timestamp(epochMillis).toLocalDateTime();
+    }
+
+    public static LocalDate toLocalDate(long timestamp){
+        return toLocalDateTime(timestamp).toLocalDate();
+    }
+
+    public static LocalTime toLocalTime(long timestamp){
+        return toLocalDateTime(timestamp).toLocalTime();
+    }
 }

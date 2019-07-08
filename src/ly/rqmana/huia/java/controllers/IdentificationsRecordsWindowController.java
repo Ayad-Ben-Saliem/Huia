@@ -249,7 +249,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
             Throwable exception = event.getSource().getException();
             Windows.errorAlert(
                     Utils.getI18nString("ERROR"),
-                    exception.getLocalizedMessage(),
+                    exception.getMessage(),
                     exception,
                     AlertAction.OK
             );

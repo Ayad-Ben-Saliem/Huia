@@ -24,6 +24,7 @@ import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
+import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
@@ -40,6 +41,7 @@ import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -157,37 +159,25 @@ public class RegistrationWindowController implements Controllable {
     }
 
     private void loadDatabase() {
-        try {
-            loadInstituteNames();
-            loadWorkIdes();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        loadInstituteNames();
+        loadWorkIdes();
     }
 
-    private void loadInstituteNames() throws SQLException {
-        PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement("SELECT id, name FROM Institutes;");
-        ResultSet resultSet = pStatement.executeQuery();
-        ObservableList<Institute> institutes = FXCollections.observableArrayList();
-        while (resultSet.next()) {
-            int id = resultSet.getInt("id");
-            String name = resultSet.getString("name");
-            institutes.add(new Institute(id, name));
-        }
-        instituteComboBox.setItems(institutes);
+    private void loadInstituteNames() {
+        Task<ObservableList<Institute>> getInstitutesTask = DAO.getInstitutes();
+
+        getInstitutesTask.addOnSucceeded(event -> instituteComboBox.setItems(getInstitutesTask.getValue()));
+
+        getInstitutesTask.addOnFailed(event -> Windows.errorAlert(Utils.getI18nString("ERROR"), "", getInstitutesTask.getException(), AlertAction.OK));
     }
 
-    private void loadWorkIdes() throws SQLException {
-        ObservableSet<String> workIdes = FXCollections.observableSet();
-        String[] queries = {"SELECT workId FROM People;", "SELECT workId FROM NewRegistrations;"};
-        for (String query : queries) {
-            PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(query);
-            ResultSet resultSet = pStatement.executeQuery();
-            while (resultSet.next()) {
-                workIdes.add(resultSet.getString("workId"));
-            }
-        }
-        employeesWorkIdComboBox.setItems(FXCollections.observableArrayList(workIdes));
+    private void loadWorkIdes() {
+        Task<ObservableSet<String>> getWorkIdesTask = DAO.getWorkIdes();
+
+        getWorkIdesTask.addOnSucceeded(event -> employeesWorkIdComboBox.setItems(FXCollections.observableArrayList(getWorkIdesTask.getValue())));
+
+        getWorkIdesTask.addOnFailed(event -> Windows.errorAlert(Utils.getI18nString("ERROR"), "", getWorkIdesTask.getException(), AlertAction.OK));
+
     }
 
     public void onAddContactBtnClicked() {

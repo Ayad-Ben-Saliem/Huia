@@ -13,6 +13,7 @@ import ly.rqmana.huia.java.util.OS;
 import ly.rqmana.huia.java.util.OSValidator;
 import ly.rqmana.huia.java.util.Utils;
 import org.apache.commons.io.FileUtils;
+import org.json.JSONObject;
 import org.zeroturnaround.zip.ZipUtil;
 
 import javax.imageio.ImageIO;
@@ -22,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.prefs.Preferences;
 
 public class DataStorage {
 
@@ -39,6 +41,8 @@ public class DataStorage {
 
     private static final Path DATA_DIRECTORY;
 
+    private static final String BASE_INFO_FILE_NAME = "BaseInfo.json";
+
     static {
         String osDataDirectory;
         if (OSValidator.isWindows()) {
@@ -52,14 +56,13 @@ public class DataStorage {
         }
 
         DATA_DIRECTORY = Paths.get(osDataDirectory, HUIA_DIRECTORY_NAME);
-
     }
 
     public static Path getSubscribersDir() {
         return DATA_DIRECTORY.resolve(SUBSCRIBERS_DIR_NAME);
     }
 
-    public static Path getNewRegistrationsDir() {
+    public static Path getNewSubscribersDir() {
         return DATA_DIRECTORY.resolve(NEW_REG_DIR_NAME);
     }
 
@@ -186,7 +189,7 @@ public class DataStorage {
 
         String subscriberId = String.valueOf(subscriber.getId());
 
-        return getNewRegistrationsDir().resolve(String.valueOf(institute.getId())).resolve(subscriberId);
+        return getNewSubscribersDir().resolve(String.valueOf(institute.getId())).resolve(subscriberId);
     }
 
     private static void saveFingerprintImages(Path imageDir, Finger finger) throws IOException {

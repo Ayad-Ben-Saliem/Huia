@@ -1,58 +1,124 @@
 package ly.rqmana.huia.java.db;
 
+import com.jfoenix.controls.JFXDialog;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.layout.Region;
 import ly.rqmana.huia.java.concurrent.Task;
-import ly.rqmana.huia.java.models.Gender;
-import ly.rqmana.huia.java.models.Subscriber;
-import ly.rqmana.huia.java.models.User;
+import ly.rqmana.huia.java.concurrent.Threading;
+import ly.rqmana.huia.java.controllers.DatabaseConfigurationDialogController;
+import ly.rqmana.huia.java.controllers.HomeWindowController;
+import ly.rqmana.huia.java.controllers.RootWindowController;
+import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.models.*;
 import ly.rqmana.huia.java.security.Auth;
+import ly.rqmana.huia.java.storage.BaseInfo;
 import ly.rqmana.huia.java.storage.DataStorage;
-import ly.rqmana.huia.java.util.SQLUtils;
-import ly.rqmana.huia.java.util.Utils;
+import ly.rqmana.huia.java.util.*;
 
+import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class DAO {
 
-    public static final Connection HUIA_DB_CONNECTION;
-    public static final Connection OLD_DB_CONNECTION;
-    private static final String DB_NAME = Utils.APP_NAME + ".sqlite";
+    private static Connection DB_CONNECTION;
+    private static Connection OLD_DB_CONNECTION;
+    private static final String DB_NAME = Utils.APP_NAME;
 
-    static {
-        try {
-            HUIA_DB_CONNECTION = DriverManager.getConnection(getDBUrl());
-            OLD_DB_CONNECTION = DriverManager.getConnection(DAO.getDataDBUrl());
+    public static void initialize() {
+        Task<Boolean> initializeDBTask = initializeDBTask();
 
-            initializeDB();
-        } catch (SQLException e) {
-            
-            throw new RuntimeException(e);
-        }
+        initializeDBTask.addOnSucceeded(event -> {
+            RootWindowController controller = Windows.ROOT_WINDOW.getController();
+            controller.getHomeWindowController().loginBtn.setDisable(false);
+        });
+
+        initializeDBTask.setOnFailed(event -> {
+            Throwable throwable = initializeDBTask.getException();
+
+            AlertAction configureDB = new AlertAction(Utils.getI18nString("DB_CONFIG"));
+
+            Optional<AlertAction> answer = Windows.errorAlert(
+                    Utils.getI18nString("ERROR"),
+                    throwable.getMessage(),
+                    throwable,
+                    AlertAction.OK,
+                    AlertAction.TRY_AGAIN,
+                    configureDB
+            );
+
+            if (answer.isPresent()){
+                if (answer.get().equals(AlertAction.TRY_AGAIN)) {
+                    initialize();
+                }
+                if (answer.get().equals(configureDB)) {
+                    try {
+                        FXMLLoader loader = new FXMLLoader(Res.Fxml.DATABASE_CONFIGURATION_DIALOG.getUrl(), Utils.getBundle());
+                        Region content = loader.load();
+                        JFXDialog dialog = new JFXDialog(Windows.getRootStack(), content, JFXDialog.DialogTransition.CENTER);
+                        DatabaseConfigurationDialogController controller = loader.getController();
+                        controller.setDialog(dialog);
+                        dialog.show();
+                        dialog.setOnDialogClosed(event1 -> initialize());
+
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        Threading.MAIN_EXECUTOR_SERVICE.submit(initializeDBTask);
     }
 
-    public static void initializeDB() throws SQLException {
-        createTables();
+    private static Task<Boolean> initializeDBTask() {
 
-        if (countRecords("Users").runAndGet() == 0) {
-            insertAdminUser().runAndGet();
-        }
+        return new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+                String dbUrl = getDBUrl();
+                String dbUsername = BaseInfo.getDbUsername();
+                String dbPassword = BaseInfo.getDbPassword();
 
-        if (countRecords("Institutes").runAndGet() == 0) {
-            insertInstitute("الشركة الليبية للحديد والصلب").runAndGet();
-        }
+                DB_CONNECTION = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
+                OLD_DB_CONNECTION = DriverManager.getConnection(DAO.getOldDBUrl());
 
-        if (countRecords("People").runAndGet() == 0) {
-            migrateOldData().runAndGet();
-        }
+                System.out.println("DB_CONNECTION = " + DB_CONNECTION);
+
+                Statement statement = DB_CONNECTION.createStatement();
+                statement.executeUpdate("CREATE DATABASE IF NOT EXISTS `" + DB_NAME + "`;");
+                statement.executeUpdate("USE `" + DB_NAME + "`;");
+                statement.executeUpdate("ALTER DATABASE `" + DB_NAME + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+
+                createTables();
+
+                if (countRecords("Users").runAndGet() == 0) {
+                    insertAdminUser().runAndGet();
+                }
+
+                if (countRecords("Institutes").runAndGet() == 0) {
+                    insertInstitute("الشركة الليبية للحديد والصلب").runAndGet();
+                }
+
+                if (countRecords("Subscribers").runAndGet() == 0) {
+                    migrateOldData().runAndGet();
+                }
+                return true;
+            }
+        };
+    }
+
+    private static String getDBUrl() {
+        String dbUrl = "jdbc:mysql://" + BaseInfo.getDbServerHost();
+        if (!dbUrl.endsWith("/"))
+            dbUrl += "/";
+        dbUrl += "?useUnicode=true&characterEncoding=utf-8";
+        return dbUrl;
     }
 
     private static Task<Boolean> migrateOldData() {
@@ -62,7 +128,7 @@ public class DAO {
             protected Boolean call() throws Exception {
                 ResultSet oldDataSet = OLD_DB_CONNECTION.createStatement().executeQuery("SELECT * FROM Fingerprint where company_id ='02';");
 
-                String insertQuery = "INSERT INTO People("
+                String insertQuery = "INSERT INTO Subscribers("
                                     + "firstName        ,"
                                     + "fatherName           ,"
                                     + "familyName           ,"
@@ -79,9 +145,8 @@ public class DAO {
                                     + "notes"
                                     + ") "
                                     + "Values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-                PreparedStatement pStatement = HUIA_DB_CONNECTION.prepareStatement(insertQuery);
+                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(insertQuery);
 
-                System.out.println(System.currentTimeMillis());
                 while (oldDataSet.next()) {
 
                     String firstName = oldDataSet.getString("first_name");
@@ -90,7 +155,7 @@ public class DAO {
                     String nationalId = oldDataSet.getString("national_id");
 
                     String birthdayString = oldDataSet.getString("birthday");
-                    LocalDate birthday = LocalDate.parse(birthdayString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    LocalDate birthday = Utils.toLocalDate(birthdayString);
 
                     String genderString = oldDataSet.getString("sex");
 
@@ -103,10 +168,12 @@ public class DAO {
                     String relationshipRawString = oldDataSet.getString("relationship");
 
                     String relationship;
-                    if (relationshipRawString.equals("خاص") || relationshipRawString.equals("لا يوجد")){
-                        relationship = relationshipRawString;
-                    }
-                    else{
+                    if (relationshipRawString.equals("خاص")) {
+                        relationship = "SPECIAL";
+                    } else
+                    if (relationshipRawString.equals("لا يوجد")) {
+                        relationship = "NOT EXIST";
+                    } else {
                         relationship = Relationship.parseArabic(relationshipRawString).name();
                     }
 
@@ -115,8 +182,6 @@ public class DAO {
                     boolean isActive = SQLUtils.getBoolean(oldDataSet.getString("is_active"));
                     String notes = oldDataSet.getString("notes");
 
-                    //TODo; sett institute id to 1
-
                     pStatement.setString(1, firstName);
                     pStatement.setString(2, fatherName);
                     pStatement.setString(3, familyName);
@@ -124,6 +189,7 @@ public class DAO {
                     pStatement.setString(4, nationalId);
                     pStatement.setString(5, birthday.toString());
                     pStatement.setString(6, gender.name());
+                    //TODO: institute id set to 1
                     pStatement.setLong(7, 1);
                     pStatement.setString(8, workId);
                     pStatement.setString(9, relationship);
@@ -133,15 +199,16 @@ public class DAO {
 
                     pStatement.setLong(13, 1);
                     pStatement.setString(14, notes);
+
+//                    pStatement.execute();
                     pStatement.addBatch();
         //            "select * from Fingerprint where relationship!='الزوجةالإبن' and relationship!='المشترك' and relationship!='الإبنة' and relationship!='والدة الموظف' and relationship!='والد الموظف' and relationship!='لا يوجد'";
                 }
-                System.out.println(System.currentTimeMillis());
 
-                HUIA_DB_CONNECTION.setAutoCommit(false);
+                DB_CONNECTION.setAutoCommit(false);
                 pStatement.executeBatch();
-                HUIA_DB_CONNECTION.commit();
-                HUIA_DB_CONNECTION.setAutoCommit(true);
+                DB_CONNECTION.commit();
+                DB_CONNECTION.setAutoCommit(true);
                 return true;
             }
         };
@@ -150,49 +217,51 @@ public class DAO {
     private static void createTables() throws SQLException {
         createUsersTable();
         createInstitutesTable();
-        createPeopleTable();
-        createNewRegistrationsTable();
+        createSubscribersTable();
+        createNewSubscribersTable();
         createContactsTable();
         createIdentificationsTable();
     }
 
     private static void createIdentificationsTable() throws SQLException {
-        Statement statement = HUIA_DB_CONNECTION.createStatement();
+        Statement statement = DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS Identifications("
-                + "id                  INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + "subscriberId        INTEGER NOT NULL,"
-                + "datetime            DATETIME NOT NULL DEFAULT (DATETIME(CURRENT_TIMESTAMP)),"
-                + "isIdentified        BOOLEAN NOT NULL ,"
-                + "username            TEXT,"
-                + "notes"
+                + "id                   INT NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+                + "subscriberId         INTEGER NOT NULL,"
+                + "datetime             DATETIME NOT NULL,"
+                + "isIdentified         BOOLEAN NOT NULL ,"
+                + "username             VARCHAR(25),"
+                + "notes                TEXT"
                 + ");";
         statement.execute(createQuery);
+
+        statement.executeUpdate("ALTER TABLE Identifications CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         statement.close();
 
     }
 
     private static void createUsersTable() throws SQLException {
-        Statement statement = HUIA_DB_CONNECTION.createStatement();
+        Statement statement = DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS Users("
-                + "id                INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
-                + "username          TEXT NOT NULL UNIQUE,"
-                + "password          TEXT NOT NULL,"
-                + "email             TEXT,"
-                + "firstName         TEXT NOT NULL,"
-                + "fatherName        TEXT,"
-                + "grandfatherName   TEXT,"
-                + "familyName        TEXT,"
-                + "nationality       TEXT,"
-                + "nationalId        TEXT,"
+                + "id                INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+                + "username          VARCHAR(25) NOT NULL UNIQUE,"
+                + "password          TEXT,"
+                + "email             VARCHAR(50),"
+                + "firstName         VARCHAR(25) NOT NULL,"
+                + "fatherName        VARCHAR(25),"
+                + "grandfatherName   VARCHAR(25),"
+                + "familyName        VARCHAR(25),"
+                + "nationality       VARCHAR(25),"
+                + "nationalId        VARCHAR(25),"
                 + "birthday          DATETIME,"
-                + "gender            TEXT,"
-                + "passport          TEXT,"
-                + "familyId          TEXT,"
-                + "residence         TEXT,"
-                + "dateJoined        DATETIME,"
+                + "gender            ENUM ('MALE', 'FEMALE') NOT NULL,"
+                + "passport          VARCHAR(25),"
+                + "familyId          VARCHAR(25),"
+                + "residence         VARCHAR(25),"
+                + "dateJoined        DATETIME DEFAULT CURRENT_TIMESTAMP,"
                 + "isSuperuser       BOOLEAN NOT NULL,"
                 + "isStaff           BOOLEAN NOT NULL,"
                 + "isActive          BOOLEAN NOT NULL,"
@@ -200,123 +269,134 @@ public class DAO {
                 + ");";
         statement.execute(createQuery);
 
+        statement.executeUpdate("ALTER TABLE Users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
         statement.close();
     }
 
     private static void createInstitutesTable() throws SQLException {
-        Statement statement = HUIA_DB_CONNECTION.createStatement();
+        Statement statement = DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS Institutes("
-                + "id           INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + "name         TEXT NOT NULL,"
+                + "id           INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+                + "name         VARCHAR(100) NOT NULL,"
                 + "description  TEXT"
                 + ");";
         statement.execute(createQuery);
 
+        statement.executeUpdate("ALTER TABLE Institutes CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
         statement.close();
     }
 
-    private static void createPeopleTable() throws SQLException {
-        Statement statement = HUIA_DB_CONNECTION.createStatement();
+    private static void createSubscribersTable() throws SQLException {
+        Statement statement = DB_CONNECTION.createStatement();
 
-        String createQuery = "CREATE TABLE IF NOT EXISTS People"
-                + "(id                  INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + "firstName            TEXT NOT NULL,"
-                + "fatherName           TEXT,"
-                + "grandfatherName      TEXT,"
-                + "familyName           TEXT NOT NULL,"
-                + "nationality          TEXT,"
-                + "nationalId           TEXT,"
-                + "birthday             DATE NOT NULL ,"
-                + "gender               TEXT NOT NULL,"
-                + "passport             TEXT UNIQUE,"
-                + "familyId             TEXT,"
-                + "residence            TEXT,"
-                + "instituteId          INTEGER NOT NULL,"
-                + "workId               TEXT,"
-                + "relationship         TEXT,"
-                + "isActive             BOOLEAN,"
-                + "rightThumbFingerprint   TEXT,"
-                + "rightIndexFingerprint   TEXT,"
-                + "rightMiddleFingerprint  TEXT,"
-                + "rightRingFingerprint    TEXT,"
-                + "rightLittleFingerprint  TEXT,"
-                + "leftThumbFingerprint    TEXT,"
-                + "leftIndexFingerprint    TEXT,"
-                + "leftMiddleFingerprint   TEXT,"
-                + "leftRingFingerprint     TEXT,"
-                + "leftLittleFingerprint   TEXT,"
-                + "allFingerprintTemplates TEXT,"
+        String createQuery = "CREATE TABLE IF NOT EXISTS Subscribers"
+                + "(id                      INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+                + "firstName                VARCHAR(25) NOT NULL,"
+                + "fatherName               VARCHAR(25),"
+                + "grandfatherName          VARCHAR(25),"
+                + "familyName               VARCHAR(25) NOT NULL,"
+                + "nationality              VARCHAR(25),"
+                + "nationalId               VARCHAR(25),"
+                + "birthday                 DATE NOT NULL ,"
+                + "gender                   ENUM ('MALE', 'FEMALE') NOT NULL,"
+                + "passport                 VARCHAR(25) UNIQUE,"
+                + "familyId                 VARCHAR(25),"
+                + "residence                VARCHAR(25),"
+                + "instituteId              INTEGER NOT NULL,"
+                + "workId                   VARCHAR(10),"
+                + "relationship             ENUM('SUBSCRIBER', 'FATHER', 'MOTHER', 'SON', 'DAUGHTER', 'WIFE', 'HUSBAND', 'SPECIAL', 'NOT EXIST') NOT NULL,"
+                + "isActive                 BOOLEAN,"
+                + "rightThumbFingerprint    TEXT,"
+                + "rightIndexFingerprint    TEXT,"
+                + "rightMiddleFingerprint   TEXT,"
+                + "rightRingFingerprint     TEXT,"
+                + "rightLittleFingerprint   TEXT,"
+                + "leftThumbFingerprint     TEXT,"
+                + "leftIndexFingerprint     TEXT,"
+                + "leftMiddleFingerprint    TEXT,"
+                + "leftRingFingerprint      TEXT,"
+                + "leftLittleFingerprint    TEXT,"
+                + "allFingerprintTemplates  TEXT,"
                 + "dataPath                 TEXT,"
-                + "user                 INTEGER NOT NULL,"
-                + "dateAdded            DATETIME NOT NULL,"
-                + "dateUploaded         DATETIME,"
-                + "notes                TEXT,"
+                + "user                     INTEGER NOT NULL,"
+                + "dateAdded                DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                + "dateUploaded             DATETIME,"
+                + "notes                    TEXT,"
                 + "FOREIGN KEY (instituteId) REFERENCES Institutes(id),"
                 + "FOREIGN KEY (user) REFERENCES Users(id)"
                 + ");";
         statement.execute(createQuery);
 
+        statement.executeUpdate("ALTER TABLE Subscribers CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
         statement.close();
     }
 
-    private static void createNewRegistrationsTable() throws SQLException {
-        Statement statement = HUIA_DB_CONNECTION.createStatement();
+    private static void createNewSubscribersTable() throws SQLException {
+        Statement statement = DB_CONNECTION.createStatement();
 
-        String createQuery = "CREATE TABLE IF NOT EXISTS NewRegistrations ("
-                + "id                   INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + "firstName            TEXT NOT NULL,"
-                + "fatherName           TEXT,"
-                + "grandfatherName      TEXT,"
-                + "familyName           TEXT NOT NULL,"
-                + "nationality          TEXT,"
-                + "nationalId           TEXT,"
-                + "birthday             DATE,"
-                + "gender               TEXT,"
-                + "passport             TEXT UNIQUE,"
-                + "familyId             TEXT,"
-                + "residence            TEXT,"
-                + "instituteId          INTEGER NOT NULL,"
-                + "workId               TEXT,"
-                + "relationship         TEXT,"
-                + "rightThumbFingerprint   TEXT,"
-                + "rightIndexFingerprint   TEXT,"
-                + "rightMiddleFingerprint  TEXT,"
-                + "rightRingFingerprint    TEXT,"
-                + "rightLittleFingerprint  TEXT,"
-                + "leftThumbFingerprint    TEXT,"
-                + "leftIndexFingerprint    TEXT,"
-                + "leftMiddleFingerprint   TEXT,"
-                + "leftRingFingerprint     TEXT,"
-                + "leftLittleFingerprint   TEXT,"
-                + "allFingerprintTemplates TEXT,"
+        String createQuery = "CREATE TABLE IF NOT EXISTS NewSubscribers ("
+                + "id                       INTEGER PRIMARY KEY AUTO_INCREMENT,"
+                + "firstName                VARCHAR(25) NOT NULL,"
+                + "fatherName               VARCHAR(25),"
+                + "grandfatherName          VARCHAR(25),"
+                + "familyName               VARCHAR(25) NOT NULL,"
+                + "nationality              VARCHAR(25),"
+                + "nationalId               VARCHAR(25),"
+                + "birthday                 DATE NOT NULL,"
+                + "gender                   ENUM ('MALE', 'FEMALE') NOT NULL,"
+                + "passport                 VARCHAR(25) UNIQUE,"
+                + "familyId                 VARCHAR(25),"
+                + "residence                VARCHAR(25),"
+                + "instituteId              INTEGER NOT NULL,"
+                + "workId                   VARCHAR(10),"
+                + "relationship             ENUM('SUBSCRIBER', 'FATHER', 'MOTHER', 'SON', 'DAUGHTER', 'WIFE', 'HUSBAND', 'SPECIAL', 'NOT EXIST') NOT NULL,"
+                + "rightThumbFingerprint    TEXT,"
+                + "rightIndexFingerprint    TEXT,"
+                + "rightMiddleFingerprint   TEXT,"
+                + "rightRingFingerprint     TEXT,"
+                + "rightLittleFingerprint   TEXT,"
+                + "leftThumbFingerprint     TEXT,"
+                + "leftIndexFingerprint     TEXT,"
+                + "leftMiddleFingerprint    TEXT,"
+                + "leftRingFingerprint      TEXT,"
+                + "leftLittleFingerprint    TEXT,"
+                + "allFingerprintTemplates  TEXT,"
                 + "dataPath                 TEXT,"
-                + "user                 INTEGER NOT NULL,"
-                + "dateAdded            DATETIME NOT NULL DEFAULT (DATETIME(CURRENT_TIMESTAMP)),"
-                + "isUploaded           BOOLEAN NOT NULL DEFAULT FALSE,"
-                + "isViewed             BOOLEAN NOT NULL DEFAULT FALSE,"
-                + "dateUploaded         DATETIME,"
-                + "hasProblem           BOOLEAN DEFAULT FALSE,"
-                + "notes                TEXT,"
+                + "isActive                 BOOLEAN,"
+                + "user                     INTEGER NOT NULL,"
+                + "dateAdded                DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                + "isUploaded               BOOLEAN NOT NULL DEFAULT FALSE,"
+                + "isViewed                 BOOLEAN NOT NULL DEFAULT FALSE,"
+                + "dateUploaded             DATETIME,"
+                + "hasProblem               BOOLEAN DEFAULT FALSE,"
+                + "notes                    TEXT,"
                 + "FOREIGN KEY (instituteId) REFERENCES Institutes(id),"
                 + "FOREIGN KEY (user) REFERENCES Users(id)"
                 + ");";
         statement.execute(createQuery);
+
+        statement.executeUpdate("ALTER TABLE NewSubscribers CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         statement.close();
     }
 
     private static void createContactsTable() throws SQLException {
-        Statement statement = HUIA_DB_CONNECTION.createStatement();
+        Statement statement = DB_CONNECTION.createStatement();
 
         String createQuery = "CREATE TABLE IF NOT EXISTS Contacts ("
-                + "id          INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + "id          INTEGER PRIMARY KEY AUTO_INCREMENT,"
                 + "personId    INTEGER NOT NULL,"
-                + "label       TEXT,"
-                + "contact     TEXT,"
-                + "FOREIGN KEY (personId) REFERENCES People(id)"
+                + "label       VARCHAR(25),"
+                + "contact     VARCHAR(250),"
+                + "FOREIGN KEY (personId) REFERENCES Subscribers(id)"
                 + ");";
         statement.execute(createQuery);
+
+        statement.executeUpdate("ALTER TABLE Contacts CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         statement.close();
     }
@@ -325,7 +405,7 @@ public class DAO {
         return new Task<Long>() {
             @Override
             protected Long call() throws Exception {
-                Statement statement = HUIA_DB_CONNECTION.createStatement();
+                Statement statement = DB_CONNECTION.createStatement();
                 ResultSet resultSet = statement.executeQuery("SELECT Count(*) FROM " + tableName);
                 long count = -1;
                 while (resultSet.next()) {
@@ -345,6 +425,7 @@ public class DAO {
                     adminUser.setUsername("Admin");
                     adminUser.setPassword("Admin");
                     adminUser.setFirstName("Admin");
+                    adminUser.setGender(Gender.MALE);
                     adminUser.setSuperuser(true);
                     adminUser.setStaff(true);
                     adminUser.setActive(true);
@@ -374,7 +455,7 @@ public class DAO {
                         "nationalId," +
                         "birthday," +
                         "gender," +
-                        "password," +
+                        "passport," +
                         "familyId," +
                         "residence," +
                         "dateJoined," +
@@ -383,7 +464,7 @@ public class DAO {
                         "isActive" +
                         ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
-                PreparedStatement pStatement = HUIA_DB_CONNECTION.prepareStatement(insertQuery);
+                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(insertQuery);
 
                 pStatement.setString(1, user.getUsername());
                 pStatement.setString(2, user.getHashedPassword());
@@ -417,7 +498,7 @@ public class DAO {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                Statement statement = HUIA_DB_CONNECTION.createStatement();
+                Statement statement = DB_CONNECTION.createStatement();
                 ResultSet resultSet = statement.executeQuery(String.format("SELECT id FROM Users WHERE username = '%s'", username));
                 return resultSet.next();
             }
@@ -428,7 +509,7 @@ public class DAO {
         return new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                Statement statement = HUIA_DB_CONNECTION.createStatement();
+                Statement statement = DB_CONNECTION.createStatement();
 
                 String insertQuery = "INSERT INTO Institutes (name) VALUES ('" + institute + "');";
                 statement.execute(insertQuery);
@@ -439,13 +520,9 @@ public class DAO {
         };
     }
 
-    private static String getDBUrl() {
-        return "jdbc:sqlite:" + DataStorage.getDataPath().resolve(DB_NAME);
-    }
+    private static final String DATA_DB_NAME = "FingerprintData.db";
 
-    public static final String DATA_DB_NAME = "FingerprintData.db";
-
-    public static String getDataDBUrl() {
+    private static String getOldDBUrl() {
         return "jdbc:sqlite:" + DataStorage.getDataPath().resolve(DATA_DB_NAME).toString();
     }
 
@@ -467,9 +544,9 @@ public class DAO {
                 "isStaff        ," +
                 "isActive       ," +
                 "lastLogin       " +
-                "FROM Users WHERE username=? COLLATE NOCASE";
+                "FROM Users WHERE username=?";
 
-        PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(query);
+        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(query);
         pStatement.setString(1, username);
         ResultSet resultSet = pStatement.executeQuery();
 
@@ -486,16 +563,16 @@ public class DAO {
             user.setNationality(resultSet.getString("nationality"));
             user.setNationalId(resultSet.getString("nationalId"));
             String birthday = resultSet.getString("birthday");
-            user.setBirthday(birthday == null? null : LocalDate.parse(birthday));
+            user.setBirthday(birthday == null? null : Utils.toLocalDate(birthday));
             String gender = resultSet.getString("gender");
             user.setGender(Gender.MALE.name().equalsIgnoreCase(gender)? Gender.MALE : Gender.FEMALE);
             String dateJoined = resultSet.getString("dateJoined");
-            user.setDateJoined(dateJoined == null? null : LocalDateTime.parse(dateJoined));
+            user.setDateJoined(dateJoined == null? null : Utils.toLocalDateTime(dateJoined));
             user.setSuperuser(resultSet.getBoolean("isSuperuser"));
             user.setStaff(resultSet.getBoolean("isStaff"));
             user.setActive(resultSet.getBoolean("isActive"));
             String lastLogin = resultSet.getString("lastLogin");
-            user.setLastLogin(lastLogin == null? null : LocalDateTime.parse(lastLogin));
+            user.setLastLogin(lastLogin == null? null : Utils.toLocalDateTime(lastLogin));
         }
         return user;
     }
@@ -558,106 +635,116 @@ public class DAO {
         };
     }
 
-    public static ObservableList<Subscriber> getSubscribers() throws SQLException {
-        return getSubscribers("People");
+    public static Task<ObservableList<Subscriber>> getSubscribers() throws SQLException {
+        return getSubscribers("Subscribers");
     }
 
-    public static ObservableList<Subscriber> getNewSubscribers() throws SQLException {
-        return getSubscribers("NewRegistrations");
+    public static Task<ObservableList<Subscriber>> getNewSubscribers() throws SQLException {
+        return getSubscribers("NewSubscribers");
     }
 
-    private static ObservableList<Subscriber> getSubscribers(String tableName) throws SQLException {
-        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
+    public static Task<ObservableList<Subscriber>> fillSubscribers(ObservableList<Subscriber> subscribers) throws SQLException {
+        return fillSubscribers("Subscribers", subscribers);
+    }
 
-        @SuppressWarnings("SqlResolve")
-        String query = "SELECT " +
-                 tableName + ".id," +
-                "firstName," +
-                "fatherName," +
-                "grandfatherName," +
-                "instituteId, " +
-                "Institutes.name AS instituteName, "+
-                "familyName," +
-                "birthday," +
-                "nationalId," +
-                "familyId," +
-                "gender," +
-                "workId," +
-                "relationship,";
+    public static Task<ObservableList<Subscriber>> fillNewSubscribers(ObservableList<Subscriber> subscribers) throws SQLException {
+        return fillSubscribers("NewSubscribers", subscribers);
+    }
 
-        if (tableName.equals("People"))
-            query += "isActive,";
+    private static Task<ObservableList<Subscriber>> getSubscribers(String tableName) throws SQLException {
+        return fillSubscribers(tableName, FXCollections.observableArrayList());
+    }
 
-        query += "allFingerprintTemplates," +
-                 "rightThumbFingerprint," +
-                 "rightIndexFingerprint," +
-                 "rightMiddleFingerprint," +
-                 "rightRingFingerprint," +
-                 "rightLittleFingerprint," +
-                 "leftThumbFingerprint," +
-                 "leftIndexFingerprint," +
-                 "leftMiddleFingerprint," +
-                 "leftRingFingerprint," +
-                 "leftLittleFingerprint" +
-                 " FROM " + tableName;
+    private static Task<ObservableList<Subscriber>> fillSubscribers(String tableName, ObservableList<Subscriber> subscribers) throws SQLException {
+        return new Task<ObservableList<Subscriber>>() {
+            @Override
+            protected ObservableList<Subscriber> call() throws Exception {
+                @SuppressWarnings("SqlResolve")
+                String query = "SELECT " +
+                        tableName + ".id," +
+                        "firstName," +
+                        "fatherName," +
+                        "grandfatherName," +
+                        "instituteId, " +
+                        "Institutes.name AS instituteName, "+
+                        "familyName," +
+                        "birthday," +
+                        "nationalId," +
+                        "familyId," +
+                        "gender," +
+                        "workId," +
+                        "relationship," +
+                        "allFingerprintTemplates," +
+                        "rightThumbFingerprint," +
+                        "rightIndexFingerprint," +
+                        "rightMiddleFingerprint," +
+                        "rightRingFingerprint," +
+                        "rightLittleFingerprint," +
+                        "leftThumbFingerprint," +
+                        "leftIndexFingerprint," +
+                        "leftMiddleFingerprint," +
+                        "leftRingFingerprint," +
+                        "leftLittleFingerprint," +
+                        "dataPath," +
+                        "isActive" +
+                        " FROM " + tableName +
+                        " INNER JOIN Institutes ON Institutes.id = "+ tableName + ".instituteId;";
 
-        query += " INNER JOIN Institutes ON Institutes.id = "+ tableName +".instituteId ";
+                ResultSet resultSet = DB_CONNECTION.createStatement().executeQuery(query);
 
-        Statement statement = HUIA_DB_CONNECTION.createStatement();
-        ResultSet resultSet = statement.executeQuery(query);
+                while (resultSet.next()) {
+                    Subscriber subscriber = new Subscriber();
 
-        while (resultSet.next()) {
-            Subscriber subscriber = new Subscriber();
+                    subscriber.setId(resultSet.getLong("id"));
 
-            subscriber.setId(resultSet.getLong("id"));
+                    subscriber.setFirstName(resultSet.getString("firstName"));
+                    subscriber.setFatherName(resultSet.getString("fatherName"));
+                    subscriber.setGrandfatherName(resultSet.getString("grandfatherName"));
+                    subscriber.setFamilyName(resultSet.getString("familyName"));
 
-            subscriber.setFirstName(resultSet.getString("firstName"));
-            subscriber.setFatherName(resultSet.getString("fatherName"));
-            subscriber.setGrandfatherName(resultSet.getString("grandfatherName"));
-            subscriber.setFamilyName(resultSet.getString("familyName"));
-
-            String birthday = resultSet.getString("birthday");
-            subscriber.setBirthday(birthday==null? null : LocalDate.parse(birthday));
-            subscriber.setNationalId(resultSet.getString("nationalId"));
-            subscriber.setGender(Gender.valueOf(resultSet.getString("gender")));
+                    String birthday = resultSet.getString("birthday");
+                    subscriber.setBirthday(birthday==null? null : Utils.toLocalDate(birthday));
+                    subscriber.setNationalId(resultSet.getString("nationalId"));
+                    subscriber.setGender(Gender.valueOf(resultSet.getString("gender")));
 
 
-            long instituteId = resultSet.getLong("instituteId");
-            String instituteName = resultSet.getString("instituteName");
-            subscriber.setInstitute(new Institute(instituteId, instituteName));
+                    long instituteId = resultSet.getLong("instituteId");
+                    String instituteName = resultSet.getString("instituteName");
+                    subscriber.setInstitute(new Institute(instituteId, instituteName));
 
-            subscriber.setWorkId(resultSet.getString("workId"));
-            subscriber.setRelationship(Relationship.parse(resultSet.getString("relationship")));
+                    subscriber.setWorkId(resultSet.getString("workId"));
+                    subscriber.setRelationship(Relationship.parse(resultSet.getString("relationship")));
 
-            if (tableName.equals("People"))
-                subscriber.setActive(resultSet.getBoolean("isActive"));
-            else
-                subscriber.setActive(true);
+                    subscriber.setAllFingerprintsTemplate(resultSet.getString("allFingerprintTemplates"));
 
-            subscriber.setAllFingerprintsTemplate(resultSet.getString("allFingerprintTemplates"));
+                    subscriber.setRightThumbFingerprint(resultSet.getString("rightThumbFingerprint"));
+                    subscriber.setRightIndexFingerprint(resultSet.getString("rightIndexFingerprint"));
+                    subscriber.setRightMiddleFingerprint(resultSet.getString("rightMiddleFingerprint"));
+                    subscriber.setRightRingFingerprint(resultSet.getString("rightRingFingerprint"));
+                    subscriber.setRightLittleFingerprint(resultSet.getString("rightLittleFingerprint"));
 
-            subscriber.setRightThumbFingerprint(resultSet.getString("rightThumbFingerprint"));
-            subscriber.setRightIndexFingerprint(resultSet.getString("rightIndexFingerprint"));
-            subscriber.setRightMiddleFingerprint(resultSet.getString("rightMiddleFingerprint"));
-            subscriber.setRightRingFingerprint(resultSet.getString("rightRingFingerprint"));
-            subscriber.setRightLittleFingerprint(resultSet.getString("rightLittleFingerprint"));
+                    subscriber.setLeftThumbFingerprint(resultSet.getString("leftThumbFingerprint"));
+                    subscriber.setLeftIndexFingerprint(resultSet.getString("leftIndexFingerprint"));
+                    subscriber.setLeftMiddleFingerprint(resultSet.getString("leftMiddleFingerprint"));
+                    subscriber.setLeftRingFingerprint(resultSet.getString("leftRingFingerprint"));
+                    subscriber.setLeftLittleFingerprint(resultSet.getString("leftLittleFingerprint"));
 
-            subscriber.setLeftThumbFingerprint(resultSet.getString("leftThumbFingerprint"));
-            subscriber.setLeftIndexFingerprint(resultSet.getString("leftIndexFingerprint"));
-            subscriber.setLeftMiddleFingerprint(resultSet.getString("leftMiddleFingerprint"));
-            subscriber.setLeftRingFingerprint(resultSet.getString("leftRingFingerprint"));
-            subscriber.setLeftLittleFingerprint(resultSet.getString("leftLittleFingerprint"));
+                    subscriber.setDataPath(resultSet.getString("dataPath"));
 
-            subscribers.add(subscriber);
-        }
-        return subscribers;
+                    subscriber.setActive(resultSet.getBoolean("isActive"));
+
+                    subscribers.add(subscriber);
+                }
+                return subscribers;
+            }
+        };
     }
 
     public static Task<Subscriber> getSubscriberById(long subscriberId)  {
         return new Task<Subscriber>() {
             @Override
             protected Subscriber call() throws Exception {
-                PreparedStatement pStatement = HUIA_DB_CONNECTION.prepareStatement("SELECT * FROM People WHERE id=?;");
+                PreparedStatement pStatement = DB_CONNECTION.prepareStatement("SELECT * FROM Subscribers WHERE id=?;");
                 pStatement.setLong(1, subscriberId);
                 ResultSet resultSet = pStatement.executeQuery();
                 if (resultSet.next()) {
@@ -689,7 +776,7 @@ public class DAO {
 
     public static long insertNewSubscriber(Subscriber subscriber) throws SQLException {
         final String INSERT_QUERY =
-                "INSERT INTO NewRegistrations ("
+                "INSERT INTO NewSubscribers ("
                         + "firstName,"
                         + "fatherName,"
                         + "grandfatherName,"
@@ -718,7 +805,7 @@ public class DAO {
                         + "user"
                         + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
-        PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
 
         pStatement.setString(1, subscriber.getFirstName());
         pStatement.setString(2, subscriber.getFatherName());
@@ -767,15 +854,16 @@ public class DAO {
                 Map<String, Object> filterMap = new HashMap<>();
                 filterMap.put("id", subscriberId);
 
-                PreparedStatement preparedStatement = prepareUpdateStatement("People", updateMap, filterMap);
+                PreparedStatement preparedStatement = prepareUpdateStatement("Subscribers", updateMap, filterMap);
 
                 preparedStatement.execute();
                 return true;
             }
         };
     }
+
     public static void updateSubscriberDataPath(Subscriber subscriber) throws SQLException {
-        PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement("UPDATE NewRegistrations SET dataPath= ? WHERE id= ?");
+        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement("UPDATE NewSubscribers SET dataPath= ? WHERE id= ?");
         pStatement.setString(1, subscriber.getDataPath());
         pStatement.setLong(2, subscriber.getId());
 
@@ -795,7 +883,7 @@ public class DAO {
                         + "notes"
                         + ") VALUES (?,?,?,?,?)";
 
-                PreparedStatement pStatement = DAO.HUIA_DB_CONNECTION.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
 
                 pStatement.setLong(1, record.getSubscriber().getId());
                 pStatement.setString(2, record.getUser().getUsername());
@@ -854,7 +942,7 @@ public class DAO {
             protected Collection<User> call() throws Exception {
                 Collection<User> resultUsers = new ArrayList<>();
                 String query = "SELECT * FROM Users;";
-                PreparedStatement pStatement = HUIA_DB_CONNECTION.prepareStatement(query);
+                PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query);
                 ResultSet resultSet = pStatement.executeQuery();
                 while (resultSet.next()) {
                     User user = new User();
@@ -868,7 +956,7 @@ public class DAO {
                     user.setEmail(resultSet.getString("email"));
                     user.setGender(Gender.MALE.name().equals(resultSet.getString("gender"))? Gender.MALE : Gender.FEMALE);
                     String birthday = resultSet.getString("birthday");
-                    user.setBirthday(birthday==null? null : LocalDate.parse(birthday));
+                    user.setBirthday(birthday==null? null : Utils.toLocalDate(birthday));
                     user.setNationalId(resultSet.getString("nationalId"));
                     user.setNationality(resultSet.getString("nationality"));
                     user.setPassportNumber(resultSet.getString("passport"));
@@ -878,9 +966,9 @@ public class DAO {
                     user.setStaff(resultSet.getBoolean("isStaff"));
                     user.setActive(resultSet.getBoolean("isActive"));
                     String dateJoined = resultSet.getString("dateJoined");
-                    user.setDateJoined((dateJoined==null || dateJoined.isEmpty())? null : LocalDateTime.parse(dateJoined));
+                    user.setDateJoined((dateJoined==null || dateJoined.isEmpty())? null : Utils.toLocalDateTime(dateJoined));
                     String lastLogin = resultSet.getString("lastLogin");
-                    user.setLastLogin((lastLogin==null||lastLogin.isEmpty())? null : LocalDateTime.parse(lastLogin));
+                    user.setLastLogin((lastLogin==null||lastLogin.isEmpty())? null : Utils.toLocalDateTime(lastLogin));
 
                     resultUsers.add(user);
                 }
@@ -901,10 +989,10 @@ public class DAO {
 
                 String query = "SELECT "
                         + "Identifications.id,"
-                        + "People.firstName AS subFirstName,"
-                        + "People.fatherName AS subFatherName,"
-                        + "People.grandfatherName AS subGrandfatherName,"
-                        + "People.familyName AS subFamilyName,"
+                        + "Subscribers.firstName AS subFirstName,"
+                        + "Subscribers.fatherName AS subFatherName,"
+                        + "Subscribers.grandfatherName AS subGrandfatherName,"
+                        + "Subscribers.familyName AS subFamilyName,"
                         + "workId,"
                         + "datetime,"
                         + "isIdentified,"
@@ -914,20 +1002,20 @@ public class DAO {
                         + "Users.grandfatherName AS userGrandfatherName,"
                         + "Users.familyName AS userFamilyName"
                         + " FROM Identifications "
-                        + " INNER JOIN People ON People.id = Identifications.subscriberId"
+                        + " INNER JOIN Subscribers ON Subscribers.id = Identifications.subscriberId"
                         + " INNER JOIN Users ON Users.username = Identifications.username";
 
                 if (identifiedOnly)
                     query += " WHERE isIdentified = 1;";
 
-                Statement statement = HUIA_DB_CONNECTION.createStatement();
+                Statement statement = DB_CONNECTION.createStatement();
                 ResultSet resultSet = statement.executeQuery(query);
 
                 while (resultSet.next()) {
                     IdentificationRecord identification = new IdentificationRecord();
 
                     identification.setId(resultSet.getLong("id"));
-                    identification.setDateTime(SQLUtils.sqlDateTime2LocalDateTime(resultSet.getString("datetime")));
+                    identification.setDateTime(Utils.toLocalDateTime(resultSet.getString("datetime")));
                     identification.setIdentified(resultSet.getBoolean("isIdentified"));
 
                     Subscriber subscriber = new Subscriber();
@@ -965,7 +1053,7 @@ public class DAO {
 
         System.out.println("query = " + query);
 
-        PreparedStatement pStatement = HUIA_DB_CONNECTION.prepareStatement(query.toString());
+        PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
         int i = 1;
         for (Map.Entry<String, Object> entry : updateMap.entrySet()) {
             pStatement.setObject(i++, entry.getValue());
@@ -976,4 +1064,38 @@ public class DAO {
         return pStatement;
     }
 
+    public static Task<ObservableList<Institute>> getInstitutes() {
+        return new Task<ObservableList<Institute>>() {
+            @Override
+            protected ObservableList<Institute> call() throws Exception {
+                PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement("SELECT id, name FROM Institutes;");
+                ResultSet resultSet = pStatement.executeQuery();
+                ObservableList<Institute> institutes = FXCollections.observableArrayList();
+                while (resultSet.next()) {
+                    int id = resultSet.getInt("id");
+                    String name = resultSet.getString("name");
+                    institutes.add(new Institute(id, name));
+                }
+                return institutes;
+            }
+        };
+    }
+
+    public static Task<ObservableSet<String>> getWorkIdes() {
+        return new Task<ObservableSet<String>>() {
+            @Override
+            protected ObservableSet<String> call() throws Exception {
+                ObservableSet<String> workIdes = FXCollections.observableSet();
+                String[] queries = {"SELECT workId FROM Subscribers;", "SELECT workId FROM NewSubscribers;"};
+                for (String query : queries) {
+                    PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(query);
+                    ResultSet resultSet = pStatement.executeQuery();
+                    while (resultSet.next()) {
+                        workIdes.add(resultSet.getString("workId"));
+                    }
+                }
+                return workIdes;
+            }
+        };
+    }
 }

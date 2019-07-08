@@ -78,7 +78,7 @@ public class LoginDialogController implements Controllable {
             Throwable t = loginTask.getException();
             Windows.errorAlert(
                     Utils.getI18nString("ERROR"),
-                    t.getLocalizedMessage(),
+                    t.getMessage(),
                     t,
                     AlertAction.OK);
         });

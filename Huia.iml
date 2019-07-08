@@ -17,5 +17,7 @@
     <orderEntry type="library" name="commons-io:commons-io:2.6" level="project" />
     <orderEntry type="library" name="org.zeroturnaround:zt-zip:1.13" level="project" />
     <orderEntry type="library" name="NBioBSPJNI" level="project" />
+    <orderEntry type="library" name="mysql:mysql-connector-java:5.1.47" level="project" />
+    <orderEntry type="library" name="org.json:json:20180130" level="project" />
   </component>
 </module>

@@ -5,10 +5,12 @@ import com.jfoenix.controls.JFXDialog;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import ly.rqmana.huia.java.controllers.RootWindowController;
 import ly.rqmana.huia.java.controls.alerts.*;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintDeviceNotOpenedException;
 
@@ -123,6 +125,7 @@ public class Windows {
         prepAlert(ERROR_ALERT, heading, body, alertActions);
         ERROR_ALERT.setUseDetails(throwable != null);
         ERROR_ALERT.visualizeStackTrace(throwable);
+        throwable.printStackTrace();
         return ERROR_ALERT.showAndWait();
     }
 
@@ -143,5 +146,10 @@ public class Windows {
         // fixme: alertActions just works for once at first, then doesn't close the alert.
         alert.getAlertActions().clear();
         alert.getAlertActions().addAll(alertActions);
+    }
+
+    public static StackPane getRootStack() {
+        RootWindowController controller = ROOT_WINDOW.getController();
+        return controller.getRootStack();
     }
 }

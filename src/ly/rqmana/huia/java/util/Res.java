@@ -55,6 +55,9 @@ public final class Res {
         CUSTOM_ALERT_LAYOUT     (ALERTS + "CustomAlertLayout.fxml"),
         INFO_ALERT_DETAILS_LAYOUT(ALERTS + "InfoAlertDetailsLayout.fxml"),
 
+        ONE_TEXT_FIELD_ENTRY_DIALOG("OneTextFieldEntryDialog.fxml"),
+        DATABASE_CONFIGURATION_DIALOG("DatabaseConfigurationDialog.fxml"),
+
         FINGERPRINT_TEST_WINDOW_D (DEVELOPER_FXML + "FingerprintTestWindow.fxml"),
                 ;
         private final String url;

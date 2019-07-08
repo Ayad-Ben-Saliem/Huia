@@ -161,7 +161,7 @@ public class AddEditUserWindowController implements Controllable {
                 Throwable t = insertUpdateUserTask.getException();
                 Windows.errorAlert(
                         Utils.getI18nString("ERROR"),
-                        t.getLocalizedMessage(),
+                        t.getMessage(),
                         t,
                         AlertAction.OK
                 );

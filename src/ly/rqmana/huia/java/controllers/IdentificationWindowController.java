@@ -42,6 +42,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class IdentificationWindowController implements Controllable {
@@ -71,8 +73,9 @@ public class IdentificationWindowController implements Controllable {
 
     private ObjectProperty<Subscriber> selectedSubscriber = new SimpleObjectProperty<>();
 
-    private Predicate<Subscriber> subscriberPredicate;
-    private FilteredList<Subscriber> filteredList ;
+    private final ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
+    private Predicate<Subscriber> subscriberPredicate = getPredicate();
+    private FilteredList<Subscriber> filteredList = new FilteredList<>(subscribers, subscriberPredicate);
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -90,7 +93,7 @@ public class IdentificationWindowController implements Controllable {
         loadTask.addOnFailed(event -> {
             Throwable ex = event.getSource().getException();
             Windows.errorAlert(Utils.getI18nString("ERROR"),
-                                ex.getLocalizedMessage(),
+                                ex.getMessage(),
                                 ex,
                                 AlertAction.OK);
         });
@@ -115,6 +118,8 @@ public class IdentificationWindowController implements Controllable {
         genderFilterComboBox.setValue(Utils.getI18nString("BOTH"));
         fingerprintFilterComboBox.setValue(Utils.getI18nString("BOTH"));
         isActiveFilterComboBox.setValue(Utils.getI18nString("BOTH"));
+
+        tableView.setItems(filteredList);
 
         tableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (nameLabel != null && newValue != null) {
@@ -169,16 +174,40 @@ public class IdentificationWindowController implements Controllable {
 
     private void loadDataFromDatabase() throws SQLException {
 
-        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList();
-
-        subscribers.addAll(DAO.getSubscribers());
+        Task<ObservableList<Subscriber>> fillSubscribersTask = DAO.fillSubscribers(subscribers);
+        fillSubscribersTask.addOnFailed(event -> {
+            Windows.errorAlert(
+                    Utils.getI18nString("ERROR"),
+                    fillSubscribersTask.getException().getMessage(),
+                    fillSubscribersTask.getException(),
+                    AlertAction.OK
+            );
+        });
+        Threading.MAIN_EXECUTOR_SERVICE.submit(fillSubscribersTask);
 
         // TODO: This should remove
-        subscribers.addAll(DAO.getNewSubscribers());
+        Task<ObservableList<Subscriber>> fillNewSubscribersTask = DAO.fillNewSubscribers(subscribers);
+        fillNewSubscribersTask.addOnFailed(event -> {
+            Windows.errorAlert(
+                    Utils.getI18nString("ERROR"),
+                    fillNewSubscribersTask.getException().getMessage(),
+                    fillNewSubscribersTask.getException(),
+                    AlertAction.OK
+            );
+        });
+        Threading.MAIN_EXECUTOR_SERVICE.submit(fillNewSubscribersTask);
 
-        setToTableView(subscribers);
+        nameFilterTF.textProperty().addListener(observable -> refreshTable());
+        workIdFilterTF.textProperty().addListener(observable -> refreshTable());
+        fromDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
+        toDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
+        genderFilterComboBox.valueProperty().addListener(observable -> refreshTable());
+        fingerprintFilterComboBox.valueProperty().addListener(observable -> refreshTable());
+        isActiveFilterComboBox.valueProperty().addListener(observable -> refreshTable());
+}
 
-        subscriberPredicate = subscriber -> {
+    private Predicate<Subscriber> getPredicate() {
+        return subscriber -> {
             String name = nameFilterTF.getText();
             String workId = workIdFilterTF.getText();
             LocalDate fromBirthday = fromDateFilterDatePicker.getValue();
@@ -228,33 +257,15 @@ public class IdentificationWindowController implements Controllable {
 //            }
             return isSubscriberMatch;
         };
-
-        filteredList.setPredicate(subscriberPredicate);
-
-        nameFilterTF.textProperty().addListener(observable -> refreshTable());
-        workIdFilterTF.textProperty().addListener(observable -> refreshTable());
-        fromDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
-        toDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
-        genderFilterComboBox.valueProperty().addListener(observable -> refreshTable());
-        fingerprintFilterComboBox.valueProperty().addListener(observable -> refreshTable());
-        isActiveFilterComboBox.valueProperty().addListener(observable -> refreshTable());
-}
-
-    public void addToTableView(Subscriber subscriber) {
-        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(filteredList.getSource());
-        subscribers.add(subscriber);
-        setToTableView(subscribers);
     }
 
-    private void setToTableView(ObservableList<Subscriber> subscribers) {
-        filteredList = new FilteredList<>(subscribers, subscriberPredicate);
-
-        tableView.setItems(filteredList);
+    public void addToTableView(Subscriber subscriber) {
+        subscribers.add(subscriber);
     }
 
     private void refreshTable() {
-        ObservableList<Subscriber> subscribers = FXCollections.observableArrayList(filteredList.getSource());
-        setToTableView(subscribers);
+        subscribers.add(new Subscriber());
+        subscribers.remove(subscribers.size() - 1);
     }
 
     @FXML public void onFingerprintBtnClicked(ActionEvent actionEvent) {

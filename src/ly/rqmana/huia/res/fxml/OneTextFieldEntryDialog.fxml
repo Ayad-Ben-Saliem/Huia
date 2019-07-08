@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane prefHeight="100.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.OneTextFieldEntryDialogController">
+
+   <stylesheets>
+      <URL value="@../css/theme.css"/>
+      <URL value="@../css/templates.css"/>
+   </stylesheets>
+
+   <StackPane.margin>
+      <Insets/>
+   </StackPane.margin>
+
+   <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="16.0">
+      <StackPane.margin>
+         <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
+      </StackPane.margin>
+
+      <Label fx:id="label"/>
+      <JFXTextField fx:id="textField"/>
+      <HBox spacing="8.0">
+         <JFXButton fx:id="okBtn" buttonType="RAISED" mnemonicParsing="false" prefWidth="100.0" styleClass="common-button" text="%OK" />
+         <JFXButton fx:id="cancelBtn" buttonType="RAISED" mnemonicParsing="false" prefWidth="100.0" styleClass="common-button" text="%CANCEL"/>
+      </HBox>
+   </VBox>
+</StackPane>

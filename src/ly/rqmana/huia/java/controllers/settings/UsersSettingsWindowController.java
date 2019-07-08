@@ -61,7 +61,7 @@ public class UsersSettingsWindowController implements Controllable {
             Throwable t = getAllUsersTask.getException();
             Windows.errorAlert(
                     Utils.getI18nString("ERROR"),
-                    t.getLocalizedMessage(),
+                    t.getMessage(),
                     t,
                     AlertAction.OK
             );

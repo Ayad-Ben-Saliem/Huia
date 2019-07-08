@@ -32,7 +32,7 @@
    </Label>
       <Pane prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: -rq-background-alt;" GridPane.rowIndex="2" GridPane.rowSpan="2" />
     <HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="250.0" prefWidth="250.0" style="-fx-background-color: -rq-background-alt; -fx-border-color: -rq-background; -fx-border-width: 20; -fx-border-radius: 300; -fx-background-radius: 300;" GridPane.rowIndex="1" GridPane.rowSpan="2">
-      <JFXButton fx:id="loginBtn" alignment="CENTER" buttonType="RAISED" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#onLoginBtnClicked" prefHeight="240.0" prefWidth="240.0" ripplerFill="#ff9e9e" style="-fx-background-radius: 120;">
+      <JFXButton fx:id="loginBtn" alignment="CENTER" buttonType="RAISED" contentDisplay="GRAPHIC_ONLY" disable="true" mnemonicParsing="false" onAction="#onLoginBtnClicked" prefHeight="240.0" prefWidth="240.0" ripplerFill="#ff9e9e" style="-fx-background-radius: 120;">
          <graphic>
               <FontAwesomeIconView glyphName="SIGN_IN" size="150" style="-fx-fill: -rq-accent-unfocus;" />
          </graphic>
@@ -55,7 +55,7 @@
              <Pane HBox.hgrow="ALWAYS" />
              <Label maxWidth="Infinity" style="-fx-text-fill: -rq-text-background-alt;" text="%DEVELOPED_BY" />
              <ImageView fitHeight="25.0" fitWidth="25.0" layoutX="530.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true">
-                 <Image url="@../images/rqmana_logo.png"/>
+                 <Image url="@../images/rqmana_logo.png" />
              </ImageView>
          </HBox>
      </VBox>

@@ -26,9 +26,7 @@ public enum Relationship {
     }
 
     public static Relationship parse(String relationshipString) {
-        if (relationshipString == null) return null;
-
-        if (relationshipString.equals("خاص") || relationshipString.equals("لا يوجد")) {
+        if (relationshipString == null || relationshipString.equalsIgnoreCase("Special") || relationshipString.equalsIgnoreCase("Not Exist")) {
             return null;
         } else {
             return valueOf(relationshipString);

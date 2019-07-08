@@ -2,22 +2,37 @@ package ly.rqmana.huia.java.models;
 
 public class Location {
 
-    private double longitude;
-    private double latitude;
+    private Double latitude;
+    private Double longitude;
+    private Double altitude;
 
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(double longitude) {
+    public Location(Double latitude, Double longitude, Double altitude) {
+        this.latitude = latitude;
         this.longitude = longitude;
+        this.altitude = altitude;
     }
 
-    public double getLatitude() {
+    public Double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
+    public void setLatitude(Double latitude) {
         this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Double getAltitude() {
+        return altitude;
+    }
+
+    public void setAltitude(Double altitude) {
+        this.altitude = altitude;
     }
 }

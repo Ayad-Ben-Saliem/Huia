@@ -161,7 +161,7 @@ public class PersonalImageLoaderController implements Controllable {
         } catch (IOException e) {
             Windows.errorAlert(
                     Utils.getI18nString("ERROR"),
-                    e.getLocalizedMessage(),
+                    e.getMessage(),
                     e,
                     AlertAction.OK
             );
