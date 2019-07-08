@@ -22,13 +22,13 @@ public class SecurityUtils {
 
     public static byte[] encrypt(byte[] plainData, String password) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidKeySpecException {
         SecretKey key = getSecretKey(password);
-        System.out.println("key = " + Arrays.toString(key.getEncoded()));
+//        System.out.println("key = " + Arrays.toString(key.getEncoded()));
 
         /* Encrypt the message. */
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(Cipher.ENCRYPT_MODE, key);
 
-        System.out.println("cipher.doFinal(plainData) = " + cipher.doFinal(plainData));
+//        System.out.println("cipher.doFinal(plainData) = " + Arrays.toString(cipher.doFinal(plainData)));
 
         return cipher.doFinal(plainData);
     }
@@ -40,7 +40,7 @@ public class SecurityUtils {
 
     public static byte[] decrypt(byte[] cipherData, String password) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidKeySpecException, InvalidParameterSpecException, InvalidAlgorithmParameterException {
         SecretKey key = getSecretKey(password);
-        System.out.println("key = " + Arrays.toString(key.getEncoded()));
+//        System.out.println("key = " + Arrays.toString(key.getEncoded()));
 
         /* Decrypt the message, given derived key and initialization vector. */
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");

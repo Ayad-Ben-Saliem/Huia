@@ -36,6 +36,16 @@ public class Auth {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        currentUserProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                RootWindowController rootWindowController = Windows.ROOT_WINDOW.getController();
+                MainWindowController mainWindowController = rootWindowController.getMainWindowController();
+                if (mainWindowController != null) {
+                    Platform.runLater(() -> mainWindowController.setCurrentUserName(newValue.getFullName()));
+                }
+            }
+        });
     }
 
     public static void authenticate() {
@@ -49,7 +59,7 @@ public class Auth {
             protected Boolean call() throws Exception {
                 User user = DAO.getUserByUsername(username);
 
-                if (Hasher.checkPassword(password, user.getHashedPassword())) {
+                if (user != null && Hasher.checkPassword(password, user.getHashedPassword())) {
                     if (user.isActive()) {
                         currentUser.set(user);
                         DAO.updateUserByUsername(username, "lastLogin", LocalDateTime.now().toString()).runAndGet();

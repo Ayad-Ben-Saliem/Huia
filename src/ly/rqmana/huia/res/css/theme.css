@@ -68,6 +68,7 @@
 .jfx-text-area,
 .jfx-text-field,
 .jfx-date-picker,
+.jfx-time-picker,
 .jfx-password-field {
     -jfx-unfocus-color: -rq-accent-unfocus;
     -jfx-default-color: -rq-accent-unfocus;
@@ -172,4 +173,8 @@
 
 .count-down .header .label{
     -fx-text-fill: -rq-text-background-alt;
+}
+
+.invisible-titled-pane-header .content {
+    -fx-background-color: -rq-background-alt;
 }

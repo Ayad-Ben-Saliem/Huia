@@ -27,7 +27,7 @@ import java.util.prefs.Preferences;
 
 public class DataStorage {
 
-    private static final String HUIA_DIRECTORY_NAME = "Huia Health Care";
+    private static final String HUIA_DIRECTORY_NAME = "Huia Healthcare";
 
     public static final String WINDOWS_DATA_DIR = "C:\\ProgramData\\";
     public static final String UNIX_DATA_DIR = System.getProperty("user.home");

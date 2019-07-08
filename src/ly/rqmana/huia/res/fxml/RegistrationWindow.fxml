@@ -23,7 +23,7 @@
         <URL value="@../css/templates.css" />
     </stylesheets>
 
-    <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
+    <ScrollPane fx:id="scrollPane" fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
         <VBox alignment="TOP_CENTER" spacing="32.0">
             <ImageView fx:id="personalPictureIV" fitHeight="100.0" fitWidth="100.0" onMouseClicked="#onPersonalImageViewClicked" pickOnBounds="true" preserveRatio="true">
                 <Image url="@../images/person.png" />
@@ -42,17 +42,16 @@
             </HBox>
             <FlowPane alignment="TOP_CENTER" hgap="32.0" vgap="50.0">
                 <JFXDatePicker fx:id="birthdayDatePicker" prefWidth="217.0" promptText="%BIRTHDAY" />
-                <CustomComboBox fx:id="genderComboBox" labelFloat="true" prefWidth="217.0" promptText="%GENDER" />
                 <CustomComboBox fx:id="instituteComboBox" labelFloat="true" prefWidth="217.0" promptText="%INSTITUTE" />
+                <JFXTextField fx:id="workIdTextField" labelFloat="true" maxWidth="-Infinity" minWidth="-Infinity" promptText="%WORK_ID" />
+                <CustomComboBox fx:id="relationshipComboBox" labelFloat="true" maxWidth="Infinity" minWidth="0.0" prefWidth="217.0" promptText="%EMPLOYEE_RELATIONSHIP" />
+                <CustomComboBox fx:id="genderComboBox" labelFloat="true" prefWidth="217.0" promptText="%GENDER" />
                 <JFXTextField fx:id="nationalityTextField" labelFloat="true" promptText="%NATIONALITY" />
                 <JFXTextField fx:id="nationalIdTextField" labelFloat="true" promptText="%NATIONAL_ID" />
                 <JFXTextField fx:id="familyIdTextField" labelFloat="true" promptText="%NO_FAMILY_BOOKLET" />
                 <JFXTextField fx:id="passportTextField" labelFloat="true" promptText="%PASSPORT" />
                 <JFXTextField fx:id="residenceTextField" labelFloat="true" promptText="%RESIDENCE_CITY" />
 
-                <JFXTextField fx:id="newEmployeeWorkIdTextField" labelFloat="true" maxWidth="-Infinity" minWidth="-Infinity" promptText="%WORK_ID" />
-                <CustomComboBox fx:id="employeesWorkIdComboBox" labelFloat="true" managed="false" prefWidth="217.0" promptText="%WORK_ID" visible="false" />
-                <CustomComboBox fx:id="relationshipComboBox" labelFloat="true" maxWidth="Infinity" minWidth="0.0" prefWidth="217.0" promptText="%EMPLOYEE_RELATIONSHIP" />
                 <padding>
                     <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
                 </padding>

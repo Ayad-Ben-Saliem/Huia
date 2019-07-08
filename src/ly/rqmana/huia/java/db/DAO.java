@@ -1,7 +1,9 @@
 package ly.rqmana.huia.java.db;
 
 import com.jfoenix.controls.JFXDialog;
+import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import javafx.fxml.FXMLLoader;
@@ -9,7 +11,6 @@ import javafx.scene.layout.Region;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controllers.DatabaseConfigurationDialogController;
-import ly.rqmana.huia.java.controllers.HomeWindowController;
 import ly.rqmana.huia.java.controllers.RootWindowController;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.models.*;
@@ -30,12 +31,68 @@ public class DAO {
     private static Connection OLD_DB_CONNECTION;
     private static final String DB_NAME = Utils.APP_NAME;
 
+    public final static ObservableList<Subscriber> SUBSCRIBERS = FXCollections.observableArrayList();
+    public final static ObservableList<IdentificationRecord> IDENTIFICATION_RECORDS = FXCollections.observableArrayList();
+    public final static ObservableList<String> WORK_IDES = FXCollections.observableArrayList();
+
     public static void initialize() {
         Task<Boolean> initializeDBTask = initializeDBTask();
+        RootWindowController rootWindowController = Windows.ROOT_WINDOW.getController();
 
         initializeDBTask.addOnSucceeded(event -> {
-            RootWindowController controller = Windows.ROOT_WINDOW.getController();
-            controller.getHomeWindowController().loginBtn.setDisable(false);
+            rootWindowController.getHomeWindowController().loginBtn.setDisable(false);
+
+            SUBSCRIBERS.addListener((ListChangeListener<Subscriber>) change -> {
+                while (change.next()) {
+                    if (change.wasRemoved() || change.wasPermutated()) {
+                        continue;
+                    }
+                    try {
+                        change.getAddedSubList().forEach(subscriber -> {
+                            if (!WORK_IDES.contains(subscriber.getWorkId())) {
+                                WORK_IDES.add(subscriber.getWorkId());
+                            }
+                        });
+                    } catch (ConcurrentModificationException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            Task<Collection<Subscriber>> fillSubscribersTask = fillSubscribers(SUBSCRIBERS);
+            fillSubscribersTask.addOnFailed(event1 -> {
+                Windows.errorAlert(
+                        Utils.getI18nString("ERROR"),
+                        fillSubscribersTask.getException().getMessage(),
+                        fillSubscribersTask.getException(),
+                        AlertAction.OK
+                );
+            });
+            Threading.MAIN_EXECUTOR_SERVICE.submit(fillSubscribersTask);
+
+
+            // TODO: This should remove
+            Task<Collection<Subscriber>> fillNewSubscribersTask = fillNewSubscribers(SUBSCRIBERS);
+            fillNewSubscribersTask.addOnFailed(event1 -> {
+                Windows.errorAlert(
+                        Utils.getI18nString("ERROR"),
+                        fillNewSubscribersTask.getException().getMessage(),
+                        fillNewSubscribersTask.getException(),
+                        AlertAction.OK
+                );
+            });
+            Threading.MAIN_EXECUTOR_SERVICE.submit(fillNewSubscribersTask);
+
+            Task<Collection<IdentificationRecord>> fillIdentificationRecordsTask = fillIdentificationRecords(IDENTIFICATION_RECORDS);
+            fillIdentificationRecordsTask.addOnFailed(event1 -> {
+                Windows.errorAlert(
+                        Utils.getI18nString("ERROR"),
+                        fillIdentificationRecordsTask.getException().getMessage(),
+                        fillIdentificationRecordsTask.getException(),
+                        AlertAction.OK
+                );
+            });
+            Threading.MAIN_EXECUTOR_SERVICE.submit(fillIdentificationRecordsTask);
         });
 
         initializeDBTask.setOnFailed(event -> {
@@ -73,8 +130,17 @@ public class DAO {
             }
         });
 
+        initializeDBTask.runningProperty().addListener((observable, oldValue, newValue) -> rootWindowController.updateLoadingView(newValue));
+
         Threading.MAIN_EXECUTOR_SERVICE.submit(initializeDBTask);
     }
+
+//    public static Connection getConnection() {
+//        if (DB_CONNECTION.isClosed()) {
+//
+//        }
+//        return DB_CONNECTION;
+//    }
 
     private static Task<Boolean> initializeDBTask() {
 
@@ -85,10 +151,14 @@ public class DAO {
                 String dbUsername = BaseInfo.getDbUsername();
                 String dbPassword = BaseInfo.getDbPassword();
 
+                // Just to ensure that the date is correct
+                Thread.sleep(6000);
+
+                Class.forName("com.mysql.jdbc.Driver");
+                Class.forName("org.sqlite.JDBC");
+
                 DB_CONNECTION = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
                 OLD_DB_CONNECTION = DriverManager.getConnection(DAO.getOldDBUrl());
-
-                System.out.println("DB_CONNECTION = " + DB_CONNECTION);
 
                 Statement statement = DB_CONNECTION.createStatement();
                 statement.executeUpdate("CREATE DATABASE IF NOT EXISTS `" + DB_NAME + "`;");
@@ -528,6 +598,7 @@ public class DAO {
 
     public static User getUserByUsername(String username) throws SQLException {
         String query = "SELECT   " +
+                "id             ," +
                 "username       ," +
                 "password       ," +
                 "email          ," +
@@ -553,7 +624,8 @@ public class DAO {
         User user = null;
         if (resultSet.next()) {
             user = new User();
-            user.setUsername(username);
+            user.setId(resultSet.getLong("id"));
+            user.setUsername(resultSet.getString("username"));
             user.setHashedPassword(resultSet.getString("password"));
             user.setEmail(resultSet.getString("email"));
             user.setFirstName(resultSet.getString("firstName"));
@@ -562,17 +634,14 @@ public class DAO {
             user.setFamilyName(resultSet.getString("familyName"));
             user.setNationality(resultSet.getString("nationality"));
             user.setNationalId(resultSet.getString("nationalId"));
-            String birthday = resultSet.getString("birthday");
-            user.setBirthday(birthday == null? null : Utils.toLocalDate(birthday));
+            user.setBirthday(Utils.toLocalDate(resultSet.getString("birthday")));
             String gender = resultSet.getString("gender");
             user.setGender(Gender.MALE.name().equalsIgnoreCase(gender)? Gender.MALE : Gender.FEMALE);
-            String dateJoined = resultSet.getString("dateJoined");
-            user.setDateJoined(dateJoined == null? null : Utils.toLocalDateTime(dateJoined));
+            user.setDateJoined(Utils.toLocalDateTime(resultSet.getString("dateJoined")));
             user.setSuperuser(resultSet.getBoolean("isSuperuser"));
             user.setStaff(resultSet.getBoolean("isStaff"));
             user.setActive(resultSet.getBoolean("isActive"));
-            String lastLogin = resultSet.getString("lastLogin");
-            user.setLastLogin(lastLogin == null? null : Utils.toLocalDateTime(lastLogin));
+            user.setLastLogin(Utils.toLocalDateTime(resultSet.getString("lastLogin")));
         }
         return user;
     }
@@ -635,30 +704,30 @@ public class DAO {
         };
     }
 
-    public static Task<ObservableList<Subscriber>> getSubscribers() throws SQLException {
+    public static Task<Collection<Subscriber>> getSubscribers() throws SQLException {
         return getSubscribers("Subscribers");
     }
 
-    public static Task<ObservableList<Subscriber>> getNewSubscribers() throws SQLException {
+    public static Task<Collection<Subscriber>> getNewSubscribers() throws SQLException {
         return getSubscribers("NewSubscribers");
     }
 
-    public static Task<ObservableList<Subscriber>> fillSubscribers(ObservableList<Subscriber> subscribers) throws SQLException {
+    public static Task<Collection<Subscriber>> fillSubscribers(Collection<Subscriber> subscribers) {
         return fillSubscribers("Subscribers", subscribers);
     }
 
-    public static Task<ObservableList<Subscriber>> fillNewSubscribers(ObservableList<Subscriber> subscribers) throws SQLException {
+    public static Task<Collection<Subscriber>> fillNewSubscribers(Collection<Subscriber> subscribers) {
         return fillSubscribers("NewSubscribers", subscribers);
     }
 
-    private static Task<ObservableList<Subscriber>> getSubscribers(String tableName) throws SQLException {
+    private static Task<Collection<Subscriber>> getSubscribers(String tableName) {
         return fillSubscribers(tableName, FXCollections.observableArrayList());
     }
 
-    private static Task<ObservableList<Subscriber>> fillSubscribers(String tableName, ObservableList<Subscriber> subscribers) throws SQLException {
-        return new Task<ObservableList<Subscriber>>() {
+    private static Task<Collection<Subscriber>> fillSubscribers(String tableName, Collection<Subscriber> subscribers) {
+        return new Task<Collection<Subscriber>>() {
             @Override
-            protected ObservableList<Subscriber> call() throws Exception {
+            protected Collection<Subscriber> call() throws Exception {
                 @SuppressWarnings("SqlResolve")
                 String query = "SELECT " +
                         tableName + ".id," +
@@ -774,6 +843,81 @@ public class DAO {
         };
     }
 
+    public static long insertSubscriber(Subscriber subscriber) throws SQLException {
+        final String INSERT_QUERY =
+                "INSERT INTO Subscribers ("
+                        + "firstName,"
+                        + "fatherName,"
+                        + "grandfatherName,"
+                        + "familyName,"
+                        + "nationality,"
+                        + "nationalId,"
+                        + "birthday,"
+                        + "gender,"
+                        + "instituteId,"
+                        + "familyId,"
+                        + "residence,"
+                        + "passport,"
+                        + "workId,"
+                        + "relationship,"
+                        + "rightThumbFingerprint,"
+                        + "rightIndexFingerprint,"
+                        + "rightMiddleFingerprint,"
+                        + "rightRingFingerprint,"
+                        + "rightLittleFingerprint,"
+                        + "leftThumbFingerprint,"
+                        + "leftIndexFingerprint,"
+                        + "leftMiddleFingerprint,"
+                        + "leftRingFingerprint,"
+                        + "leftLittleFingerprint,"
+                        + "allFingerprintTemplates,"
+                        + "user"
+                        + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
+
+        pStatement.setString(1, subscriber.getFirstName());
+        pStatement.setString(2, subscriber.getFatherName());
+        pStatement.setString(3, subscriber.getGrandfatherName());
+        pStatement.setString(4, subscriber.getFamilyName());
+        pStatement.setString(5, subscriber.getNationality());
+        pStatement.setString(6, subscriber.getNationalId());
+        LocalDate birthday = subscriber.getBirthday();
+        pStatement.setString(7, birthday==null? null : birthday.toString());
+        pStatement.setString(8, subscriber.getGender().name());
+        pStatement.setLong(9, subscriber.getInstitute().getId());
+
+        pStatement.setString(10, subscriber.getFamilyId());
+        pStatement.setString(11, subscriber.getResidence());
+        pStatement.setString(12, subscriber.getPassport().getNumber());
+
+        pStatement.setString(13, subscriber.getWorkId());
+        pStatement.setString(14, subscriber.getRelationship().name());
+
+        pStatement.setString(15, subscriber.getRightThumbFingerprint());
+        pStatement.setString(16, subscriber.getRightIndexFingerprint());
+        pStatement.setString(17, subscriber.getRightMiddleFingerprint());
+        pStatement.setString(18, subscriber.getRightRingFingerprint());
+        pStatement.setString(19, subscriber.getRightLittleFingerprint());
+
+        pStatement.setString(20, subscriber.getLeftThumbFingerprint());
+        pStatement.setString(21, subscriber.getLeftIndexFingerprint());
+        pStatement.setString(22, subscriber.getLeftMiddleFingerprint());
+        pStatement.setString(23, subscriber.getLeftRingFingerprint());
+        pStatement.setString(24, subscriber.getLeftLittleFingerprint());
+
+        pStatement.setString(25, subscriber.getAllFingerprintsTemplate());
+
+        pStatement.setLong(26, Auth.getCurrentUser().getId());
+        pStatement.executeUpdate();
+
+        ResultSet generatedKeys = pStatement.getGeneratedKeys();
+        if (generatedKeys.next()) {
+            return generatedKeys.getLong(1);
+        }
+        return -1;
+    }
+
     public static long insertNewSubscriber(Subscriber subscriber) throws SQLException {
         final String INSERT_QUERY =
                 "INSERT INTO NewSubscribers ("
@@ -839,12 +983,14 @@ public class DAO {
 
         pStatement.setString(25, subscriber.getAllFingerprintsTemplate());
 
-        pStatement.setString(26, Auth.getCurrentUser().getUsername());
+        pStatement.setLong(26, Auth.getCurrentUser().getId());
         pStatement.executeUpdate();
 
         ResultSet generatedKeys = pStatement.getGeneratedKeys();
-
-        return generatedKeys.getLong(1);
+        if (generatedKeys.next()) {
+            return generatedKeys.getLong(1);
+        }
+        return -1;
     }
 
     public static Task<Boolean> updateSubscriberById(long subscriberId, Map<String, Object> updateMap){
@@ -863,7 +1009,7 @@ public class DAO {
     }
 
     public static void updateSubscriberDataPath(Subscriber subscriber) throws SQLException {
-        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement("UPDATE NewSubscribers SET dataPath= ? WHERE id= ?");
+        PreparedStatement pStatement = DAO.DB_CONNECTION.prepareStatement("UPDATE NewSubscribers SET dataPath=? WHERE id=?");
         pStatement.setString(1, subscriber.getDataPath());
         pStatement.setLong(2, subscriber.getId());
 
@@ -888,7 +1034,7 @@ public class DAO {
                 pStatement.setLong(1, record.getSubscriber().getId());
                 pStatement.setString(2, record.getUser().getUsername());
                 pStatement.setBoolean(3, record.isIdentified());
-                pStatement.setString(4, record.getDateTime().toString());
+                pStatement.setString(4, record.getDatetime().toString());
                 String notes = "";
                 if (!record.getSubscriber().isActive())
                     notes += Utils.getI18nString("SUBSCRIBER_NOT_ACTIVE");
@@ -899,7 +1045,9 @@ public class DAO {
                 pStatement.execute();
 
                 ResultSet generatedKeys = pStatement.getGeneratedKeys();
-                record.setId(generatedKeys.getLong(1));
+                if (generatedKeys.next()) {
+                    record.setId(generatedKeys.getLong(1));
+                }
                 return record.getId();
             }
         };
@@ -922,7 +1070,7 @@ public class DAO {
                     }
                 }
 
-                System.out.println("updateMap = " + updateMap);
+//                System.out.println("updateMap = " + updateMap);
 
                 Map<String, Object> filterMap = new HashMap<>();
                 filterMap.put("id", record.getId());
@@ -981,14 +1129,27 @@ public class DAO {
     }
 
     public static Task<ObservableList<IdentificationRecord>> getIdentificationRecords(boolean identifiedOnly) {
-
         return new Task<ObservableList<IdentificationRecord>>() {
             @Override
             protected ObservableList<IdentificationRecord> call() throws Exception {
                 ObservableList<IdentificationRecord> identifications = FXCollections.observableArrayList();
+                fillIdentificationRecords(identifications, identifiedOnly);
+                return identifications;
+            }
+        };
+    }
 
+    private static Task<Collection<IdentificationRecord>> fillIdentificationRecords(Collection<IdentificationRecord> identificationRecords) {
+        return fillIdentificationRecords(identificationRecords, false);
+    }
+
+    private static Task<Collection<IdentificationRecord>> fillIdentificationRecords(Collection<IdentificationRecord> identificationRecords, boolean identifiedOnly) {
+        return new Task<Collection<IdentificationRecord>>() {
+            @Override
+            protected Collection<IdentificationRecord> call() throws Exception {
                 String query = "SELECT "
                         + "Identifications.id,"
+                        + "subscriberId,"
                         + "Subscribers.firstName AS subFirstName,"
                         + "Subscribers.fatherName AS subFatherName,"
                         + "Subscribers.grandfatherName AS subGrandfatherName,"
@@ -996,6 +1157,7 @@ public class DAO {
                         + "workId,"
                         + "datetime,"
                         + "isIdentified,"
+                        + "Identifications.notes,"
                         + "Identifications.username,"
                         + "Users.firstName AS userFirstName,"
                         + "Users.fatherName AS userFatherName,"
@@ -1015,29 +1177,32 @@ public class DAO {
                     IdentificationRecord identification = new IdentificationRecord();
 
                     identification.setId(resultSet.getLong("id"));
-                    identification.setDateTime(Utils.toLocalDateTime(resultSet.getString("datetime")));
+                    identification.setDatetime(Utils.toLocalDateTime(resultSet.getString("datetime")));
                     identification.setIdentified(resultSet.getBoolean("isIdentified"));
+                    identification.setNotes(resultSet.getString("notes"));
 
                     Subscriber subscriber = new Subscriber();
+                    subscriber.setId(resultSet.getLong("subscriberId"));
                     subscriber.setFirstName(resultSet.getString("subFirstName"));
                     subscriber.setFatherName(resultSet.getString("subFatherName"));
                     subscriber.setGrandfatherName(resultSet.getString("subGrandfatherName"));
                     subscriber.setFamilyName(resultSet.getString("subFamilyName"));
                     subscriber.setWorkId(resultSet.getString("workId"));
 
+                    identification.setSubscriber(subscriber);
 
                     User user = new User();
+                    user.setUsername(resultSet.getString("username"));
                     user.setFirstName(resultSet.getString("userFirstName"));
                     user.setFatherName(resultSet.getString("userFatherName"));
                     user.setGrandfatherName(resultSet.getString("userGrandfatherName"));
                     user.setFamilyName(resultSet.getString("userFamilyName"));
 
-                    identification.setSubscriber(subscriber);
                     identification.setUser(user);
 
-                    identifications.add(identification);
+                    identificationRecords.add(identification);
                 }
-                return identifications;
+                return identificationRecords;
             }
         };
     }
@@ -1051,7 +1216,7 @@ public class DAO {
         filterMap.keySet().forEach(key -> query.append(String.format("%s=? AND ", key)));
         query.delete(query.length() - 5, query.length()).append(";");
 
-        System.out.println("query = " + query);
+//        System.out.println("query = " + query);
 
         PreparedStatement pStatement = DB_CONNECTION.prepareStatement(query.toString());
         int i = 1;

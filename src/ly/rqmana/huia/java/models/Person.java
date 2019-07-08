@@ -132,4 +132,12 @@ public class Person {
     public Map<Integer, Image> getPersonalPictures() {
         return personalPictures;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Person) {
+            return this.getId() == ((Person) obj).getId();
+        }
+        return false;
+    }
 }

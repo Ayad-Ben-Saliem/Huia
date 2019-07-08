@@ -5,12 +5,17 @@ import com.jfoenix.controls.base.IFXValidatableControl;
 import com.nitgen.SDK.BSP.NBioBSPJNI;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
+import com.sun.javafx.scene.control.skin.TitledPaneSkin;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.application.Platform;
 import javafx.geometry.NodeOrientation;
 import javafx.scene.Node;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
+import javafx.util.Callback;
+import javafx.util.Duration;
 import ly.rqmana.huia.java.concurrent.Task;
 import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.ContactField;
@@ -18,9 +23,12 @@ import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
+import ly.rqmana.huia.java.models.IdentificationRecord;
 import ly.rqmana.huia.java.storage.DataStorage;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
@@ -44,6 +52,14 @@ public class Utils {
             + "[ddMMMyyyy[:HH:mm:ss[.S[SS[SSS]][ Z]]]]";
 
     private static Process fingerprintBackgroundServer;
+
+    static {
+        try {
+            setTitledPaneDuration(new Duration(500));
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static ResourceBundle getBundle() {
         return ResourceBundle.getBundle(Res.LANGUAGE_PATH, new Locale("ar", "SA"));
@@ -171,14 +187,13 @@ public class Utils {
     }
 
     public static void loadNBioBSPJNILib() throws IOException, InterruptedException {
-        String dateCommandPath = DataStorage.getInstallationPath().resolve("Date.exe").toString();
-        System.out.println("dateCommandPath = " + dateCommandPath);
         final String CHANGE_DATE_COMMAND = "cmd /c date ";
         final LocalDate TODAY = LocalDate.now();
 
         Process process = Runtime.getRuntime().exec(CHANGE_DATE_COMMAND + "7/7/2019");
         process.waitFor();
         System.loadLibrary("NBioBSPJNI");
+
         new Thread(() -> {
             try {
                 Thread.sleep(6000);
@@ -248,5 +263,34 @@ public class Utils {
 
     public static LocalTime toLocalTime(long timestamp){
         return toLocalDateTime(timestamp).toLocalTime();
+    }
+
+    public static void setTitledPaneDuration(Duration duration) throws NoSuchFieldException, IllegalAccessException {
+        Field durationField = TitledPaneSkin.class.getField("TRANSITION_DURATION");
+
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        modifiersField.setInt(durationField, durationField.getModifiers() & ~Modifier.FINAL);
+
+        durationField.setAccessible(true);
+        durationField.set(TitledPaneSkin.class, duration);
+    }
+
+    public static <T> Callback<TableColumn<T, Integer>, TableCell<T, Integer>> getAutoNumberCellFactory() {
+        return new Callback<TableColumn<T, Integer>, TableCell<T, Integer>>() {
+            @Override
+            public TableCell<T, Integer> call(TableColumn<T, Integer> param) {
+                return new TableCell<T, Integer>() {
+                    @Override
+                    protected void updateItem(Integer item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (!empty)
+                            setText(String.valueOf(getIndex()+1));
+                        else
+                            setText("");
+                    }
+                };
+            }
+        };
     }
 }

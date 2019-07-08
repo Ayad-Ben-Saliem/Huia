@@ -34,7 +34,7 @@ public class Hasher {
         try {
             secret = keyFactory.generateSecret(keySpec);
         } catch (InvalidKeySpecException e) {
-            System.out.println("Could NOT generate secret key");
+//            System.out.println("Could NOT generate secret key");
             e.printStackTrace();
         }
 
@@ -45,7 +45,7 @@ public class Hasher {
     }
 
     /*
-     * returns hashed password, along with ALGORITHM, number of iterations and salt.
+     * returns hashed password, along with ALGORITHM, numberColumn of iterations and salt.
      */
     public static String encode(String password, String salt, int iterations) {
         String hash = getEncodedHash(password, salt, iterations);

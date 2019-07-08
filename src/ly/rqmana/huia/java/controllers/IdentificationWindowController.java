@@ -6,6 +6,7 @@ import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
 import com.sun.istack.internal.Nullable;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -38,12 +39,9 @@ import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
 
 import java.net.URL;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class IdentificationWindowController implements Controllable {
@@ -80,26 +78,6 @@ public class IdentificationWindowController implements Controllable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-        Task<Boolean> loadTask = new Task<Boolean>() {
-            @Override
-            protected Boolean call() throws Exception {
-                loadDataFromDatabase();
-                return true;
-            }
-        };
-
-//        loadTask.runningProperty().addListener((observable, oldValue, newValue) -> getMainController().updateLoadingView(newValue));
-
-        loadTask.addOnFailed(event -> {
-            Throwable ex = event.getSource().getException();
-            Windows.errorAlert(Utils.getI18nString("ERROR"),
-                                ex.getMessage(),
-                                ex,
-                                AlertAction.OK);
-        });
-
-        Threading.MAIN_EXECUTOR_SERVICE.submit(loadTask);
-
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("fullName"));
         workIdColumn.setCellValueFactory(new PropertyValueFactory<>("workId"));
         genderColumn.setCellValueFactory(new PropertyValueFactory<>("gender"));
@@ -107,6 +85,20 @@ public class IdentificationWindowController implements Controllable {
         relationshipColumn.setCellValueFactory(new PropertyValueFactory<>("relationship"));
         fingerprintColumn.setCellValueFactory(new PropertyValueFactory<>("fingerprintsNodes"));
         isActiveColumn.setCellValueFactory(new PropertyValueFactory<>("activeNode"));
+
+        subscribers.addAll(DAO.SUBSCRIBERS);
+        DAO.SUBSCRIBERS.addListener((InvalidationListener) change -> {
+            subscribers.clear();
+            subscribers.addAll(DAO.SUBSCRIBERS);
+        });
+
+        nameFilterTF.textProperty().addListener(observable -> refreshTable());
+        workIdFilterTF.textProperty().addListener(observable -> refreshTable());
+        fromDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
+        toDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
+        genderFilterComboBox.valueProperty().addListener(observable -> refreshTable());
+        fingerprintFilterComboBox.valueProperty().addListener(observable -> refreshTable());
+        isActiveFilterComboBox.valueProperty().addListener(observable -> refreshTable());
 
         searchFieldsContainer.minWidthProperty().bind(tableView.widthProperty());
 
@@ -119,7 +111,7 @@ public class IdentificationWindowController implements Controllable {
         fingerprintFilterComboBox.setValue(Utils.getI18nString("BOTH"));
         isActiveFilterComboBox.setValue(Utils.getI18nString("BOTH"));
 
-        tableView.setItems(filteredList);
+        Platform.runLater(() ->  tableView.setItems(filteredList));
 
         tableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (nameLabel != null && newValue != null) {
@@ -172,42 +164,10 @@ public class IdentificationWindowController implements Controllable {
         });
     }
 
-    private void loadDataFromDatabase() throws SQLException {
-
-        Task<ObservableList<Subscriber>> fillSubscribersTask = DAO.fillSubscribers(subscribers);
-        fillSubscribersTask.addOnFailed(event -> {
-            Windows.errorAlert(
-                    Utils.getI18nString("ERROR"),
-                    fillSubscribersTask.getException().getMessage(),
-                    fillSubscribersTask.getException(),
-                    AlertAction.OK
-            );
-        });
-        Threading.MAIN_EXECUTOR_SERVICE.submit(fillSubscribersTask);
-
-        // TODO: This should remove
-        Task<ObservableList<Subscriber>> fillNewSubscribersTask = DAO.fillNewSubscribers(subscribers);
-        fillNewSubscribersTask.addOnFailed(event -> {
-            Windows.errorAlert(
-                    Utils.getI18nString("ERROR"),
-                    fillNewSubscribersTask.getException().getMessage(),
-                    fillNewSubscribersTask.getException(),
-                    AlertAction.OK
-            );
-        });
-        Threading.MAIN_EXECUTOR_SERVICE.submit(fillNewSubscribersTask);
-
-        nameFilterTF.textProperty().addListener(observable -> refreshTable());
-        workIdFilterTF.textProperty().addListener(observable -> refreshTable());
-        fromDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
-        toDateFilterDatePicker.valueProperty().addListener(observable -> refreshTable());
-        genderFilterComboBox.valueProperty().addListener(observable -> refreshTable());
-        fingerprintFilterComboBox.valueProperty().addListener(observable -> refreshTable());
-        isActiveFilterComboBox.valueProperty().addListener(observable -> refreshTable());
-}
-
     private Predicate<Subscriber> getPredicate() {
         return subscriber -> {
+            if (subscriber == null)
+                return false;
             String name = nameFilterTF.getText();
             String workId = workIdFilterTF.getText();
             LocalDate fromBirthday = fromDateFilterDatePicker.getValue();
@@ -223,7 +183,7 @@ public class IdentificationWindowController implements Controllable {
             if (name.isEmpty() && workId.isEmpty())
                 return true;
 
-            boolean isSubscriberMatch = subscriber.getWorkId().equalsIgnoreCase(workId);
+            boolean isSubscriberMatch = subscriber.getWorkId().startsWith(workId);
             if (! workId.isEmpty()) {
                 if (!isSubscriberMatch)
                     return false;
@@ -259,13 +219,13 @@ public class IdentificationWindowController implements Controllable {
         };
     }
 
-    public void addToTableView(Subscriber subscriber) {
+    void addToTableView(Subscriber subscriber) {
         subscribers.add(subscriber);
     }
 
     private void refreshTable() {
-        subscribers.add(new Subscriber());
-        subscribers.remove(subscribers.size() - 1);
+        filteredList = new FilteredList<>(subscribers, subscriberPredicate);
+        tableView.setItems(filteredList);
     }
 
     @FXML public void onFingerprintBtnClicked(ActionEvent actionEvent) {
@@ -279,8 +239,9 @@ public class IdentificationWindowController implements Controllable {
         IdentificationRecord identificationRecord = new IdentificationRecord();
         identificationRecord.setSubscriber(subscriber);
         identificationRecord.setUser(Auth.getCurrentUser());
-        identificationRecord.setDateTime(LocalDateTime.now());
+        identificationRecord.setDatetime(LocalDateTime.now());
         identificationRecord.setIdentified(false);
+        DAO.IDENTIFICATION_RECORDS.add(identificationRecord);
 
         Task<Long> insertIdentificationRecordTask = DAO.insertIdentificationRecord(identificationRecord);
         insertIdentificationRecordTask.addOnSucceeded(event -> {
@@ -330,7 +291,6 @@ public class IdentificationWindowController implements Controllable {
                             Task<Boolean> updateSubscriberIdentificationTask = DAO.updateIdentificationRecord(identificationRecord, "isIdentified", "notes");
                             updateSubscriberIdentificationTask.addOnSucceeded(event3 -> showIdentificationState(match, identificationRecord));
                             updateSubscriberIdentificationTask.addOnFailed(event3 -> showUpdateIdentificationErrorAlert(updateSubscriberIdentificationTask.getException()));
-                            updateSubscriberIdentificationTask.addOnComplete(event3 -> getIdentificationsRecordsWindowController().addIdentificationRecord(identificationRecord));
 
                             Threading.MAIN_EXECUTOR_SERVICE.submit(updateSubscriberIdentificationTask);
                         });
@@ -346,11 +306,11 @@ public class IdentificationWindowController implements Controllable {
                     Threading.MAIN_EXECUTOR_SERVICE.submit(captureFingerTask);
                 });
                 Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
-            } else {
+            } else if ( Auth.getCurrentUser().isSuperuser() || Auth.getCurrentUser().isStaff() ) {
                 Optional<AlertAction> alertAction = showAddMissingFingerprintAlert();
                 if (alertAction.isPresent() && AlertAction.YES.equals(alertAction.get())) {
                     // in case we want to register fingerprint for a subscriber
-                    openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
+//                    openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
                     openDeviceTask.addOnSucceeded(event1 -> {
                         Task<FingerprintCaptureResult> addFingerprintToSubscriberTask = new Task<FingerprintCaptureResult>() {
                             @Override
@@ -394,9 +354,15 @@ public class IdentificationWindowController implements Controllable {
                                         updateMap.put("leftLittleFingerprint", subscriber.getLeftLittleFingerprint());
 
                                         updateMap.put("allFingerprintTemplates", subscriber.getAllFingerprintsTemplate());
-                                        updateMap.put("user", Auth.getCurrentUser().getUsername());
+                                        updateMap.put("user", Auth.getCurrentUser().getId());
+
+//                                        System.out.println("currentUserId : " + Auth.getCurrentUser().getId());
+
+//                                        System.out.println("Auth.getCurrentUser().getId() = " + Auth.getCurrentUser().getId());
 
                                         DAO.updateSubscriberById(subscriber.getId(), updateMap).runAndGet();
+
+                                        tableView.refresh();
 
                                         return true;
                                     }

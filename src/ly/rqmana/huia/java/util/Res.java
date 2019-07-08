@@ -39,6 +39,7 @@ public final class Res {
         DATABASE_SITTINGS_WINDOW(SETTING + "DatabaseSettingsWindow.fxml"),
         USERS_SITTINGS_WINDOW   (SETTING + "UsersSettingsWindow.fxml"),
         IDENTIFICATIONS_RECORDS("IdentificationsRecordsWindow.fxml"),
+        IDENTIFICATIONS_EXPORT_REPORT_DIALOG("IdentificationsExportReportDialog.fxml"),
 
         ADD_CONTACTS_METHOD_WINDOW("AddContactMethodDialog.fxml"),
         PERSONAL_IMAGE_WINDOW("PersonalImageLoader.fxml"),
@@ -59,7 +60,7 @@ public final class Res {
         DATABASE_CONFIGURATION_DIALOG("DatabaseConfigurationDialog.fxml"),
 
         FINGERPRINT_TEST_WINDOW_D (DEVELOPER_FXML + "FingerprintTestWindow.fxml"),
-                ;
+        ;
         private final String url;
         Fxml(String url){
             this.url = url;

@@ -48,11 +48,9 @@ public class RootWindowController implements Controllable {
             @Override
             protected Void call() throws Exception {
                 if (isLocked) {
-                    getHomeWindow();
-                    Platform.runLater(homeWindow::toFront);
+                    Platform.runLater(() -> getHomeWindow().toFront());
                 } else {
-                    getMainWindow();
-                    Platform.runLater(mainWindow::toFront);
+                    Platform.runLater(() -> getMainWindow().toFront());
                 }
                 return null;
             }
@@ -69,7 +67,7 @@ public class RootWindowController implements Controllable {
     }
 
     private Node getMainWindow() {
-        if (mainWindow == null){
+//        if (mainWindow == null){
             try {
                 FXMLLoader loader = new FXMLLoader(Res.Fxml.MAIN_WINDOW.getUrl(), Utils.getBundle());
                 mainWindow = loader.load();
@@ -77,7 +75,7 @@ public class RootWindowController implements Controllable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+//        }
         return mainWindow;
     }
 

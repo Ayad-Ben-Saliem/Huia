@@ -282,7 +282,7 @@ public class NamedParameterStatement {
      * Executes the statement, which must be an SQL INSERT, UPDATE or DELETE statement; or an SQL statement that returns
      * nothing, such as a DDL statement.
      *
-     * @return number of rows affected
+     * @return numberColumn of rows affected
      * @throws SQLException
      *             if an error occurred
      * @see PreparedStatement#executeUpdate()

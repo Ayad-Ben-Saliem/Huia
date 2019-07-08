@@ -18,5 +18,7 @@ public enum  Gender {
         return Utils.getI18nString(stringKey);
     }
 
-
+    public String getKey() {
+        return stringKey;
+    }
 }

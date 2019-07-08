@@ -94,8 +94,8 @@ public class FingerprintManager {
 
                 String responseCommand = reader.readLine();
                 String match = reader.readLine();
-                System.out.println("responseCommand = " + responseCommand);
-                System.out.println("match = " + match);
+//                System.out.println("responseCommand = " + responseCommand);
+//                System.out.println("match = " + match);
 
                 socket.close();
 

@@ -154,7 +154,7 @@ public class AddEditUserWindowController implements Controllable {
             }
 
             insertUpdateUserTask.addOnSucceeded(event -> {
-                onCancelBtnClicked(null);
+//                onCancelBtnClicked(null);
                 System.exit(0);
             });
             insertUpdateUserTask.addOnFailed(event -> {
@@ -209,7 +209,7 @@ public class AddEditUserWindowController implements Controllable {
         updateMap.put("familyId", familyIdTF.getText());
         updateMap.put("residence", residenceTF.getText());
         updateMap.put("birthday", birthdayDP.getValue());
-        updateMap.put("gender", gender.getValue());
+        updateMap.put("gender", gender.getValue().getKey());
         updateMap.put("isSuperuser", isSuperuser.isSelected());
         updateMap.put("isStaff", isStaff.isSelected());
         updateMap.put("isActive", isActive.isSelected());

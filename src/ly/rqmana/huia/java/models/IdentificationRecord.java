@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class IdentificationRecord {
 
     private long id;
-    private LocalDateTime dateTime;
+    private LocalDateTime datetime;
     private boolean isIdentified;
 
     private User user;
@@ -17,16 +17,20 @@ public class IdentificationRecord {
         return id;
     }
 
+    public String getStringId() {
+        return Long.toHexString(getId()).toUpperCase();
+    }
+
     public void setId(long id) {
         this.id = id;
     }
 
-    public LocalDateTime getDateTime() {
-        return dateTime;
+    public LocalDateTime getDatetime() {
+        return datetime;
     }
 
-    public void setDateTime(LocalDateTime dateTime) {
-        this.dateTime = dateTime;
+    public void setDatetime(LocalDateTime datetime) {
+        this.datetime = datetime;
     }
 
     public boolean isIdentified() {

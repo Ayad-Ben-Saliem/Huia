@@ -6,10 +6,10 @@ import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.validation.base.ValidatorBase;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableSet;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -24,7 +24,6 @@ import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
-import ly.rqmana.huia.java.controls.alerts.Alerts;
 import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.fingerprints.FingerprintCaptureResult;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
@@ -38,10 +37,6 @@ import ly.rqmana.huia.java.util.*;
 
 import java.io.IOException;
 import java.net.URL;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collection;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -55,8 +50,7 @@ public class RegistrationWindowController implements Controllable {
     @FXML public JFXTextField passportTextField;
     @FXML public JFXTextField familyIdTextField;
     @FXML public JFXTextField residenceTextField;
-    @FXML public JFXTextField newEmployeeWorkIdTextField;
-    @FXML public CustomComboBox<String> employeesWorkIdComboBox;
+    @FXML public JFXTextField workIdTextField;
     @FXML public CustomComboBox<Institute> instituteComboBox;
     @FXML public JFXDatePicker birthdayDatePicker;
     @FXML public JFXTextField nationalityTextField;
@@ -67,6 +61,7 @@ public class RegistrationWindowController implements Controllable {
     @FXML public ImageView personalPictureIV;
 
     public VBox mainContainer;
+    public ScrollPane scrollPane;
     private FingerprintCaptureResult fingerprintCaptureResult;
     private Map<Integer, Image> personalPictures;
 
@@ -75,13 +70,6 @@ public class RegistrationWindowController implements Controllable {
 
         relationshipComboBox.setItems(FXCollections.observableArrayList(Relationship.values()));
         relationshipComboBox.setValue(Relationship.SUBSCRIBER);
-        relationshipComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-            boolean status = newValue.equals(Relationship.SUBSCRIBER);
-            newEmployeeWorkIdTextField.setVisible(status);
-            newEmployeeWorkIdTextField.setManaged(status);
-            employeesWorkIdComboBox.setVisible(!status);
-            employeesWorkIdComboBox.setManaged(!status);
-        });
 
         loadDatabase();
 
@@ -102,15 +90,20 @@ public class RegistrationWindowController implements Controllable {
         Utils.setFieldRequired(nationalityTextField);
         Utils.setFieldRequired(relationshipComboBox);
 
-        newEmployeeWorkIdTextField.setValidators(new RequiredFieldValidator(),
+        workIdTextField.setValidators(new RequiredFieldValidator(),
         new ValidatorBase() {
             {
-                setMessage(Utils.getBundle().getString("WORK_ID_ALREADY_EXIST"));
                 setIcon(Utils.getErrorIcon());
             }
             @Override
             protected void eval() {
-                hasErrors.set(employeesWorkIdComboBox.getItems().contains(newEmployeeWorkIdTextField.getText()));
+                if (relationshipComboBox.getValue().equals(Relationship.SUBSCRIBER)) {
+                    setMessage(Utils.getBundle().getString("WORK_ID_ALREADY_EXIST"));
+                    hasErrors.set(DAO.WORK_IDES.contains(workIdTextField.getText()));
+                } else {
+                    setMessage(Utils.getBundle().getString("WORK_ID_NOT_EXIST"));
+                    hasErrors.set(!DAO.WORK_IDES.contains(workIdTextField.getText()));
+                }
             }
         });
 
@@ -160,7 +153,6 @@ public class RegistrationWindowController implements Controllable {
 
     private void loadDatabase() {
         loadInstituteNames();
-        loadWorkIdes();
     }
 
     private void loadInstituteNames() {
@@ -169,15 +161,8 @@ public class RegistrationWindowController implements Controllable {
         getInstitutesTask.addOnSucceeded(event -> instituteComboBox.setItems(getInstitutesTask.getValue()));
 
         getInstitutesTask.addOnFailed(event -> Windows.errorAlert(Utils.getI18nString("ERROR"), "", getInstitutesTask.getException(), AlertAction.OK));
-    }
 
-    private void loadWorkIdes() {
-        Task<ObservableSet<String>> getWorkIdesTask = DAO.getWorkIdes();
-
-        getWorkIdesTask.addOnSucceeded(event -> employeesWorkIdComboBox.setItems(FXCollections.observableArrayList(getWorkIdesTask.getValue())));
-
-        getWorkIdesTask.addOnFailed(event -> Windows.errorAlert(Utils.getI18nString("ERROR"), "", getWorkIdesTask.getException(), AlertAction.OK));
-
+        Threading.MAIN_EXECUTOR_SERVICE.submit(getInstitutesTask);
     }
 
     public void onAddContactBtnClicked() {
@@ -248,8 +233,10 @@ public class RegistrationWindowController implements Controllable {
     }
 
     public void onEnterBtnClicked() {
-        if (validate()) {
-            saveToDB();
+        if (isInputFieldsValidate()) {
+//            if (isFingerprintValidate()) {
+                saveToDB();
+//            }
         }
     }
 
@@ -268,7 +255,7 @@ public class RegistrationWindowController implements Controllable {
         if (nationalityTextField.getText() == null || nationalityTextField.getText().isEmpty()) {
             nationalityTextField.setText(Utils.getI18nString("LIBYAN"));
         }
-        newEmployeeWorkIdTextField.setText("");
+        workIdTextField.setText("");
 
 //        contactsContainer.getChildren().remove(3, contactsContainer.getChildren().size());
 //        contactsContainer.getChildren().forEach(node -> {
@@ -277,7 +264,7 @@ public class RegistrationWindowController implements Controllable {
 //        });
     }
 
-    private boolean validate() {
+    private boolean isInputFieldsValidate() {
 
         boolean validate;
         validate = firstNameTextField.validate();
@@ -291,23 +278,25 @@ public class RegistrationWindowController implements Controllable {
         validate &= nationalIdTextField.validate();
         validate &= nationalityTextField.validate();
 
-        if (relationshipComboBox.getValue().equals(Relationship.SUBSCRIBER)) {
-            validate &= newEmployeeWorkIdTextField.validate();
-        } else {
-            validate &= employeesWorkIdComboBox.validate();
-        }
+        validate &= workIdTextField.validate();
 
         validate &= contactsContainer.getChildren().stream().map(node -> (ContactField) node).map(ContactField::validate).reduce(true, (a, b) -> a && b);
 
-        if (fingerprintCaptureResult == null || fingerprintCaptureResult.isEmpty()) {
-            Windows.warningAlert(
-                                Utils.getI18nString("WARNING"),
-                                Utils.getI18nString("SCAN_FINGERPRINT_WARNING"),
-                                AlertAction.OK);
-            validate = false;
-        }
+        if (!validate)
+            scrollPane.setVvalue(0);
 
         return validate;
+    }
+
+    private boolean isFingerprintValidate() {
+        if (fingerprintCaptureResult == null || fingerprintCaptureResult.isEmpty()) {
+            Windows.warningAlert(
+                    Utils.getI18nString("WARNING"),
+                    Utils.getI18nString("SCAN_FINGERPRINT_WARNING"),
+                    AlertAction.OK);
+            return false;
+        }
+        return true;
     }
 
     private void saveToDB() {
@@ -317,9 +306,9 @@ public class RegistrationWindowController implements Controllable {
             protected Subscriber call() throws Exception {
 
                 Subscriber subscriber = constructSubscriber();
-                subscriber.setActive(true);
+                subscriber.setActive(false);
 
-                long subscriberId = DAO.insertNewSubscriber(subscriber);
+                long subscriberId = DAO.insertSubscriber(subscriber);
 
                 subscriber.setId(subscriberId);
 
@@ -334,14 +323,13 @@ public class RegistrationWindowController implements Controllable {
         saveTask.addOnSucceeded(event -> {
 
             Subscriber newSubscriber = saveTask.getValue();
-            updateWorkIdes(newSubscriber.getWorkId());
 
-            getMainWindowController().getIdentificationWindowController().addToTableView(newSubscriber);
+            DAO.SUBSCRIBERS.add(newSubscriber);
+
+            clearInput();
 
             String heading = Utils.getI18nString("SUBSCRIBER_ADDED_SUCCESSFULLY_HEADING");
             String body = Utils.getI18nString("SUBSCRIBER_ADDED_SUCCESSFULLY_BODY").replace("{0}", newSubscriber.getFullName());
-
-            clearInput();
 
             Windows.infoAlert(
                             heading,
@@ -380,26 +368,21 @@ public class RegistrationWindowController implements Controllable {
         subscriber.getPassport().setNumber(passport);
         subscriber.setResidence(residenceTextField.getText());
 
-        String workId = relationshipComboBox.getValue().equals(Relationship.SUBSCRIBER)? newEmployeeWorkIdTextField.getText() : employeesWorkIdComboBox.getValue();
+        String workId = workIdTextField.getText();
         subscriber.setWorkId(workId);
         subscriber.setRelationship(relationshipComboBox.getValue());
 
-        subscriber.fillRightHand(fingerprintCaptureResult.getRightHand());
+        if (fingerprintCaptureResult != null && !fingerprintCaptureResult.isEmpty()) {
+            subscriber.fillRightHand(fingerprintCaptureResult.getRightHand());
 
-        subscriber.fillLeftHand(fingerprintCaptureResult.getLeftHand());
+            subscriber.fillLeftHand(fingerprintCaptureResult.getLeftHand());
 
-        subscriber.setAllFingerprintsTemplate(fingerprintCaptureResult.getFingerprintsTemplate());
+            subscriber.setAllFingerprintsTemplate(fingerprintCaptureResult.getFingerprintsTemplate());
+        }
 
         subscriber.setInstitute(instituteComboBox.getValue());
 
         return subscriber;
-    }
-
-    private void updateWorkIdes(String newWorkId) {
-        ObservableSet<String> workIdes = FXCollections.observableSet();
-        workIdes.addAll(employeesWorkIdComboBox.getItems());
-        workIdes.add(newWorkId);
-        employeesWorkIdComboBox.setItems(FXCollections.observableArrayList(workIdes));
     }
 
     public void onFingerprintBtnClicked(ActionEvent actionEvent) {

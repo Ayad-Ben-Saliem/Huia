@@ -10,7 +10,6 @@
     <orderEntry type="library" name="de.jensd:fontawesomefx:8.9" level="project" />
     <orderEntry type="library" name="ZKFingerReader" level="project" />
     <orderEntry type="library" name="com.jfoenix:jfoenix:8.0.8" level="project" />
-    <orderEntry type="library" name="org.xerial:sqlite-jdbc:3.27.2.1" level="project" />
     <orderEntry type="library" name="Simple Logging Facade for Java:1.7.26" level="project" />
     <orderEntry type="library" name="javax.media:jmf:2.1.1e" level="project" />
     <orderEntry type="library" name="com.github.sarxos:webcam-capture:0.3.12" level="project" />
@@ -19,5 +18,7 @@
     <orderEntry type="library" name="NBioBSPJNI" level="project" />
     <orderEntry type="library" name="mysql:mysql-connector-java:5.1.47" level="project" />
     <orderEntry type="library" name="org.json:json:20180130" level="project" />
+    <orderEntry type="library" name="net.sourceforge.jexcelapi:jxl:2.6.12" level="project" />
+    <orderEntry type="library" name="org.xerial:sqlite-jdbc:3.27.2.1" level="project" />
   </component>
 </module>

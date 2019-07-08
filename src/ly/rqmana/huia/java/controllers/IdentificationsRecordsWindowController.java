@@ -1,41 +1,38 @@
 package ly.rqmana.huia.java.controllers;
 
-import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXCheckBox;
 import com.jfoenix.controls.JFXDatePicker;
+import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXTextField;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
-import ly.rqmana.huia.java.concurrent.Task;
+import javafx.scene.layout.Region;
 import ly.rqmana.huia.java.concurrent.Threading;
-import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.db.DAO;
 import ly.rqmana.huia.java.models.IdentificationRecord;
 import ly.rqmana.huia.java.models.Subscriber;
 import ly.rqmana.huia.java.models.User;
 import ly.rqmana.huia.java.util.Controllable;
+import ly.rqmana.huia.java.util.Res;
 import ly.rqmana.huia.java.util.Utils;
-import ly.rqmana.huia.java.util.Windows;
 
+import java.io.IOException;
 import java.net.URL;
-import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.ResourceBundle;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class IdentificationsRecordsWindowController implements Controllable {
@@ -65,7 +62,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
             IdentificationRecord identification = new IdentificationRecord();
             identification.setIdentified(true);
-            identification.setDateTime(LocalDateTime.now());
+            identification.setDatetime(LocalDateTime.now());
             identification.setSubscriber(subscriber);
             identification.setUser(user);
 
@@ -94,10 +91,10 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
     @FXML private JFXCheckBox searchByHoursCheck;
     @FXML private Spinner<Integer> lastHoursSpinner;
-    @FXML private JFXButton searchButton;
     
     @FXML private TableView<IdentificationRecord> tableView;
-    @FXML private TableColumn<IdentificationRecord, Long> identificationId;
+    @FXML private TableColumn<IdentificationRecord, Integer> numberColumn;
+    @FXML private TableColumn<IdentificationRecord, String> identificationId;
     @FXML private TableColumn<IdentificationRecord, String> nameColumn;
     @FXML private TableColumn<IdentificationRecord, String> workIdColumn;
     @FXML private TableColumn<IdentificationRecord, String> userColumn;
@@ -105,13 +102,12 @@ public class IdentificationsRecordsWindowController implements Controllable {
     private final ObjectProperty<LocalDateTime> upperDateTimeBound = new SimpleObjectProperty<>();
     private final ObjectProperty<LocalDateTime> lowerDateTimeBound = new SimpleObjectProperty<>();
 
-    private final ObservableList<IdentificationRecord> cachedData = FXCollections.observableArrayList();
-    private final FilteredList<IdentificationRecord> filteredList = new FilteredList<>(cachedData);
+//    private final ObservableList<IdentificationRecord> cachedData = FXCollections.observableArrayList();
+    private final FilteredList<IdentificationRecord> filteredList = new FilteredList<>(DAO.IDENTIFICATION_RECORDS);
 
     private final static Long IDENTIFICATION_VALIDITY = 24L;
 
     public void initialize(URL location, ResourceBundle resources) {
-
         initComponents();
         initListeners();
 
@@ -121,38 +117,41 @@ public class IdentificationsRecordsWindowController implements Controllable {
         lowerBoundDatePicker.setValue(LocalDate.now().minusDays(1));
         upperBoundDatePicker.setValue(LocalDate.now());
 
-        loadFromDatabase();
+//        cachedData.addAll(DAO.IDENTIFICATION_RECORDS);
+//        DAO.IDENTIFICATION_RECORDS.addListener((InvalidationListener) change -> {
+//            cachedData.clear();
+//            cachedData.addAll(DAO.IDENTIFICATION_RECORDS);
+//        });
+        applyFilters();
     }
 
     private void initComponents(){
 
         // set the source of the data of the table from the filtered list
-
         tableView.setItems(filteredList);
 
         lastHoursSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, 24));
 
-        identificationId.setCellValueFactory(new PropertyValueFactory<>("id"));
-
-        identificationId.setCellFactory(param -> new TableCell<IdentificationRecord, Long>(){
-            @Override
-            protected void updateItem(Long item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (! empty && item != null){
-                    long idInDecimal = item;
-                    String hexId = Long.toHexString(idInDecimal).toUpperCase();
-                    setText(hexId);
-                }
-                else{
-                    setText(null);
-                }
-            }
-        });
-
+        numberColumn.setCellFactory(Utils.getAutoNumberCellFactory());
+        identificationId.setCellValueFactory(new PropertyValueFactory<>("stringId"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("subscriberName"));
         workIdColumn.setCellValueFactory(new PropertyValueFactory<>("subscriberWorkId"));
         userColumn.setCellValueFactory(new PropertyValueFactory<>("providingUserName"));
+
+        filtersBox.expandedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(500);
+                        Platform.runLater(() -> filtersBox.setMinHeight(156));
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+            } else {
+                filtersBox.setMinHeight(0);
+            }
+        });
     }
 
     private void initListeners(){
@@ -187,8 +186,6 @@ public class IdentificationsRecordsWindowController implements Controllable {
         tableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> onSelectedItemChanged(oldValue, newValue));
 
         // *** filtering-related listeners *****
-        searchButton.addEventFilter(ActionEvent.ACTION, event -> applyFilters());
-
         searchByHoursCheck.selectedProperty().addListener((observable, oldValue, newValue) -> applyFilters());
 
         nameFilterField.textProperty().addListener((observable, oldValue, newValue) -> applyFilters());
@@ -206,7 +203,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
                 if (isEmptySelection())
                     return;
 
-                LocalDateTime startDate = getSelectedRecord().getDateTime();
+                LocalDateTime startDate = getSelectedRecord().getDatetime();
                 LocalDateTime endDate = startDate.plusHours(IDENTIFICATION_VALIDITY);
                 LocalDateTime now = LocalDateTime.now();
 
@@ -233,30 +230,6 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
             });
         }, 0, 1000, TimeUnit.MILLISECONDS);
-    }
-
-    private void loadFromDatabase(){
-
-        //TODO: check if you want to load identified only or not
-        Task<ObservableList<IdentificationRecord>> loadTask = DAO.getIdentificationRecords();
-
-        loadTask.addOnSucceeded(event -> {
-            cachedData.setAll(loadTask.getValue());
-            applyFilters();
-        });
-
-        loadTask.addOnFailed(event -> {
-            Throwable exception = event.getSource().getException();
-            Windows.errorAlert(
-                    Utils.getI18nString("ERROR"),
-                    exception.getMessage(),
-                    exception,
-                    AlertAction.OK
-            );
-        });
-        loadTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
-
-        Threading.MAIN_EXECUTOR_SERVICE.submit(loadTask);
     }
 
     private void onSelectedItemChanged(IdentificationRecord oldId, IdentificationRecord newId){
@@ -299,7 +272,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
             if (! wordIdFilter.isEmpty())
                 match = match && record.getSubscriberWorkId().contains(wordIdFilter);
 
-            LocalDateTime dateTime = record.getDateTime();
+            LocalDateTime dateTime = record.getDatetime();
 
             if (! isSearchByHours){
 
@@ -330,14 +303,6 @@ public class IdentificationsRecordsWindowController implements Controllable {
         return getSelectedRecord() == null;
     }
 
-    public void addIdentificationRecord(IdentificationRecord record){
-        cachedData.add(record);
-    }
-
-    public void addIdentificationRecords(List<IdentificationRecord> records){
-        cachedData.addAll(records);
-    }
-
     /* ***************************************** *
      *
      *             Setters && Getters
@@ -366,5 +331,26 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
     public void setLowerDateTimeBound(LocalDateTime lowerDateTimeBound) {
         this.lowerDateTimeBound.set(lowerDateTimeBound);
+    }
+
+    public void onAdvancedSearchBtnClicked(ActionEvent actionEvent) {
+        filtersBox.setExpanded(!filtersBox.isExpanded());
+    }
+
+    public void onSearchBtnClicked(ActionEvent actionEvent) {
+        applyFilters();
+    }
+
+    public void onExportReportBtnClicked(ActionEvent actionEvent) {
+        FXMLLoader loader = new FXMLLoader(Res.Fxml.IDENTIFICATIONS_EXPORT_REPORT_DIALOG.getUrl(), Utils.getBundle());
+        try {
+            Region content = loader.load();
+//            IdentificationsExportReportDialogController controller = loader.getController();
+            JFXDialog dialog = new JFXDialog(getRootStack(), content, JFXDialog.DialogTransition.CENTER);
+
+            dialog.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

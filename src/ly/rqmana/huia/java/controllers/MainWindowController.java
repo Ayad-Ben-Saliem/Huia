@@ -8,6 +8,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.WindowEvent;
 import ly.rqmana.huia.java.concurrent.Task;
@@ -16,7 +17,6 @@ import ly.rqmana.huia.java.controllers.settings.SettingsWindowController;
 import ly.rqmana.huia.java.controls.alerts.AlertAction;
 import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
 import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
-import ly.rqmana.huia.java.models.User;
 import ly.rqmana.huia.java.security.Auth;
 import ly.rqmana.huia.java.util.Controllable;
 import ly.rqmana.huia.java.util.Res;
@@ -34,6 +34,7 @@ public class MainWindowController implements Controllable {
     @FXML public JFXButton identificationBtn;
     @FXML public JFXButton identificationsRecordsBtn;
     @FXML public JFXButton settingsBtn;
+    @FXML public Label currentUserLabel;
 
     private Node registrationWindow;
     private Node identificationWindow;
@@ -54,12 +55,10 @@ public class MainWindowController implements Controllable {
         SETTINGS
     }
 
-    final ObjectProperty<SelectedPage> selectedPageProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<SelectedPage> selectedPageProperty = new SimpleObjectProperty<>();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
-        centralStack.getChildren().addAll(getRegistrationWindow(), getIdentificationWindow(), getIdentificationsRecordsWindow(), getSettingsWindow());
 
         selectedPageProperty.addListener((observable, oldValue, newValue) -> activeTab(newValue));
 
@@ -68,23 +67,36 @@ public class MainWindowController implements Controllable {
         identificationsRecordsBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.IDENTIFICATIONS_RECORD));
         settingsBtn.setOnAction(event -> selectedPageProperty.set(SelectedPage.SETTINGS));
 
-        User currentUser = Auth.getCurrentUser();
-        if (currentUser.isSuperuser())
-            registrationBtn.fire();
-        else {
-            settingsBtn.setDisable(true);
-            settingsBtn.setManaged(false);
-            if (!currentUser.isStaff()) {
+        if (Auth.getCurrentUser().isActive()) {
+            setCurrentUserName(Auth.getCurrentUser().getFullName());
+
+            if (Auth.getCurrentUser().isSuperuser()) {
+                centralStack.getChildren().addAll(getRegistrationWindow(), getIdentificationWindow(), getIdentificationsRecordsWindow(), getSettingsWindow());
+                registrationBtn.fire();
+            } else if (Auth.getCurrentUser().isStaff()) {
+                centralStack.getChildren().addAll(getRegistrationWindow(), getIdentificationWindow(), getIdentificationsRecordsWindow());
+                settingsBtn.setDisable(true);
+                settingsBtn.setManaged(false);
+                identificationBtn.fire();
+            } else {
+                centralStack.getChildren().addAll(getIdentificationWindow(), getIdentificationsRecordsWindow());
+                settingsBtn.setDisable(true);
+                settingsBtn.setManaged(false);
                 registrationBtn.setDisable(true);
                 registrationBtn.setManaged(false);
+                identificationBtn.fire();
             }
-            identificationBtn.fire();
         }
     }
 
     @FXML
-    private void onDeviceRefreshButtonClicked(ActionEvent actionEvent){
+    private void onRefreshDeviceBtnClicked(ActionEvent actionEvent){
 
+        try {
+            Utils.loadNBioBSPJNILib();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
         Task<Boolean> openDeviceTask = FingerprintManager.openDevice(FingerprintDeviceType.HAMSTER_DX);
 
         openDeviceTask.runningProperty().addListener((observable, oldValue, newValue) -> updateLoadingView(newValue));
@@ -96,7 +108,7 @@ public class MainWindowController implements Controllable {
         });
 
         openDeviceTask.addOnFailed(event -> {
-            fingerprintDeviceError(event.getSource().getException(), () -> onDeviceRefreshButtonClicked(actionEvent));
+            fingerprintDeviceError(event.getSource().getException(), () -> onRefreshDeviceBtnClicked(actionEvent));
         });
 
         Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
@@ -172,6 +184,7 @@ public class MainWindowController implements Controllable {
                 e.printStackTrace();
             }
         }
+        ;
         return identificationsRecordsWindow;
     }
 
@@ -220,4 +233,7 @@ public class MainWindowController implements Controllable {
         windowEventHandler = eventHandler;
     }
 
+    public void setCurrentUserName(String currentUserName) {
+        this.currentUserLabel.setText(currentUserName);
+    }
 }

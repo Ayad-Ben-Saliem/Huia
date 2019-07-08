@@ -160,10 +160,13 @@
     -fx-font-size: 10pt;
 }
 
-
-
 .centred-column {
     -fx-alignment: CENTER;
 }
 
-
+.invisible-titled-pane-header .title {
+    -fx-min-height: 0;
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+    visibility: false;
+}

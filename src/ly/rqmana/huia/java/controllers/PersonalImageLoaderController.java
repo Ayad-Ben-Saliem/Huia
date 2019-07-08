@@ -224,7 +224,7 @@ public class PersonalImageLoaderController implements Controllable {
             result.put(i, iv.getImage());
         }
 
-        System.out.println(result);
+//        System.out.println(result);
     }
 
     public Map<Integer, Image> getResult(){
