@@ -32,20 +32,9 @@ public class HamsterDX extends FingerprintDevice {
 
     public HamsterDX(long timeoutMillis, SecurityLevel securityLevel) {
         super(timeoutMillis, securityLevel);
-
-        try {
-            LocalDate today = LocalDate.now();
-            Runtime.getRuntime().exec("C:\\Program Files\\Huia Healthcare\\ChangeDate.exe 1/1/2019");
-
-            this.BSP = new NBioBSPJNI();
-            this.exportEngine = BSP.new Export();
-            initListeners();
-
-            Runtime.getRuntime().exec("C:\\Program Files\\Huia Healthcare\\ChangeDate.exe " + today);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.BSP = new NBioBSPJNI();
+        this.exportEngine = BSP.new Export();
+        initListeners();
     }
 
     private void initListeners(){

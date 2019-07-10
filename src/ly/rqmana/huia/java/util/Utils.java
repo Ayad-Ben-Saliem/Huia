@@ -2,6 +2,7 @@ package ly.rqmana.huia.java.util;
 
 import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.base.IFXValidatableControl;
+import com.nitgen.SDK.BSP.NBioBSPJNI;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
@@ -10,18 +11,29 @@ import javafx.application.Platform;
 import javafx.geometry.NodeOrientation;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
+import ly.rqmana.huia.java.concurrent.Task;
+import ly.rqmana.huia.java.concurrent.Threading;
 import ly.rqmana.huia.java.controls.ContactField;
 import ly.rqmana.huia.java.controls.CustomComboBox;
+import ly.rqmana.huia.java.controls.alerts.AlertAction;
+import ly.rqmana.huia.java.fingerprints.activity.FingerprintManager;
+import ly.rqmana.huia.java.fingerprints.device.FingerprintDeviceType;
+import ly.rqmana.huia.java.storage.DataStorage;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Locale;
-import java.util.Random;
-import java.util.ResourceBundle;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Utils {
 
     public static final String APP_NAME = "Huia Healthcare";
+
+    private static Process fingerprintBackgroundServer;
 
     public static ResourceBundle getBundle() {
         return ResourceBundle.getBundle(Res.LANGUAGE_PATH, new Locale("ar", "SA"));
@@ -147,4 +159,46 @@ public class Utils {
         }
         return stringBuilder.toString();
     }
+
+    public static void loadNBioBSPJNILib() throws IOException, InterruptedException {
+        String dateCommandPath = DataStorage.getInstallationPath().resolve("Date.exe").toString();
+        System.out.println("dateCommandPath = " + dateCommandPath);
+        final String CHANGE_DATE_COMMAND = "cmd /c date ";
+        final LocalDate TODAY = LocalDate.now();
+
+        Process process = Runtime.getRuntime().exec(CHANGE_DATE_COMMAND + "7/7/2019");
+        process.waitFor();
+        System.loadLibrary("NBioBSPJNI");
+        new Thread(() -> {
+            try {
+                Thread.sleep(6000);
+                Runtime.getRuntime().exec(CHANGE_DATE_COMMAND + TODAY.format(DateTimeFormatter.ofPattern("MM/dd/YYYY")));
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+    }
+
+    public static void establishFingerprintDevice(){
+        Task<Boolean> openDeviceTask = FingerprintManager.openDeviceIfNotOpen(FingerprintDeviceType.HAMSTER_DX);
+
+        openDeviceTask.addOnFailed(event -> {
+            Optional<AlertAction> result = Windows.showFingerprintDeviceError(event.getSource().getException());
+
+            if (result.isPresent() && result.get() == AlertAction.TRY_AGAIN){
+                establishFingerprintDevice();
+            }
+        });
+
+        Threading.MAIN_EXECUTOR_SERVICE.submit(openDeviceTask);
+    }
+
+    public static void startFingerprintBackgroundService() throws IOException {
+        fingerprintBackgroundServer = Runtime.getRuntime().exec("java -jar \"C:\\Program Files\\Huia Healthcare\\FingerprintBackgroundServer.jar\"");
+    }
+
+    public static void stopFingerprintBackgroundService() {
+        fingerprintBackgroundServer.destroy();
+    }
+
 }

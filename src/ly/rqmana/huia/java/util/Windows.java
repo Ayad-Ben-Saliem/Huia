@@ -35,7 +35,7 @@ public class Windows {
 
     static {
 
-        System.out.println("static :: Windows");
+//        System.out.println("static :: Windows");
         ROOT_WINDOW.getIcons().addAll(Res.Image.PERSON.getImage());
 
         ROOT_WINDOW.setTitle(Utils.APP_NAME);
