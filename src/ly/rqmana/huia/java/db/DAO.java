@@ -1,7 +1,6 @@
 package ly.rqmana.huia.java.db;
 
 import com.jfoenix.controls.JFXDialog;
-import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -28,7 +27,6 @@ import java.util.*;
 public class DAO {
 
     private static Connection DB_CONNECTION;
-    private static Connection OLD_DB_CONNECTION;
     private static final String DB_NAME = Utils.APP_NAME;
 
     public final static ObservableList<Subscriber> SUBSCRIBERS = FXCollections.observableArrayList();
@@ -155,10 +153,8 @@ public class DAO {
                 Thread.sleep(6000);
 
                 Class.forName("com.mysql.jdbc.Driver");
-                Class.forName("org.sqlite.JDBC");
 
                 DB_CONNECTION = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-                OLD_DB_CONNECTION = DriverManager.getConnection(DAO.getOldDBUrl());
 
                 Statement statement = DB_CONNECTION.createStatement();
                 statement.executeUpdate("CREATE DATABASE IF NOT EXISTS `" + DB_NAME + "`;");
@@ -174,10 +170,6 @@ public class DAO {
                 if (countRecords("Institutes").runAndGet() == 0) {
                     insertInstitute("الشركة الليبية للحديد والصلب").runAndGet();
                 }
-
-                if (countRecords("Subscribers").runAndGet() == 0) {
-                    migrateOldData().runAndGet();
-                }
                 return true;
             }
         };
@@ -191,12 +183,20 @@ public class DAO {
         return dbUrl;
     }
 
-    private static Task<Boolean> migrateOldData() {
+    public static Task<Boolean> migrateExternalData(String dbUrl) {
 
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                ResultSet oldDataSet = OLD_DB_CONNECTION.createStatement().executeQuery("SELECT * FROM Fingerprint where company_id ='02';");
+
+                String url = dbUrl;
+                if (!url.startsWith("jdbc:sqlite:"))
+                    url = "jdbc:sqlite:" + url;
+
+                Class.forName("org.sqlite.JDBC");
+                Connection EXTERNAL_DB_CONNECTION = DriverManager.getConnection(url);
+
+                ResultSet resultSet = EXTERNAL_DB_CONNECTION.createStatement().executeQuery("SELECT * FROM Subscribers where company_id ='02';");
 
                 String insertQuery = "INSERT INTO Subscribers("
                                     + "firstName        ,"
@@ -217,25 +217,25 @@ public class DAO {
                                     + "Values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
                 PreparedStatement pStatement = DB_CONNECTION.prepareStatement(insertQuery);
 
-                while (oldDataSet.next()) {
+                while (resultSet.next()) {
 
-                    String firstName = oldDataSet.getString("first_name");
-                    String fatherName = oldDataSet.getString("father_name");
-                    String familyName = oldDataSet.getString("last_name");
-                    String nationalId = oldDataSet.getString("national_id");
+                    String firstName = resultSet.getString("first_name");
+                    String fatherName = resultSet.getString("father_name");
+                    String familyName = resultSet.getString("last_name");
+                    String nationalId = resultSet.getString("national_id");
 
-                    String birthdayString = oldDataSet.getString("birthday");
+                    String birthdayString = resultSet.getString("birthday");
                     LocalDate birthday = Utils.toLocalDate(birthdayString);
 
-                    String genderString = oldDataSet.getString("sex");
+                    String genderString = resultSet.getString("gender");
 
                     Gender gender;
                     gender = genderString.equals("M") ? Gender.MALE: Gender.FEMALE;
 
-                    String allFingerprintsTemplates = oldDataSet.getString("fingerprint_template");
-                    String workId = oldDataSet.getString("work_id");
+                    String allFingerprintsTemplates = resultSet.getString("all_fingerprint_template");
+                    String workId = resultSet.getString("work_id");
 
-                    String relationshipRawString = oldDataSet.getString("relationship");
+                    String relationshipRawString = resultSet.getString("relationship");
 
                     String relationship;
                     if (relationshipRawString.equals("خاص")) {
@@ -247,10 +247,13 @@ public class DAO {
                         relationship = Relationship.parseArabic(relationshipRawString).name();
                     }
 
-                    String dateAdded = oldDataSet.getString("start_date");
+                    String dateAdded = resultSet.getString("start_date");
+                    if (dateAdded == null) {
+                        dateAdded = LocalDate.now().toString();
+                    }
 
-                    boolean isActive = SQLUtils.getBoolean(oldDataSet.getString("is_active"));
-                    String notes = oldDataSet.getString("notes");
+                    boolean isActive = SQLUtils.getBoolean(resultSet.getString("is_active"));
+                    String notes = resultSet.getString("notes");
 
                     pStatement.setString(1, firstName);
                     pStatement.setString(2, fatherName);
@@ -588,12 +591,6 @@ public class DAO {
                 return null;
             }
         };
-    }
-
-    private static final String DATA_DB_NAME = "FingerprintData.db";
-
-    private static String getOldDBUrl() {
-        return "jdbc:sqlite:" + DataStorage.getDataPath().resolve(DATA_DB_NAME).toString();
     }
 
     public static User getUserByUsername(String username) throws SQLException {

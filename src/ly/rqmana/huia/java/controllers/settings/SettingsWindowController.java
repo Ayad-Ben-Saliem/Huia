@@ -128,4 +128,14 @@ public class SettingsWindowController implements Controllable {
     public UsersSettingsWindowController getUsersSettingsWindowController() {
         return usersSettingsWindowController;
     }
+
+    public boolean askForSaveSetting() {
+        Optional<AlertAction> alertAction = Windows.infoAlert(
+                Utils.getI18nString("SAVE_NEW_SITTING_HEADING"),
+                Utils.getI18nString("SAVE_NEW_SITTING_BODY"),
+                AlertAction.OK, AlertAction.CANCEL
+        );
+
+        return alertAction.isPresent() && alertAction.get().equals(AlertAction.OK);
+    }
 }

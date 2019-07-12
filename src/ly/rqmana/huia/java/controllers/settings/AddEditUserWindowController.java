@@ -135,15 +135,7 @@ public class AddEditUserWindowController implements Controllable {
     }
 
     public void insetUpdateUser() {
-        Optional<AlertAction> alertAction = Windows.infoAlert(
-                Utils.getI18nString("SAVE_NEW_SITTING_HEADING"),
-                Utils.getI18nString("SAVE_NEW_SITTING_BODY"),
-                AlertAction.OK, AlertAction.CANCEL
-        );
-        if (alertAction.isPresent()) {
-            if (alertAction.get().equals(AlertAction.CANCEL))
-                return;
-
+        if (getSettingsWindowController().askForSaveSetting()) {
             Task<Boolean> insertUpdateUserTask;
             if (editMode) {
                 // Register User

@@ -20,5 +20,8 @@
     <orderEntry type="library" name="org.json:json:20180130" level="project" />
     <orderEntry type="library" name="net.sourceforge.jexcelapi:jxl:2.6.12" level="project" />
     <orderEntry type="library" name="org.xerial:sqlite-jdbc:3.27.2.1" level="project" />
+    <orderEntry type="library" name="javax.mail:mail:1.5.0-b01" level="project" />
+    <orderEntry type="library" name="org.controlsfx:controlsfx:8.40.15" level="project" />
+    <orderEntry type="library" name="org.reactfx:reactfx:2.0-M5" level="project" />
   </component>
 </module>

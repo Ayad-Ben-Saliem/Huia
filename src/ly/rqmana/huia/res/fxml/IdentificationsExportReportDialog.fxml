@@ -73,9 +73,9 @@
             <JFXCheckBox fx:id="identificationIdCheckBox" maxWidth="1.7976931348623157E308" mnemonicParsing="false" selected="true" text="%IDENTIFICATION_CODE" HBox.hgrow="ALWAYS" />
             <JFXCheckBox fx:id="nameCheckBox" maxWidth="1.7976931348623157E308" mnemonicParsing="false" selected="true" text="%FULL_NAME" HBox.hgrow="ALWAYS" />
             <JFXCheckBox fx:id="workIdCheckBox" maxWidth="1.7976931348623157E308" mnemonicParsing="false" selected="true" text="%WORK_ID" HBox.hgrow="ALWAYS" />
-            <JFXCheckBox fx:id="employeeNameCheckBox" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="%EMPLOYEE_NAME" HBox.hgrow="ALWAYS" />
-            <JFXCheckBox fx:id="isIdentifiedCheckBox" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="%IDENTIFIED" HBox.hgrow="ALWAYS" />
-            <JFXCheckBox fx:id="relationshipCheckBox" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="%RELATIONSHIP" HBox.hgrow="ALWAYS" />
+            <JFXCheckBox fx:id="employeeNameCheckBox" disable="true" managed="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="%EMPLOYEE_NAME" visible="false" HBox.hgrow="ALWAYS" />
+            <JFXCheckBox fx:id="isIdentifiedCheckBox" maxWidth="1.7976931348623157E308" mnemonicParsing="false" selected="true" text="%IDENTIFIED" HBox.hgrow="ALWAYS" />
+            <JFXCheckBox fx:id="relationshipCheckBox" disable="true" managed="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="%RELATIONSHIP" visible="false" HBox.hgrow="ALWAYS" />
             <JFXCheckBox fx:id="datetimeCheckBox" maxWidth="1.7976931348623157E308" mnemonicParsing="false" selected="true" text="%DATETIME" HBox.hgrow="ALWAYS" />
             <JFXCheckBox fx:id="userCheckBox" maxWidth="1.7976931348623157E308" mnemonicParsing="false" selected="true" text="%USER" HBox.hgrow="ALWAYS" />
             <JFXCheckBox fx:id="notesCheckBox" maxWidth="1.7976931348623157E308" mnemonicParsing="false" selected="true" text="%NOTES" HBox.hgrow="ALWAYS" />
@@ -89,7 +89,7 @@
                 <TableColumn fx:id="employeeNameColumn" editable="false" minWidth="250.0" prefWidth="250.0" text="%EMPLOYEE_NAME" />
                 <TableColumn fx:id="workIdColumn" editable="false" minWidth="100.0" prefWidth="100.0" styleClass="centred-column" text="%WORK_ID" />
                 <TableColumn fx:id="relationshipColumn" editable="false" minWidth="100.0" prefWidth="100.0" styleClass="centred-column" text="%RELATIONSHIP" />
-                <TableColumn fx:id="isIdentifiedColumn" editable="false" minWidth="100.0" prefWidth="100.0" text="%IDENTIFIED" />
+                <TableColumn fx:id="isIdentifiedColumn" editable="false" minWidth="100.0" prefWidth="100.0" text="%IDENTIFIED" visible="false" />
                 <TableColumn fx:id="datetimeColumn" editable="false" minWidth="100.0" prefWidth="100.0" text="%DATETIME" />
                 <TableColumn fx:id="userColumn" editable="false" minWidth="100.0" prefWidth="100.0" text="%USER" />
                 <TableColumn fx:id="notesColumn" editable="false" minWidth="250.0" prefWidth="250.0" text="%NOTES" />
@@ -100,7 +100,7 @@
         </TableView>
 
         <HBox alignment="CENTER" layoutX="10.0" layoutY="10.0" spacing="32.0">
-            <JFXButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onExportPDFClicked" styleClass="common-button" text="%EXPORT_PDF" HBox.hgrow="ALWAYS">
+            <JFXButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onExportPDFClicked" styleClass="common-button" text="%EXPORT_PDF" visible="false" HBox.hgrow="ALWAYS">
                 <graphic>
                     <FontAwesomeIconView glyphName="FILE_PDF_ALT" size="20" strokeType="OUTSIDE" strokeWidth="0.0" />
                 </graphic></JFXButton>
@@ -108,7 +108,7 @@
                 <graphic>
                     <FontAwesomeIconView glyphName="FILE_EXCEL_ALT" size="20" strokeType="OUTSIDE" strokeWidth="0.0" />
                 </graphic></JFXButton>
-            <JFXButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onSendReportClicked" styleClass="common-button" text="%SEND_REPORT" HBox.hgrow="ALWAYS">
+            <JFXButton maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onSendReportClicked" styleClass="common-button" text="%SEND_REPORT" visible="false" HBox.hgrow="ALWAYS">
                 <graphic>
                     <FontAwesomeIconView glyphName="SEND" size="20" strokeType="OUTSIDE" strokeWidth="0.0" />
                 </graphic></JFXButton>

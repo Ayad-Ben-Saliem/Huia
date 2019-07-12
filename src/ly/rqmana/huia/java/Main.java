@@ -1,6 +1,10 @@
 package ly.rqmana.huia.java;
 
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import ly.rqmana.huia.java.concurrent.Threading;
@@ -11,6 +15,8 @@ import ly.rqmana.huia.java.util.Utils;
 import ly.rqmana.huia.java.util.Windows;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

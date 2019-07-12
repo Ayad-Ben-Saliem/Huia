@@ -29,7 +29,7 @@ public abstract class FingerprintDevice implements Closeable {
     }
 
 
-    private final ObjectProperty<SecurityLevel> securityLevel = new SimpleObjectProperty<>(SecurityLevel.NORMAL);
+    private final ObjectProperty<SecurityLevel> securityLevel = new SimpleObjectProperty<>(SecurityLevel.LOWEST);
     private final LongProperty timeoutMillis = new SimpleLongProperty(30 * 1000);
 
     public FingerprintDevice(long timeoutMillis, SecurityLevel securityLevel){

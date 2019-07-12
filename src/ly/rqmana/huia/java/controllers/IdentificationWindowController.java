@@ -287,6 +287,7 @@ public class IdentificationWindowController implements Controllable {
                             identificationRecord.setIdentified(match);
                             if (!match)
                                 identificationRecord.addNote(Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED"));
+                            getIdentificationsRecordsWindowController().refreshTable();
 
                             Task<Boolean> updateSubscriberIdentificationTask = DAO.updateIdentificationRecord(identificationRecord, "isIdentified", "notes");
                             updateSubscriberIdentificationTask.addOnSucceeded(event3 -> showIdentificationState(match, identificationRecord));
@@ -398,12 +399,12 @@ public class IdentificationWindowController implements Controllable {
         String heading;
         String body;
         if (state) {
-            heading = Utils.getI18nString("IDENTIFICATION_FOUND_HEADING");
+            heading = Utils.getI18nString("SUBSCRIBER_IDENTIFIED");
             body = Utils.getI18nString("IDENTIFICATION_FOUND_BODY");
             body = body.replace("{0}", record.getSubscriber().getFullName());
             body = body.replace("{1}", Long.toHexString(record.getId()).toUpperCase());
         } else {
-            heading = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_HEADING");
+            heading = Utils.getI18nString("SUBSCRIBER_NOT_IDENTIFIED");
             body = Utils.getI18nString("IDENTIFICATION_NOT_FOUND_BODY");
         }
         Windows.infoAlert(

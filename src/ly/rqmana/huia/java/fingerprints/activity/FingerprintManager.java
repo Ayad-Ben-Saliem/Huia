@@ -20,7 +20,7 @@ public class FingerprintManager {
 
     }
 
-    private static final SecurityLevel DEFAULT_SECURITY_LEVEL = SecurityLevel.HIGH;
+    private static final SecurityLevel DEFAULT_SECURITY_LEVEL = SecurityLevel.LOWEST;
     private static final long DEFAULT_TIMOUT = 20 * 1000;
 
     private static final ObjectProperty<FingerprintDevice> device = new SimpleObjectProperty<>(null);

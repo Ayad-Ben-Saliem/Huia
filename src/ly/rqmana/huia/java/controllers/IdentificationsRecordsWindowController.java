@@ -1,16 +1,16 @@
 package ly.rqmana.huia.java.controllers;
 
-import com.jfoenix.controls.JFXCheckBox;
-import com.jfoenix.controls.JFXDatePicker;
-import com.jfoenix.controls.JFXDialog;
-import com.jfoenix.controls.JFXTextField;
+import com.jfoenix.controls.*;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
+import javafx.event.EventDispatchChain;
+import javafx.event.EventTarget;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
@@ -83,15 +83,21 @@ public class IdentificationsRecordsWindowController implements Controllable {
     @FXML private Label minutesCountLabel;
     @FXML private Label secondsCountLabel;
 
+    @FXML public JFXButton showHideSearchPaneBtn;
+
     @FXML private TitledPane filtersBox;
     @FXML private JFXTextField nameFilterField;
     @FXML private JFXTextField workIdFilterField;
+    @FXML private JFXTextField identificationCodeFilterField;
+    @FXML private JFXTextField userFilterField;
     @FXML private JFXDatePicker lowerBoundDatePicker;
     @FXML private JFXDatePicker upperBoundDatePicker;
 
     @FXML private JFXCheckBox searchByHoursCheck;
     @FXML private Spinner<Integer> lastHoursSpinner;
-    
+
+    @FXML public JFXButton refreshBtn;
+
     @FXML private TableView<IdentificationRecord> tableView;
     @FXML private TableColumn<IdentificationRecord, Integer> numberColumn;
     @FXML private TableColumn<IdentificationRecord, String> identificationId;
@@ -103,7 +109,7 @@ public class IdentificationsRecordsWindowController implements Controllable {
     private final ObjectProperty<LocalDateTime> lowerDateTimeBound = new SimpleObjectProperty<>();
 
 //    private final ObservableList<IdentificationRecord> cachedData = FXCollections.observableArrayList();
-    private final FilteredList<IdentificationRecord> filteredList = new FilteredList<>(DAO.IDENTIFICATION_RECORDS);
+    private FilteredList<IdentificationRecord> filteredList = new FilteredList<>(DAO.IDENTIFICATION_RECORDS);
 
     private final static Long IDENTIFICATION_VALIDITY = 24L;
 
@@ -137,21 +143,6 @@ public class IdentificationsRecordsWindowController implements Controllable {
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("subscriberName"));
         workIdColumn.setCellValueFactory(new PropertyValueFactory<>("subscriberWorkId"));
         userColumn.setCellValueFactory(new PropertyValueFactory<>("providingUserName"));
-
-        filtersBox.expandedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(500);
-                        Platform.runLater(() -> filtersBox.setMinHeight(156));
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }).start();
-            } else {
-                filtersBox.setMinHeight(0);
-            }
-        });
     }
 
     private void initListeners(){
@@ -190,6 +181,8 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
         nameFilterField.textProperty().addListener((observable, oldValue, newValue) -> applyFilters());
         workIdFilterField.textProperty().addListener((observable, oldValue, newValue) -> applyFilters());
+        identificationCodeFilterField.textProperty().addListener((observable, oldValue, newValue) -> applyFilters());
+        userFilterField.textProperty().addListener((observable, oldValue, newValue) -> applyFilters());
 
         lowerDateTimeBoundProperty().addListener((observable, oldValue, newValue) -> applyFilters());
         upperDateTimeBoundProperty().addListener((observable, oldValue, newValue) -> applyFilters());
@@ -230,6 +223,14 @@ public class IdentificationsRecordsWindowController implements Controllable {
 
             });
         }, 0, 1000, TimeUnit.MILLISECONDS);
+
+        filtersBox.expandedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                showHideSearchPaneBtn.setText(Utils.getI18nString("HIDE_SEARCH_PANE"));
+            } else {
+                showHideSearchPaneBtn.setText(Utils.getI18nString("SHOW_SEARCH_PANE"));
+            }
+        });
     }
 
     private void onSelectedItemChanged(IdentificationRecord oldId, IdentificationRecord newId){
@@ -250,41 +251,48 @@ public class IdentificationsRecordsWindowController implements Controllable {
      *
      * ***************************************** */
 
-    private void applyFilters(){
+    void refreshTable() {
+        applyFilters();
+        tableView.refresh();
+    }
 
-        String nameFilter = nameFilterField.getText();
-        String wordIdFilter = workIdFilterField.getText();
-
-        boolean isSearchByHours = searchByHoursCheck.isSelected();
-
-        LocalDateTime lowerBound = getLowerDateTimeBound();
-        LocalDateTime upperBound = getUpperDateTimeBound();
-
+    private void applyFilters() {
         filteredList.setPredicate(record -> {
             boolean match = true;
+            String nameFilter = nameFilterField.getText();
+            String wordIdFilter = workIdFilterField.getText();
+            String identificationCode = identificationCodeFilterField.getText();
+            String username = userFilterField.getText();
 
             if (!record.isIdentified())
                 return false;
 
-            if (! nameFilter.isEmpty())
-                match = record.getSubscriberName().contains(nameFilter);
+            if (!nameFilter.isEmpty())
+                match = record.getSubscriberName().toUpperCase().contains(nameFilter.toUpperCase());
 
-            if (! wordIdFilter.isEmpty())
-                match = match && record.getSubscriberWorkId().contains(wordIdFilter);
+            if (!wordIdFilter.isEmpty())
+                match &= record.getSubscriberWorkId().toUpperCase().startsWith(wordIdFilter.toUpperCase());
 
-            LocalDateTime dateTime = record.getDatetime();
+            if (!identificationCode.isEmpty())
+                match &= record.getStringId().toUpperCase().startsWith(identificationCode.toUpperCase());
 
-            if (! isSearchByHours){
+            if (!username.isEmpty())
+                match &= record.getUser().getUsername().toUpperCase().startsWith(username.toUpperCase());
 
-                if (lowerBound != null)
-                    match = match && (dateTime.isAfter(lowerBound) || dateTime.isEqual(lowerBound));
+            LocalDateTime datetime = record.getDatetime();
 
-                if (upperBound != null)
-                    match = match && (dateTime.isBefore(upperBound) || dateTime.isEqual(upperBound));
-            }
-            else{
+            if (searchByHoursCheck.isSelected()) {
                 LocalDateTime hoursFilter = LocalDateTime.now().minusHours(lastHoursSpinner.getValue());
-                match = match && (dateTime.isAfter(hoursFilter) || dateTime.isEqual(hoursFilter));
+                match &= (datetime.isAfter(hoursFilter) || datetime.isEqual(hoursFilter));
+
+            } else {
+                LocalDateTime lowerBound = getLowerDateTimeBound();
+                if (lowerBound != null)
+                    match &= (datetime.isAfter(lowerBound) || datetime.isEqual(lowerBound));
+
+                LocalDateTime upperBound = getUpperDateTimeBound();
+                if (upperBound != null)
+                    match &= (datetime.isBefore(upperBound) || datetime.isEqual(upperBound));
             }
 
             return match;
@@ -333,11 +341,11 @@ public class IdentificationsRecordsWindowController implements Controllable {
         this.lowerDateTimeBound.set(lowerDateTimeBound);
     }
 
-    public void onAdvancedSearchBtnClicked(ActionEvent actionEvent) {
+    public void onShowHideSearchPaneBtnClicked(ActionEvent actionEvent) {
         filtersBox.setExpanded(!filtersBox.isExpanded());
     }
 
-    public void onSearchBtnClicked(ActionEvent actionEvent) {
+    public void onRefreshBtnClicked(ActionEvent actionEvent) {
         applyFilters();
     }
 

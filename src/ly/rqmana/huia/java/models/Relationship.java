@@ -43,8 +43,10 @@ public enum Relationship {
                 case "الزوج":
                     return HUSBAND;
                 case "الإبن":
+                case "الابن":
                     return SON;
                 case "الإبنة":
+                case "الابنة":
                     return DAUGHTER;
                 case "والدة الموظف":
                     return MOTHER;

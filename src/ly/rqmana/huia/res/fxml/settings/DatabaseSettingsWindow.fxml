@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" style="-fx-background-color: -rq-background-alt;" fx:controller="ly.rqmana.huia.java.controllers.settings.DatabaseSettingsWindowController">
+<VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: -rq-background-alt;" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.settings.DatabaseSettingsWindowController">
     <stylesheets>
         <URL value="@../../css/theme.css" />
         <URL value="@../../css/templates.css" />
@@ -17,6 +17,9 @@
             <Insets bottom="32.0" left="32.0" right="32.0" top="32.0" />
         </VBox.margin>
         <JFXTextField fx:id="dbPathTF" promptText="%DB_PATH" HBox.hgrow="ALWAYS" />
-        <JFXButton buttonType="RAISED" mnemonicParsing="false" onAction="#onSelectDatabasePathClicked" styleClass="common-button" text="..." />
+        <JFXButton buttonType="RAISED" mnemonicParsing="false" onAction="#onSelectDatabasePathClicked" prefWidth="45.0" styleClass="common-button" text=". . ." />
     </HBox>
+
+    <JFXButton fx:id="loadDBBtn" buttonType="RAISED" mnemonicParsing="false" onAction="#onLoadDBBtnClicked" styleClass="common-button" text="%LOAD_DATA_TO_MAIN_DATABASE" />
+
 </VBox>

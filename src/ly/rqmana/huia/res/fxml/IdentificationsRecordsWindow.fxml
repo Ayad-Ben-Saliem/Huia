@@ -21,7 +21,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="TOP_CENTER" prefWidth="1000.0" style="-fx-background-color: -rq-background;" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.IdentificationsRecordsWindowController">
+<VBox alignment="TOP_CENTER" prefWidth="1200.0" style="-fx-background-color: -rq-background;" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ly.rqmana.huia.java.controllers.IdentificationsRecordsWindowController">
     <StackPane minHeight="170.0" styleClass="header-pane">
         <GridPane fx:id="headerDetailsPane" alignment="BOTTOM_CENTER" hgap="10.0" StackPane.alignment="CENTER">
             <columnConstraints>
@@ -72,20 +72,34 @@
                 <Label fx:id="secondsCountLabel" layoutX="132.0" layoutY="64.0" text="43" GridPane.columnIndex="4" GridPane.rowIndex="1" />
             </GridPane>
         </GridPane>
-         <JFXButton alignment="CENTER" buttonType="RAISED" mnemonicParsing="false" onAction="#onAdvancedSearchBtnClicked" prefWidth="200.0" styleClass="common-button" text="%ADVANCED_SEARCH" StackPane.alignment="BOTTOM_RIGHT">
+        <VBox maxHeight="-Infinity" maxWidth="-Infinity" prefWidth="200.0" spacing="8.0" StackPane.alignment="BOTTOM_RIGHT">
+             <JFXButton buttonType="RAISED" graphicTextGap="10.0" onAction="#onExportReportBtnClicked" prefWidth="200.0" styleClass="common-button" text="%EXPORT_REPORT">
+                 <graphic>
+                     <FontAwesomeIconView glyphName="FILES_ALT" size="20" />
+                 </graphic>
+             </JFXButton>
+            <JFXButton fx:id="showHideSearchPaneBtn" alignment="CENTER" buttonType="RAISED" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onShowHideSearchPaneBtnClicked" styleClass="common-button" text="%HIDE_SEARCH_PANE">
+                <StackPane.margin>
+                    <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                </StackPane.margin>
+            <graphic>
+               <FontAwesomeIconView glyphName="SEARCH" size="20" />
+            </graphic>
+            </JFXButton>
          <StackPane.margin>
             <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
          </StackPane.margin>
-      </JFXButton>
+        </VBox>
     </StackPane>
 
     <VBox alignment="CENTER" maxHeight="Infinity" style="-fx-background-color: -rq-background-alt;" VBox.vgrow="ALWAYS">
-        <TitledPane fx:id="filtersBox" minHeight="156.0" styleClass="invisible-titled-pane-header" VBox.vgrow="ALWAYS">
+        <TitledPane fx:id="filtersBox" styleClass="invisible-titled-pane-header" VBox.vgrow="ALWAYS">
             <VBox.margin>
                 <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
             </VBox.margin>
-            <GridPane hgap="25.0" styleClass="filters-box" vgap="50.0">
+            <GridPane hgap="25.0" minHeight="-Infinity" prefHeight="155.0" styleClass="filters-box" vgap="50.0">
                 <columnConstraints>
+                    <ColumnConstraints hgrow="SOMETIMES" />
                     <ColumnConstraints hgrow="SOMETIMES" />
                     <ColumnConstraints hgrow="SOMETIMES" />
                     <ColumnConstraints hgrow="NEVER" />
@@ -102,22 +116,19 @@
                 </padding>
                 <JFXTextField fx:id="nameFilterField" labelFloat="true" minWidth="0.0" promptText="%FILTER_BY_NAME" />
                 <JFXTextField fx:id="workIdFilterField" labelFloat="true" maxWidth="Infinity" minWidth="0.0" promptText="%FILTER_BY_WORK_ID" GridPane.rowIndex="1" />
-                <JFXDatePicker fx:id="lowerBoundDatePicker" maxWidth="Infinity" minWidth="0.0" promptText="%FROM" GridPane.columnIndex="1" />
-                <JFXDatePicker fx:id="upperBoundDatePicker" maxWidth="Infinity" minWidth="0.0" promptText="%TO" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                <Separator maxHeight="Infinity" orientation="VERTICAL" GridPane.columnIndex="2" GridPane.rowSpan="2147483647" />
-                <JFXCheckBox fx:id="searchByHoursCheck" maxWidth="Infinity" nodeOrientation="LEFT_TO_RIGHT" text="%SEARCH_BY_HOURS" GridPane.columnIndex="3" />
-                <HBox alignment="BOTTOM_LEFT" spacing="10.0" GridPane.columnIndex="3" GridPane.rowIndex="1">
+            <JFXTextField fx:id="identificationCodeFilterField" labelFloat="true" layoutX="20.0" layoutY="110.0" maxWidth="Infinity" minWidth="0.0" promptText="%FILTER_BY_IDENTIFICATION_CODE" GridPane.columnIndex="1" />
+            <JFXTextField fx:id="userFilterField" labelFloat="true" layoutX="235.0" layoutY="30.0" maxWidth="Infinity" minWidth="0.0" promptText="%FILTER_BY_USER" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <JFXDatePicker fx:id="lowerBoundDatePicker" maxWidth="Infinity" minWidth="0.0" promptText="%FROM" GridPane.columnIndex="2" />
+                <JFXDatePicker fx:id="upperBoundDatePicker" maxWidth="Infinity" minWidth="0.0" promptText="%TO" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                <Separator maxHeight="Infinity" orientation="VERTICAL" GridPane.columnIndex="3" GridPane.rowSpan="2147483647" />
+                <JFXCheckBox fx:id="searchByHoursCheck" maxWidth="Infinity" nodeOrientation="LEFT_TO_RIGHT" text="%SEARCH_BY_HOURS" GridPane.columnIndex="4" />
+                <HBox alignment="BOTTOM_LEFT" spacing="10.0" GridPane.columnIndex="4" GridPane.rowIndex="1">
                     <Label text="%SHOW_LAST" />
                     <Spinner fx:id="lastHoursSpinner" prefHeight="37.0" prefWidth="100.0" HBox.hgrow="ALWAYS" />
                 </HBox>
-                <JFXButton buttonType="RAISED" graphicTextGap="10.0" onAction="#onSearchBtnClicked" prefWidth="200.0" styleClass="common-button" text="%SEARCH" GridPane.columnIndex="4">
+                <JFXButton fx:id="refreshBtn" buttonType="RAISED" graphicTextGap="10.0" onAction="#onRefreshBtnClicked" prefWidth="200.0" styleClass="common-button" text="%REFRESH" GridPane.columnIndex="5">
                     <graphic>
-                        <FontAwesomeIconView glyphName="SEARCH" size="20" />
-                    </graphic>
-                </JFXButton>
-                <JFXButton buttonType="RAISED" graphicTextGap="10.0" onAction="#onExportReportBtnClicked" prefWidth="200.0" styleClass="common-button" text="%EXPORT_REPORT" GridPane.columnIndex="4" GridPane.rowIndex="1">
-                    <graphic>
-                        <FontAwesomeIconView glyphName="FILES_ALT" size="20" />
+                        <FontAwesomeIconView glyphName="REFRESH" size="20" />
                     </graphic>
                 </JFXButton>
             </GridPane>

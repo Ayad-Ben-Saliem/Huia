@@ -2,16 +2,24 @@ package ly.rqmana.huia.java.models;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import javafx.application.Platform;
 import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.util.Duration;
+import ly.rqmana.huia.java.concurrent.Threading;
+import ly.rqmana.huia.java.event.MouseStationaryEvent;
 import ly.rqmana.huia.java.fingerprints.hand.Finger;
 import ly.rqmana.huia.java.fingerprints.hand.Hand;
 import ly.rqmana.huia.java.fingerprints.hand.HandType;
+import ly.rqmana.huia.java.util.Utils;
+import org.controlsfx.control.PopOver;
 
-import javax.swing.*;
 import java.time.LocalDate;
+import java.util.concurrent.TimeUnit;
 
 public class Subscriber extends Person {
 
@@ -98,6 +106,7 @@ public class Subscriber extends Person {
             fontAwesomeIconView = new FontAwesomeIconView(FontAwesomeIcon.TIMES_CIRCLE);
         }
         fontAwesomeIconView.setSize("25");
+        fontAwesomeIconView.setMouseTransparent(true);
         return fontAwesomeIconView;
     }
 
@@ -208,19 +217,19 @@ public class Subscriber extends Person {
         result.setAlignment(Pos.CENTER);
 
         if (hasFingerprint() && ! isFingerprintsDetailed()) {
-            result.getChildren().add(getFingerprintNode(getAllFingerprintsTemplate()));
+            result.getChildren().add(getFingerprintNode(getAllFingerprintsTemplate(), "FINGERPRINT"));
         } else {
-            result.getChildren().add(getFingerprintNode(getRightLittleFingerprint()));
-            result.getChildren().add(getFingerprintNode(getRightRingFingerprint()));
-            result.getChildren().add(getFingerprintNode(getRightMiddleFingerprint()));
-            result.getChildren().add(getFingerprintNode(getRightIndexFingerprint()));
-            result.getChildren().add(getFingerprintNode(getRightThumbFingerprint()));
+            result.getChildren().add(getFingerprintNode(getRightLittleFingerprint(), "RIGHT_LITTLE"));
+            result.getChildren().add(getFingerprintNode(getRightRingFingerprint(), "RIGHT_RING"));
+            result.getChildren().add(getFingerprintNode(getRightMiddleFingerprint(), "RIGHT_MIDDLE"));
+            result.getChildren().add(getFingerprintNode(getRightIndexFingerprint(), "RIGHT_INDEX"));
+            result.getChildren().add(getFingerprintNode(getRightThumbFingerprint(), "RIGHT_THUMB"));
 
-            result.getChildren().add(getFingerprintNode(getLeftThumbFingerprint()));
-            result.getChildren().add(getFingerprintNode(getLeftIndexFingerprint()));
-            result.getChildren().add(getFingerprintNode(getLeftMiddleFingerprint()));
-            result.getChildren().add(getFingerprintNode(getLeftRingFingerprint()));
-            result.getChildren().add(getFingerprintNode(getLeftLittleFingerprint()));
+            result.getChildren().add(getFingerprintNode(getLeftThumbFingerprint(), "LEFT_THUMB"));
+            result.getChildren().add(getFingerprintNode(getLeftIndexFingerprint(), "LEFT_INDEX"));
+            result.getChildren().add(getFingerprintNode(getLeftMiddleFingerprint(), "LEFT_MIDDLE"));
+            result.getChildren().add(getFingerprintNode(getLeftRingFingerprint(), "LEFT_RING"));
+            result.getChildren().add(getFingerprintNode(getLeftLittleFingerprint(), "LEFT_LITTLE"));
         }
         return result;
     }
@@ -239,13 +248,14 @@ public class Subscriber extends Person {
         return isDetailed;
     }
 
-    private Node getFingerprintNode(String fingerprint) {
+    private Node getFingerprintNode(String fingerprint, String stringKey) {
         FontAwesomeIconView fontAwesomeIconView;
         if (fingerprint != null && !fingerprint.isEmpty())
             fontAwesomeIconView = new FontAwesomeIconView(FontAwesomeIcon.CHECK_CIRCLE);
         else
             fontAwesomeIconView = new FontAwesomeIconView(FontAwesomeIcon.CIRCLE_ALT);
         fontAwesomeIconView.setSize("25");
+        fontAwesomeIconView.setMouseTransparent(true);
         return fontAwesomeIconView;
     }
 

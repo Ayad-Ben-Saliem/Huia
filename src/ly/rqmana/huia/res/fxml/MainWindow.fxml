@@ -55,7 +55,7 @@
                 </graphic>
             </JFXButton>
             <Label fx:id="currentUserLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-text-fill: -rq-text-background;" text="Current User" GridPane.columnIndex="1" />
-            <JFXButton buttonType="RAISED" contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onLogoutBtnClicked" styleClass="menu-bar-button" text="%LOGOUT" GridPane.columnIndex="2" GridPane.halignment="RIGHT">
+            <JFXButton contentDisplay="RIGHT" mnemonicParsing="false" onAction="#onLogoutBtnClicked" styleClass="menu-bar-button" text="%LOGOUT" GridPane.columnIndex="2" GridPane.halignment="RIGHT">
                 <graphic>
                     <FontAwesomeIconView glyphName="SIGN_OUT" size="20" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="menu-bar-button-icon" />
                 </graphic>
